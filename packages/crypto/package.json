@@ -1,0 +1,27 @@
+{
+  "name": "@lorena/crypto",
+  "version": "0.0.0",
+  "description": "Crypto packacge for Lorena",
+  "main": "src/index.js",
+  "author": "Alex Puig",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@polkadot/keyring": "^2.10.1",
+    "@polkadot/util": "^2.10.1",
+    "@polkadot/util-crypto": "^2.10.1"
+  },
+  "scripts": {
+    "coverage": "nyc npm run mocha && nyc report --reporter=html",
+    "coveralls": "nyc npm run mocha && nyc report --reporter=text-lcov | coveralls",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix",
+    "mocha": "mocha test --timeout 20000",
+    "test": "npm run mocha"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint"
+    }
+  }
+}
