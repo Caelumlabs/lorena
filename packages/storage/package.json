@@ -1,26 +1,25 @@
 {
-  "name": "@lorena/crypto",
+  "name": "@lorena/storage",
   "version": "0.0.0",
-  "description": "Crypto package for Lorena",
+  "description": "Lorena Storage",
   "main": "src/index.js",
   "author": "Alex Puig",
   "license": "MIT",
   "private": false,
-  "dependencies": {
-    "@polkadot/keyring": "^2.10.1",
-    "@polkadot/util": "^2.10.1",
-    "@polkadot/util-crypto": "^2.10.1"
-  },
   "scripts": {
     "test": "jest --silent ",
     "coverage": "jest --coverage",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"
-    
   },
   "husky": {
     "hooks": {
       "pre-commit": "yarn lint"
     }
+  },
+  "dependencies": {
+    "cids": "^0.8.1",
+    "debug": "^4.1.1",
+    "ipfs-http-client": "^44.1.0"
   }
 }

@@ -1,7 +1,7 @@
 {
-  "name": "@lorena/blockchain-substrate",
+  "name": "@lorena/comms",
   "version": "0.0.0",
-  "description": "Lorena - Blockchain Substrate Lib",
+  "description": "Lorena Communication Protocol",
   "main": "src/index.js",
   "author": "Alex Puig",
   "license": "MIT",
@@ -13,9 +13,7 @@
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@lorena/blockchain": "^0.0.0",
-    "@lorena/crypto": "^0.0.0",
-    "@polkadot/api": "^1.15.1",
-    "@polkadot/types": "^1.15.1"
+    "axios": "^0.19.2",
+    "debug": "^4.1.1"
   }
 }
