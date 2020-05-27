@@ -1,0 +1,16 @@
+{
+  "name": "@lorena/resolver",
+  "version": "0.0.0",
+  "description": "Lorena DID Resolver",
+  "main": "src/index.js",
+  "author": "Chuck Ledux",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "@lorena/blockchain-substrate": "^0.0.0",
+    "@lorena/storage": "^0.0.0",
+    "bip39": "^3.0.2",
+    "debug": "^4.1.1",
+    "did-resolver": "^1.1.0"
+  }
+}
