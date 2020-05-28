@@ -8,7 +8,7 @@ class Test2 extends BlockchainInterface {
   setKeyring (seed) {}
   getAddress (seed) {}
   addrState (address) {}
-  async transferTokens (addrTo, ammount) {}
+  async transferTokens (addrTo, amount) {}
   async registerDid (did, pubKey) {}
   async getActualKey (did) {}
   async getActualDidKey (did) {}
