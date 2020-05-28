@@ -1,4 +1,4 @@
-// Librtaries
+// Libraries
 const { start, stop } = require('nact')
 var path = require('path')
 
@@ -16,7 +16,7 @@ const DBM = require('./db/lorena-migrate-db')
 const MAIL = require('./utils/sendgrid')
 const ContactsApi = require('../api/contacts')
 // const Register = require('./lorena-register')
-// const Recipe = require('./lorena-recipe')
+const Recipe = {} // const Recipe = require('./lorena-recipe')
 
 // Debug
 var debug = require('debug')('idspace:debug:main')
@@ -168,7 +168,7 @@ module.exports = class IDSpace {
    * Loads initial Recipes.
    */
   async initRegister () {
-    this.context.register = new Register(this.system, this.context.database, true)
+    // this.context.register = new Register(this.system, this.context.database, true)
     // first load system recipes
     await this.loadActors(path.join(__dirname, '../recipes_installed'))
     await this.loadActors(path.join(__dirname, '../recipes'))
@@ -183,6 +183,7 @@ module.exports = class IDSpace {
     debug('Recipes : ' + actorsPath)
     await this.context.register.loadActors(actorsPath)
   }
+
   /**
    * Deletes all information for a DID
    *
