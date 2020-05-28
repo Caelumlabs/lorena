@@ -134,7 +134,7 @@ module.exports = class DB extends DBInterface {
    *
    * @param {*} key key
    * @param {*} value value
-   * @param {string} type Type = 'S'tring, 'J'son, 'N'umeric
+   * @param {string} type Type = 'S' for String, 'J' for Json, 'N' for Numeric
    * @returns {*} result
    */
   async set (key, value, type = 'S') {

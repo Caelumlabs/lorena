@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "test": "jest --silent ",
+    "test": "jest --silent --passWithNoTests",
     "coverage": "jest --coverage",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"

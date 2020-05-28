@@ -1,11 +1,11 @@
 'use strict'
 const BlockchainSubstrate = require('./index.js')
-const LorenaCrypto = require('@lorena/crypto')
+// const LorenaCrypto = require('@lorena/crypto')
 const Utils = require('./utils')
 
-const crypto = new LorenaCrypto(true)
+// const crypto = new LorenaCrypto(true)
 
-const subscribe2RegisterEvents = (api, eventMethod) => {
+/* const subscribe2RegisterEvents = (api, eventMethod) => {
   return new Promise(resolve => {
     api.query.system.events(events => {
       events.forEach(record => {
@@ -23,11 +23,11 @@ const subscribe2RegisterEvents = (api, eventMethod) => {
       })
     })
   })
-}
+} */
 
-const did = crypto.random(16)
-const kZpair = crypto.newKeyPair()
-const pubKey = kZpair.publicKey
+// const did = crypto.random(16)
+// const kZPair = crypto.newKeyPair()
+// const pubKey = kZPair.publicKey
 const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 let alice, bob
 
@@ -49,13 +49,13 @@ test('Should use a SURI as a key', async () => {
   expect(alice).toEqual('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY')
 })
 
-test('Sohuld send Tokens from Alice to Bob', async () => {
+test('Should send Tokens from Alice to Bob', async () => {
   bob = blockchain.getAddress('//Bob')
   expect(bob).toEqual('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty')
-  const ammount1 = await blockchain.addrState(alice)
+  const amount1 = await blockchain.addrState(alice)
   await blockchain.transferTokens('5Epmnp6ts1r3qRFEv9di7wxMNnihd1hXDCPp49GUeUqapSz1', 3000000000000000)
-  const ammount2 = await blockchain.addrState(alice)
-  expect(ammount1).not.toEqual(ammount2)
+  const amount2 = await blockchain.addrState(alice)
+  expect(amount1).not.toEqual(amount2)
 })
 
 test('Should Save a DID to Blockchain', async () => {

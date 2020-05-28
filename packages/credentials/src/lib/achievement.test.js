@@ -5,7 +5,7 @@ const crypto = new Crypto(true)
 test('Achievement: should add an Achievement', () => {
   const achievement = new cred.Achievement()
 
-  // Create a new Credential for Achievment
+  // Create a new Credential for Achievement
   achievement.title('Javascript Course')
   achievement.description('Javascript full course for developers')
   achievement.issuer('did:lor:labdev:10001')

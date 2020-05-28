@@ -30,6 +30,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
 
   /**
    * Connect with the Blockchain.
+   *
+   * @returns {boolean} success
    */
   async connect () {
     debug('connecting to ' + this.providerWS)
@@ -100,6 +102,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Balance of Tokens
    *
    * @param {string} address Address to send tokens to
+   * @returns {*} balance and nonce
    */
   async addrState (address = false) {
     return new Promise(async (resolve) => {
@@ -113,12 +116,13 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Transfer Tokens
    *
    * @param {string} addrTo Address to send tokens to
-   * @param {*} ammount Ammount of tokens
+   * @param {*} amount Amount of tokens
+   * @returns {Promise} of sending tokens
    */
-  async transferTokens (addrTo, ammount) {
+  async transferTokens (addrTo, amount) {
     return new Promise(async (resolve) => {
       const unsub = await this.api.tx.balances
-        .transfer(addrTo, ammount)
+        .transfer(addrTo, amount)
         .signAndSend(this.keypair, (result) => {
           if (result.status.isInBlock) {
             console.log(`Transaction included at blockHash ${result.status.asInBlock}`)
@@ -145,12 +149,12 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const arr = Utils.toUTF8Array(pubKey)
-    const zkey = new Vec(registry, 'u8', arr)
+    const zKey = new Vec(registry, 'u8', arr)
 
     debug('Register did : ' + did)
     debug('Assign pubKey : ' + pubKey)
 
-    const transaction = await this.api.tx.lorenaModule.registerDid(hexDID, zkey)
+    const transaction = await this.api.tx.lorenaModule.registerDid(hexDID, zKey)
     await transaction.signAndSend(this.keypair)
   }
 
