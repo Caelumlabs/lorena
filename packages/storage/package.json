@@ -8,7 +8,7 @@
   "private": false,
   "scripts": {
     "test": "jest --silent --passWithNoTests",
-    "coverage": "jest --coverage",
+    "coverage": "jest --coverage --passWithNoTests",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"
   },
