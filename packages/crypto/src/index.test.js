@@ -11,8 +11,8 @@ const crypto = new LorenaCrypto(true)
 test('KeyPair generation: ', () => {
   alice = crypto.newKeyPair()
   expect(alice.mnemonic).not.toBeUndefined()
-  const mnemArray = alice.mnemonic.split(' ')
-  expect(mnemArray.length).toEqual(12)
+  const mnemonicArray = alice.mnemonic.split(' ')
+  expect(mnemonicArray.length).toEqual(12)
   expect(alice.keyPair.publicKey).not.toBeUndefined()
   expect(alice.keyPair.publicKey.length).toEqual(32)
   expect(alice.keyPair.secretKey).not.toBeUndefined()
@@ -20,7 +20,7 @@ test('KeyPair generation: ', () => {
 })
 
 test('Should create a KeyPair from a Seed', () => {
-  const bob  = crypto.keyPairFromSeed(alice.mnemonic)
+  const bob = crypto.keyPairFromSeed(alice.mnemonic)
   expect(alice.keyPair.secretKey.toString).toEqual(bob.keyPair.secretKey.toString)
 })
 

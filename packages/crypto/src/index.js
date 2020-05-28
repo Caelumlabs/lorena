@@ -1,5 +1,3 @@
-'use strict'
-
 const { mnemonicGenerate, mnemonicToSeed, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
 const { stringToU8a, u8aToString, u8aConcat, u8aToHex, hexToU8a, hexToString } = require('@polkadot/util')
 const { randomAsU8a, naclKeypairFromSeed, naclSign, naclVerify, blake2AsHex } = require('@polkadot/util-crypto')
@@ -98,7 +96,7 @@ module.exports = class LorenaCrypto {
    * @param {string} message Message signed..
    * @param {object} signature Signature of the message.
    * @param {string} publicKey Public Key of the signature
-   * @returns {boolean} Wheter the signature is valid or not
+   * @returns {boolean} Whether the signature is valid or not
    */
   checkSignature (message, signature, publicKey) {
     return naclVerify(message, hexToU8a(signature), publicKey)
@@ -108,7 +106,7 @@ module.exports = class LorenaCrypto {
    * Create a Random string
    *
    * @param {number} length Length of the random string
-   * @returns {string} Return arandom string
+   * @returns {string} Return a random string
    */
   random (length = 32) {
     // const rnd = hexToString(u8aToHex(randomAsU8a(length * 2)))

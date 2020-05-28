@@ -3,17 +3,17 @@ const cred = require('../index')
 test('Person: should set a addressLocality', () => {
   // new Person.
   const location = new cred.Location()
-  location.addressLocality('Myoldtown')
+  location.addressLocality('MyOldTown')
 
   // Check Person.
   expect(location.subject['@type']).toEqual('PostalAddress')
-  expect(location.subject.addressLocality).toEqual('Myoldtown')
+  expect(location.subject.addressLocality).toEqual('MyOldTown')
 })
 
 test('Person: should set a addressLocality', () => {
   // new Person.
   const location = new cred.Location()
-  location.streetAddress('Reina Cristina 9, ppal')
+  location.streetAddress('Reina Cristina 9, principal')
   location.addressLocality('Sitges')
   location.postalCode('08001')
   location.addressRegion('Barcelona')
@@ -21,7 +21,7 @@ test('Person: should set a addressLocality', () => {
 
   // Check Location.
   expect(location.subject['@type']).toEqual('PostalAddress')
-  expect(location.subject.streetAddress).toEqual('Reina Cristina 9, ppal')
+  expect(location.subject.streetAddress).toEqual('Reina Cristina 9, principal')
   expect(location.subject.addressLocality).toEqual('Sitges')
   expect(location.subject.postalCode).toEqual('08001')
   expect(location.subject.addressRegion).toEqual('Barcelona')
@@ -41,9 +41,9 @@ test('Person: should set a postalCode', () => {
 test('Person: should set a neighborhood', () => {
   // new Person.
   const location = new cred.Location()
-  location.neighborhood('Myneighborhood')
+  location.neighborhood('MyNeighborhood')
 
   // Check Person.
   expect(location.subject['@type']).toEqual('PostalAddress')
-  expect(location.subject.neighborhood).toEqual('Myneighborhood')
+  expect(location.subject.neighborhood).toEqual('MyNeighborhood')
 })

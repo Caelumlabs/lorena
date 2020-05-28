@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "test": "jest --silent --testTimeout=20000",
+    "test": "jest --silent --passWithNoTests --testTimeout=20000",
     "coverage": "jest --coverage",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"
