@@ -1,51 +1,48 @@
-// import Wallet  from './index'
-const Wallet = require('./index')
+const Wallet = require('./wallet.js');
 
 // run (almost) all tests for each supported storage type
 ['fs', 'mem'].forEach((storage) => {
-  console.log("Test1")
-  // const w = new Wallet('testWallet', { storage, silent: true })
-  console.log("Test2")
+  const w = new Wallet('testWallet', { storage, silent: true })
 
   test('should create Wallet class ' + storage, () => {
-    // expect(w.info.matrixUser).toEqual('')
+    expect(w.info.matrixUser).toEqual('')
   })
-/*
+
   test('should delete the wallet (if any remaining from the last test) ' + storage, async () => {
     await w.delete()
   })
 
   test('should add to credentials collection ' + storage, () => {
-    w.add('credentials', { name: 'admintest', role: 'admin' })
+    w.add('credentials', { name: 'adminTest', role: 'admin' })
     w.add('credentials', { name: 'test1', role: 'user' })
     w.add('credentials', { name: 'test2', role: 'user' })
     w.add('credentials', { name: 'test3', role: 'user' })
     w.add('credentials', { name: 'test4', role: 'user' })
     w.add('credentials', { name: 'test5', role: 'user' })
-    expect(w.data.credentials[0]).toEqual({ name: 'admintest', role: 'admin' })
+    expect(w.data.credentials[0]).toEqual({ name: 'adminTest', role: 'admin' })
     expect(w.data.credentials[1]).toEqual({ name: 'test1', role: 'user' })
   })
 
   test('should get the credential ' + storage, () => {
-    const cred = w.get('credentials', { name: 'admintest' })
-    expect(cred).toEqual({ name: 'admintest', role: 'admin' })
+    const cred = w.get('credentials', { name: 'adminTest' })
+    expect(cred).toEqual({ name: 'adminTest', role: 'admin' })
   })
 
   test('should update the credential ' + storage, () => {
-    w.update('credentials', { name: 'admintest' }, { name: 'admintest', role: 'superadmin' })
-    expect(w.data.credentials[0]).toEqual({ name: 'admintest', role: 'superadmin' })
+    w.update('credentials', { name: 'adminTest' }, { name: 'adminTest', role: 'superAdmin' })
+    expect(w.data.credentials[0]).toEqual({ name: 'adminTest', role: 'superAdmin' })
   })
 
   test('should save the wallet (lock) ' + storage, async () => {
     await w.lock('myPassword0')
-    expect(w.data.credentials[0]).toEqual({ name: 'admintest', role: 'superadmin' })
+    expect(w.data.credentials[0]).toEqual({ name: 'adminTest', role: 'superAdmin' })
   })
 
   test('should load the wallet (unlock) (fs only)', async () => {
     if (storage === 'fs') {
       const w2 = new Wallet('testWallet', { storage, silent: true })
       await w2.unlock('myPassword0')
-      expect(w2.data.credentials[0]).toEqual({ name: 'admintest', role: 'superadmin' })
+      expect(w2.data.credentials[0]).toEqual({ name: 'adminTest', role: 'superAdmin' })
     }
   })
 
@@ -123,15 +120,14 @@ const Wallet = require('./index')
       done()
     })
   })
-  */
 })
-/*
+
 // Scenarios specific to filesystem
 test('should lock and unlock a wallet in fs', (done) => {
   let w2
   const w1 = new Wallet('testWallet', { storage: 'fs', silent: true })
-  w1.add('credentials', { name: 'admintest', role: 'admin' })
-  expect(w1.data.credentials[0]).toEqual({ name: 'admintest', role: 'admin' })
+  w1.add('credentials', { name: 'adminTest', role: 'admin' })
+  expect(w1.data.credentials[0]).toEqual({ name: 'adminTest', role: 'admin' })
   w1.lock('myPassword')
     .then((response) => {
       expect(response).not.toBeUndefined()
@@ -139,11 +135,10 @@ test('should lock and unlock a wallet in fs', (done) => {
       return w2.unlock('myPassword')
     })
     .then((response) => {
-      expect(w2.data.credentials[0]).toEqual({ name: 'admintest', role: 'admin' })
+      expect(w2.data.credentials[0]).toEqual({ name: 'adminTest', role: 'admin' })
       return w2.delete()
     })
     .then(() => {
       done()
     })
 })
-*/
