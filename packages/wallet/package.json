@@ -1,0 +1,26 @@
+{
+  "name": "@lorena/wallet",
+  "version": "0.0.0",
+  "description": "Lorena Wallet",
+  "main": "src/index.js",
+  "author": "Javi Santos",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "module": "src/index.js",
+  "scripts": {
+    "test": "jest --silent --passWithNoTests",
+    "coverage": "jest --coverage",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn lint"
+    }
+  },
+  "dependencies": {
+    "@lorena/crypto": "^0.0.0",
+    "esm": "^3.2.25"
+  }
+}
