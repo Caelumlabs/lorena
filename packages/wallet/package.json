@@ -2,12 +2,11 @@
   "name": "@lorena/wallet",
   "version": "0.0.0",
   "description": "Lorena Wallet",
-  "main": "src/index.js",
+  "main": "src/wallet.js",
   "author": "Javi Santos",
   "license": "MIT",
   "private": false,
   "type": "module",
-  "module": "src/index.js",
   "scripts": {
     "test": "jest --silent --passWithNoTests",
     "coverage": "jest --coverage",
@@ -20,7 +19,6 @@
     }
   },
   "dependencies": {
-    "@lorena/crypto": "^0.0.0",
-    "esm": "^3.2.25"
+    "@lorena/crypto": "^0.0.0"
   }
 }

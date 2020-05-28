@@ -1,11 +1,10 @@
-import Crypto from '@lorena/crypto'
-import { promises as fsPromises } from 'fs'
-import { homedir as home } from 'os'
-import log from 'debug'
-const debug = log('did:debug:wallet-fs')
+const Crypto = require('@lorena/crypto')
+const fsPromises = require('fs').promises
+const home = require('os').homedir
+const debug = require('debug')('did:debug:wallet-fs')
 debug.enabled = true
 
-export default class Wallet {
+module.exports = class Wallet {
   constructor (username, opts = { storage: 'fs', silent: true }) {
     this.opts = opts
     if (opts.storage === 'mem') {
