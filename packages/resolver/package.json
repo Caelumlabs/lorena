@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Lorena DID Resolver",
   "main": "src/index.js",
-  "author": "Chuck Ledux",
+  "author": "Caelum Labs",
   "license": "MIT",
   "private": false,
   "scripts": {
