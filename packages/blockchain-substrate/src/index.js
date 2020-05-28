@@ -149,12 +149,12 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const arr = Utils.toUTF8Array(pubKey)
-    const zkey = new Vec(registry, 'u8', arr)
+    const zKey = new Vec(registry, 'u8', arr)
 
     debug('Register did : ' + did)
     debug('Assign pubKey : ' + pubKey)
 
-    const transaction = await this.api.tx.lorenaModule.registerDid(hexDID, zkey)
+    const transaction = await this.api.tx.lorenaModule.registerDid(hexDID, zKey)
     await transaction.signAndSend(this.keypair)
   }
 

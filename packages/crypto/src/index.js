@@ -96,7 +96,7 @@ module.exports = class LorenaCrypto {
    * @param {string} message Message signed..
    * @param {object} signature Signature of the message.
    * @param {string} publicKey Public Key of the signature
-   * @returns {boolean} Wheter the signature is valid or not
+   * @returns {boolean} Whether the signature is valid or not
    */
   checkSignature (message, signature, publicKey) {
     return naclVerify(message, hexToU8a(signature), publicKey)
@@ -106,7 +106,7 @@ module.exports = class LorenaCrypto {
    * Create a Random string
    *
    * @param {number} length Length of the random string
-   * @returns {string} Return arandom string
+   * @returns {string} Return a random string
    */
   random (length = 32) {
     const rnd = hexToString(u8aToHex(randomAsU8a(length * 2)))
