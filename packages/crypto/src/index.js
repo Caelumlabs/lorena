@@ -1,5 +1,5 @@
 const { mnemonicGenerate, mnemonicToSeed, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
-const { stringToU8a, u8aToString, u8aConcat, u8aToHex, hexToU8a, hexToString } = require('@polkadot/util')
+const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString } = require('@polkadot/util')
 const { randomAsU8a, naclKeypairFromSeed, naclSign, naclVerify, blake2AsHex } = require('@polkadot/util-crypto')
 
 /**
@@ -111,7 +111,7 @@ module.exports = class LorenaCrypto {
   random (length = 32) {
     // const rnd = hexToString(u8aToHex(randomAsU8a(length * 2)))
     const rnd = blake2AsHex(randomAsU8a(length)).toString()
-    return (rnd.slice(2, length+2))
+    return (rnd.slice(2, length + 2))
   }
 
   /**
