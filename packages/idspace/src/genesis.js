@@ -50,7 +50,6 @@ const genesis = async (options) => {
   blockchain.setKeyring(seed.mnemonic)
   await blockchain.registerDid(did)
 
-
   // return
 }
 

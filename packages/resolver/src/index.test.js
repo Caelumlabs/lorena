@@ -2,7 +2,7 @@ const { Resolver } = require('did-resolver')
 const LorenaDidResolver = require('..')
 
 let resolver, lorResolver
-const badDids = [
+const badDIDs = [
   'did:lor:labdev:TuNaFiShSaNdWiChAnDfRiEsPlEaSe5q',
   'did:lor:fake:TuNaFiShSaNdWiChAnDfRiEsPlEaSe5q'
 ]
@@ -35,7 +35,7 @@ test('should construct the resolver', () => {
   expect(resolver.resolve).toBeDefined()
 })
 
-badDids.forEach((did) => {
+badDIDs.forEach((did) => {
   test('should get an empty public key for a nonexistent DID', async () => {
     // using a valid DID, retrieve public key
     const publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
@@ -50,12 +50,12 @@ badDids.forEach((did) => {
   })
 })
 
-const goodDids = [
+const goodDIDs = [
   'did:lor:labdev:ZVdsVWQybHVhM0YxWDFoTFRqWk5jVk5X',
   'did:lor:labtest:VFhKQ2FsazVSM1pWY0VaWmJXVlpSVmRS'
 ]
 
-goodDids.forEach((did) => {
+goodDIDs.forEach((did) => {
   let publicKey
   test('should get the public key for a DID', async () => {
     // using a valid DID, retrieve public key
