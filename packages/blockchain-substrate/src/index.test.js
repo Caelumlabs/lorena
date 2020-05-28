@@ -1,11 +1,11 @@
 'use strict'
 const BlockchainSubstrate = require('./index.js')
-const LorenaCrypto = require('@lorena/crypto')
+// const LorenaCrypto = require('@lorena/crypto')
 const Utils = require('./utils')
 
-const crypto = new LorenaCrypto(true)
+// const crypto = new LorenaCrypto(true)
 
-const subscribe2RegisterEvents = (api, eventMethod) => {
+/* const subscribe2RegisterEvents = (api, eventMethod) => {
   return new Promise(resolve => {
     api.query.system.events(events => {
       events.forEach(record => {
@@ -23,11 +23,11 @@ const subscribe2RegisterEvents = (api, eventMethod) => {
       })
     })
   })
-}
+} */
 
-const did = crypto.random(16)
-const kZpair = crypto.newKeyPair()
-const pubKey = kZpair.publicKey
+// const did = crypto.random(16)
+// const kZpair = crypto.newKeyPair()
+// const pubKey = kZpair.publicKey
 const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 let alice, bob
 
