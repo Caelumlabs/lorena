@@ -234,30 +234,6 @@ module.exports = class DB extends DBInterface {
   }
 
   /**
-   * Insert a Contact
-   *
-   * @param {object} contact Contact details
-   * @returns {*} result
-   */
-  async insertContact (contact) {
-    const sql = 'INSERT OR REPLACE INTO contacts ' +
-      ' (matrixUser, network, roomId, type, name, alias, didType, status ) VALUES ' +
-      ' ($matrixUser, $network, $roomId, $type, $name, $alias, $didType, $status )'
-
-    const params = {
-      $matrixUser: contact.matrixUser,
-      $network: contact.network,
-      $roomId: contact.room_id || '',
-      $type: contact.type || 'contact',
-      $name: contact.name || '',
-      $alias: contact.alias,
-      $didType: contact.didType,
-      $status: 'invited'
-    }
-    return this.runSQL(sql, params)
-  }
-
-  /**
    * Updates contact as accepted
    *
    * @param {string} roomId Contact room ID
@@ -296,43 +272,6 @@ module.exports = class DB extends DBInterface {
   /**
    * Get contact from database by DID
    *
-   * @returns {object} Contact details
-   */
-  async getContact () {
-    return new Promise((resolve, reject) => {
-      this.getSQL('SELECT * FROM contacts WHERE type=\'me\'')
-        .then((contact) => {
-          resolve(contact)
-        })
-        .catch((e) => {
-          reject(e)
-        })
-    })
-  }
-
-  /**
-   * Get contact from database by DID
-   *
-   * @param {string} contactId DID
-   * @param {string} type Type of Key
-   * @param {number} number Index
-   * @returns {object} Contact details
-   */
-  getKey (contactId, type, number) {
-    return new Promise((resolve, reject) => {
-      this.getSQL('SELECT key, type FROM keys WHERE owner=? AND type=? AND keyNumber=? ', [contactId, type, number])
-        .then((keypair) => {
-          resolve((keypair.type === 'zenroom:keypair' || keypair.type === 'zenroom:public_key') ? JSON.parse(keypair.key) : keypair.key)
-        })
-        .catch((e) => {
-          reject(e)
-        })
-    })
-  }
-
-  /**
-   * Get contact from database by DID
-   *
    * @param {number} contactId COntact ID
    * @returns {object} Contact details
    */
@@ -365,20 +304,6 @@ module.exports = class DB extends DBInterface {
    */
   async getContactByRoomId (roomId) {
     return this.getSQL('SELECT * FROM contacts WHERE roomId=?', [roomId])
-  }
-
-  /**
-   * Adds a key.
-   *
-   * @param {string} owner contactId to add key to
-   * @param {string} type Type of key
-   * @param {string} key to add
-   * @param {number} number Index
-   * @returns {*} SQL result
-   */
-  async addKey (owner, type, key, number) {
-    const sql = "INSERT INTO keys (owner, keyNumber, status, type, key) VALUES (?,?,'active',?,?)"
-    return this.runSQL(sql, [owner, number, type, (typeof key === 'string') ? key : JSON.stringify(key)])
   }
 
   /**

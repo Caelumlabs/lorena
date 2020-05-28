@@ -8,9 +8,13 @@ const networks = ['lab', 'labdev', 'labtest', 'tgn', 'tgntest', 'bcn', 'bcntest'
  * @param {string} dataPath Data DIR Path
  * @returns {Promise} of the most recent DID as a string
  */
-const getDefaultDID = (dataPath) => {
+const getDefaultDID = async (dataPath) => {
   // Windows does not accept colons in filenames
   const regex = new RegExp(/^.*\.db$/g)
+  let options = checkEnvOptions()
+  options.dataPath = dataPath
+  options.newIDSpace = false
+
   const files = fs.readdirSync(dataPath)
     // filter out the ones that don't match the pattern
     .filter(file => regex.test(file))
@@ -22,10 +26,16 @@ const getDefaultDID = (dataPath) => {
       }
     })
   if (files.length > 0) {
+    // File in the database found.
     const sorted = files.sort(function (a, b) { return a.time - b.time })
-    // take the last file, strip the .db extension: that's the result
-    return (sorted[sorted.length - 1].name.split('.')[0])
-  } else return false
+    options.did = sorted[sorted.length - 1].name.split('.')[0]
+  } else {
+    // No Database found. Check if we can add a new DID.
+    options = checkInitOptions(options)
+    options.newIDSpace = true
+    await fs.promises.mkdir(dataPath, { recursive: true })
+  }
+  return options
 }
 
 /**
@@ -39,17 +49,14 @@ const checkEnvOptions = () => {
     'LORENA_DOMAIN' in process.env &&
     'MATRIX_PASSWORD' in process.env &&
     'PRIVATE_KEY_SEED' in process.env &&
-    process.env.LORENA_NETWORK in networks) {
+    networks.includes(process.env.LORENA_NETWORK)) {
     options = {
       network: process.env.LORENA_NETWORK,
       domain: process.env.LORENA_DOMAIN,
       password: process.env.MATRIX_PASSWORD,
       seed: process.env.PRIVATE_KEY_SEED
     }
-  } else {
-    console.log('Invalid Env values')
-    process.exit(1)
-  }
+  } else throw (new Error('Invalid Env values'))
   return options
 }
 
@@ -66,11 +73,8 @@ const checkInitOptions = (_options) => {
     options.did = process.env.INIT_DID
     options.tempSeed = process.env.INIT_SEED
     options.email = process.env.INIT_EMAIL
-  } else {
-    console.log('Env INIT values not found')
-    process.exit(1)
-  }
+  } else throw (new Error('Invalid INIT Env values'))
   return options
 }
 
-module.exports = { getDefaultDID, checkEnvOptions, checkInitOptions }
+module.exports = { getDefaultDID }

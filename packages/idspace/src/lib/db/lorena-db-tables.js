@@ -9,7 +9,8 @@ module.exports = [
         type CHAR(1) NOT NULL DEFAULT ('S'),
         value TEXT NOT NULL);`,
     `CREATE TABLE IF NOT EXISTS contacts (
-        id INTEGER PRIMARY KEY,
+        did TEXT PRIMARY KEY,
+        diddoc TEXT,
         matrixUser TEXT,
         network TEXT,
         roomId TEXT,
@@ -19,8 +20,6 @@ module.exports = [
         status TEXT,
         type TEXT,
         name TEXT,
-        alias TEXT,
-        didType TEXT,
         level NOT NULL DEFAULT(0)
     );`,
     `CREATE TABLE IF NOT EXISTS members (
@@ -63,9 +62,8 @@ module.exports = [
         status TEXT DEFAULT ('open')
     );`,
     `CREATE TABLE IF NOT EXISTS keys (
-        keyId INTEGER PRIMARY KEY,
-        owner INTEGER,
-        keyNumber INTEGER,
+        did TEXT PRIMARY KEY,
+        keyIndex INTEGER,
         createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         rotatedAt DATETIME,
         status TEXT,

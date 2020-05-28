@@ -1,7 +1,6 @@
 // Librtaries
 const { start, stop } = require('nact')
 var path = require('path')
-const fs = require('fs')
 
 // Lorena Components
 const Comms = require('@lorena/comms')
@@ -9,67 +8,160 @@ const Storage = require('@lorena/storage')
 const Crypto = require('@lorena/crypto')
 const Blockchain = require('@lorena/blockchain-substrate')
 const Credential = require('@lorena/credentials')
-
-// Blockchains supported
-const didResolver = require('@lorena-ssi/did-resolver')
+const didResolver = require('@lorena/resolver')
 
 // Local Components
 const DB = require('./db/lorena-db-sqlite')
 const DBM = require('./db/lorena-migrate-db')
 const MAIL = require('./utils/sendgrid')
-const Register = require('./lorena-register')
-const Recipe = require('./lorena-recipe')
+const ContactsApi = require('../api/contacts')
+// const Register = require('./lorena-register')
+// const Recipe = require('./lorena-recipe')
 
 // Debug
-var debug = require('debug')('did:debug:did')
-var error = require('debug')('did:error:did')
+var debug = require('debug')('idspace:debug:main')
+var error = require('debug')('idspace:error:main')
 
 /**
  * Javascript Class to interact with Lorena.
  */
 module.exports = class IDSpace {
   /**
+   * Builds an IDSpace Class.
+   *
+   * @param {object} options Options for the IDSpace.
+   * @returns {IDSpace} a new Instance of IDSpace
+   */
+  static async build (options) {
+    // Servers.
+    const substrateServer = didResolver.getInfoForNetwork(options.network).blockchainEndpoint
+    const matrixServer = didResolver.getInfoForNetwork(options.network).matrixEndpoint
+
+    // Context.
+    const context = {
+      blockchain: new Blockchain(substrateServer),
+      database: await new DB(options.did, path.join(options.dataPath, options.did + '.db')),
+      comms: await new Comms(matrixServer),
+      crypto: new Crypto(true),
+      storage: new Storage(),
+      mail: new MAIL(),
+      info: options,
+      nextBatch: ''
+    }
+    // New IDSpace.
+    if (options.newIDSpace) {
+      await context.database.init()
+    } else {
+      // Migration available?
+      const dbm = new DBM(options.did, options.dataPath)
+      const result = await dbm.doMigration()
+      debug('DB Migration: ' + result)
+    }
+    await context.blockchain.connect()
+    return new IDSpace(context)
+  }
+
+  /**
    * Creates a DID Object
    *
    * @param {*} options for creation
    */
-  constructor (options) {
+  constructor (context) {
     this.actors = []
-    this.options = options
-    this.context = {
-      database: false,
-      blockchain: false,
-      crypto: false,
-      info: {
-        name: '',
-        did: '',
-        domain: options.domain,
-        matrixUser: '',
-        network: options.network,
-        kZpair: false,
-        ...options
-      }
-    }
-
-    // choose the blockchain based on the DID method
-    this.context.blockchain = new Blockchain(this.substrateServer(this.context.info.network))
-
-    // Zenroom for this DID
-    this.context.crypto = new Crypto(true)
-    // Init Actors in the system.
+    this.context = context
     this.system = start()
   }
 
-  matrixServer (network = this.context.info.network) {
-    return didResolver.getInfoForNetwork(network).matrixEndpoint
+  /**
+   * Initializes a new IDSpace.
+   *
+   * @param {string} did DID to use
+   * @param {string} password Did Password
+   * @returns {*} this
+   */
+  async init () {
+    // Create DID
+    await this.initCrypto()
+
+    // Comms : MATRIX.
+    debug('Init Matrix')
+    const matrixUser = this.context.info.matrixUser
+    if (await this.context.comms.available(matrixUser)) {
+      await this.context.comms.register(matrixUser, this.context.info.password)
+    } else throw (new Error('Could not create a new Matrix user'))
+    await this.context.comms.connect(this.context.info.matrixUser, this.context.info.password)
+
+    // DIDDOC
+    const didDocument = new Credential.DidDoc(this.context.info.w3cDID)
+    this.context.info.diddoc = await this.context.storage.put(didDocument.subject)
+
+    // Blockchain.
+    // await this.context.blockchain.setKeyring(this.context.info.tempSeed)
+    // const newAccount = this.context.blockchain.getAddress(this.context.info.wallet.mnemonic)
+    // await this.context.blockchain.changeOwner(this.context.info.did, newAccount)
+    // await this.context.blockchain.transferAllTokens(newAccount)
+    await this.context.blockchain.setKeyring(this.context.info.wallet.mnemonic)
+    // await this.context.blockchain.registerDidDocument(this.context.info.did, this.context.info.diddoc)
+    // await this.context.blockchain.rotateKey(this.context.info.did, this.context.info.wallet.keyPair.publicKey)
+
+    // TODO: Change DID owner
+    // Move funds to new wallet
+    // Add first publicKey
+
+    // Blockchain.
+    await this.saveBasicSettings()
+
+    // Set the first admin
+    const secretCode = await this.context.crypto.random(32)
+    await this.context.database.set('first_admin', secretCode)
+    debug(`First Admin secret code: ${secretCode}`)
+
+    // Send EMAIL to the first admin with : DID, DIDDOC, secretCode
   }
 
-  matrixFederation (network = this.context.info.network) {
-    return `:${this.matrixServer(network).split('://')[1]}`
+  /**
+   * Init Crypto
+   */
+  async initCrypto (did) {
+    debug('Crypto : new DID & keypair')
+    // Get matrix user
+    const matrixUser = this.context.crypto.random(12)
+    this.context.info.matrixUser = matrixUser.toLowerCase()
+    this.context.info.wallet = this.context.crypto.newKeyPair()
+    this.context.info.w3cDID = 'did:lor:' + this.context.info.network + ':' + this.context.info.did
   }
 
-  substrateServer (network = this.context.info.network) {
-    return didResolver.getInfoForNetwork(network).blockchainEndpoint
+  /**
+   * Saves basic information about the DID
+   *
+   * @param {string} alias Name for the subject
+   */
+  async saveBasicSettings () {
+    const info = this.context.info
+    await ContactsApi.insertContact(this.context, {
+      did: info.did,
+      diddoc: info.diddoc,
+      matrixUser: info.matrixUser,
+      network: info.network,
+      type: 'me',
+      status: 'accepted'
+    })
+    await ContactsApi.addKey(this.context, info.did, 'crypto:keypair', info.wallet, 1)
+    await this.context.database.set('next_batch', '')
+  }
+
+  /**
+   * Open
+   */
+  async open () {
+    // await this.initRegister()
+    const contact = await ContactsApi.getContact(this.context, this.context.info.did)
+    this.context.info.diddoc = contact.diddoc
+    this.context.info.matrixUser = contact.matrixUser
+    this.context.info.wallet = await ContactsApi.getKey(this.context, this.context.info.did, 'crypto:keypair', 1)
+    await this.context.comms.connect(this.context.info.matrixUser, this.context.info.password)
+    await this.context.blockchain.setKeyring(this.context.info.wallet.mnemonic)
+    this.nextBatch = await this.context.database.get('next_batch')
   }
 
   /**
@@ -91,193 +183,6 @@ module.exports = class IDSpace {
     debug('Recipes : ' + actorsPath)
     await this.context.register.loadActors(actorsPath)
   }
-
-  /**
-   * Database - Open sqlite3 ID database
-   *
-   * @param {string} did did to open
-   * @param {boolean} init Create new Database
-   */
-  async openDB (did = this.context.info.did, init = false) {
-    debug('Sqlite : Open DB')
-    if (init === true) {
-      // Make sure directory data/ exists
-      await fs.promises.mkdir(this.options.dataPath, { recursive: true })
-    }
-    const databasePath = path.join(this.options.dataPath, did + '.db')
-    this.context.database = await new DB(did, databasePath)
-    if (init === true) {
-      // Create tables
-      await this.context.database.init()
-    } else {
-      // check if DB migration must be done
-      const dbm = new DBM(did, this.options.dataPath)
-      const result = await dbm.doMigration()
-      if (result) {
-        debug('DB: Migration done')
-      } else {
-        debug('DB: No migration needed')
-      }
-    }
-  }
-
-  /**
-   * Open Blockchain connection
-   */
-  async openBlockchain () {
-    debug('Blockchain : Open Connection')
-    await this.context.blockchain.connect()
-  }
-
-  /**
-   * Set keyring for database
-   */
-  async setKeyring () {
-    debug('Blockchain : Set Keyring')
-    await this.context.blockchain.setKeyring(this.options.seed)
-  }
-
-  /**
-   * Inits Matrix user.
-   *
-   * @param {string=} matrixServer Matrix server URL
-   */
-  async initComms (matrixServer = this.matrixServer()) {
-    debug('Matrix : Connect User to ' + matrixServer)
-    this.context.comms = await new Comms(matrixServer)
-  }
-
-  /**
-   * Adds a Matrix user.
-   *
-   * @param {string} matrixUser User handler
-   * @param {string} password Did Password
-   * @returns {boolean} success
-   */
-  async newCommsUser (matrixUser, password) {
-    debug(`New matrix user: ${matrixUser}`)
-    // Check if user already exist, if not create it.
-    if (await this.context.comms.available(matrixUser)) {
-      debug(`Registering matrix user: ${matrixUser}`)
-      await this.context.comms.register(matrixUser, password)
-      debug(`Registered matrix user: ${matrixUser}`)
-      return (true)
-    } else {
-      debug(`Matrix user ${matrixUser} not available`)
-      return (false)
-    }
-  }
-
-  /**
-   * Logins a Matrix user.
-   *
-   * @param {string} matrixUser Matrix user ID
-   * @param {string} password password
-   * @returns {string} Matrix access token
-   */
-  async loginCommsUser (matrixUser, password) {
-    debug(`Login matrix user : ${matrixUser}`)
-    return this.context.comms.connect(matrixUser, password)
-  }
-
-  /**
-   * Init Crypto
-   */
-  async initCrypto (did) {
-    debug('Zenroom : new DID & keypair')
-    // Get matrix user
-    const matrixUser = await this.context.zenroom.random(12)
-    this.context.info.matrixUser = matrixUser.toLowerCase()
-    this.context.info.kZpair = this.context.crypto.newKeyPair()
-    this.context.info.did = 'did:lor:' + this.context.info.network + ':' + did
-    debug('kZpub : ' + this.context.info.kZpair[did].keypair.public_key)
-  }
-
-  /**
-   * SaveDIDObject
-   *
-   * @returns {*} new diddoc or error
-   **/
-  async saveDIDObject () {
-    debug('DIDDocument to Matrix : Connect')
-    const didDocument = new Credential.DidDoc('did:lor:lab:1001')
-    const didDocHash = await this.context.storage.put(didDocument.subject)
-    // Returns the hash of the diddoc
-    return (didDocHash)
-  }
-
-  /**
-   * Creates a DID
-   *
-   * @param {string} did DID to use
-   * @param {string} password Did Password
-   * @returns {*} this
-   */
-  async new (did, password) {
-    // Create DID
-    await this.initCrypto(did)
-    // Create & Open Database.
-    await this.openDB(did, true)
-    // Init IPFS/MAIL
-    this.context.storage = new Storage()
-    this.context.mail = new MAIL()
-
-    // Init Comms and create Matrix User.
-    await this.initComms()
-    await this.newCommsUser(this.context.info.matrixUser, password)
-    await this.loginCommsUser(this.context.info.matrixUser, password)
-    // Create Did Document; TODO: save to Matrix
-    const diddocHash = await this.saveDIDObject()
-    await this.openBlockchain()
-    await this.setKeyring()
-    const didParts = this.context.info.did.split(':')
-
-    // TODO: Change DID owner
-    // Move funds to new wallet
-    // Add first publicKey
-    debug(`Register DID in the Blockchain: ${didParts[3]}`)
-    // await this.context.blockchain.registerDid(didParts[3], this.context.info.kZpair[this.context.info.did].keypair.public_key)
-
-    debug(`Register DIDDoc in the Blockchain: ${didParts[3]}, diddocHash`)
-    // await this.context.blockchain.registerDidDocument(didParts[3], diddocHash)
-
-    await this.saveBasicSettings(alias)
-
-    // Set the first admin
-    const secretCode = await this.context.zenroom.random(32)
-    await this.context.database.set('first_admin', secretCode)
-    debug(`First Admin secret code: ${secretCode}`)
-    this.nextBatch = ''
-
-    // Key info for the end of the log
-    debug(`Matrix user: ${this.context.comms.matrixUser}`)
-    debug(`Created DID: ${this.context.info.did}`)
-
-    return this
-  }
-
-  /**
-   * Saves basic information about the DID
-   *
-   * @param {string} alias Name for the subject
-   */
-  async saveBasicSettings () {
-    debug('DID : Basic Settings')
-    const contactId = await this.context.database.insertContact({
-      did: this.context.info.did,
-      matrixUser: this.context.info.matrixUser,
-      network: this.context.info.network,
-      didType: this.options.didType,
-      type: 'me'
-    })
-
-    // choose the blockchain based on the DID method
-    await this.context.database.addKey(contactId, 'substrate', this.options.seed, 1)
-    // await this.context.database.addKey(contactId, 'maxonrow', this.options.seed, 1)
-    await this.context.database.addKey(contactId, 'crypto:keypair', this.context.info.kZpair, 1)
-    await this.context.database.set('next_batch', '')
-  }
-
   /**
    * Deletes all information for a DID
    *
@@ -299,40 +204,6 @@ module.exports = class IDSpace {
     })
     this.context.database.delete()
     debug(`DID : Deleted ${did}`)
-  }
-
-  /**
-   * Open
-   *
-   * @param {string} did for matrix
-   * @param {string} password for matrix
-   */
-  async open (did, password) {
-    await this.openDB(did)
-    await this.initRegister()
-    await this.initAuth()
-
-    this.context.ipfs = new Storage()
-    this.context.mail = new MAIL()
-    this.context.info = await this.context.database.getContact()
-    this.context.info.did = did
-
-    // choose the blockchain based on the DID method
-    this.options.seed = await this.context.database.getKey(this.context.info.id, 'substrate', 1)
-    this.context.info.kZpair = await this.context.database.getKey(this.context.info.id, 'crypto:keypair', 1)
-    // this.options.seed = await this.context.database.getKey(this.context.info.id, 'maxonrow', 1)
-    this.nextBatch = await this.context.database.get('next_batch')
-    await this.initComms()
-    await this.loginCommsUser(this.context.info.matrixUser, password)
-    await this.openBlockchain()
-    await this.setKeyring()
-
-    // report the secret code if still unclaimed
-    const secretCode = await this.context.database.get('first_admin')
-    if (secretCode) {
-      debug(`First Admin secret code: ${secretCode}`)
-    }
-    debug(`${did} - Listening...`)
   }
 
   /**

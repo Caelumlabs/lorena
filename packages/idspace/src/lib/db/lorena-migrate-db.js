@@ -1,14 +1,24 @@
 const fs = require('fs')
 const path = require('path')
-const os = require('check-os')
-
 var DBTables = require('./lorena-db-tables')
 const DB = require('./lorena-db-sqlite')
 const lex = require('./lorena-db-lexer').lex
-const Utils = require('../utils/utils')
 
 var debug = require('debug')('did:debug:db')
 var error = require('debug')('did:error:db')
+
+const timeToFormattedTime = (timestamp) => {
+  var time = new Date(timestamp)
+  var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  var year = time.getFullYear()
+  var month = months[time.getMonth()]
+  var date = time.getDate()
+  var hour = time.getHours()
+  var min = time.getMinutes()
+  var sec = time.getSeconds()
+  var timeString = year + '-' + month + '-' + date + '-' + hour + min + sec
+  return timeString
+}
 
 /**
  * Javascript Class to migrate Database.
@@ -425,17 +435,7 @@ module.exports = class DBMigrator {
       debug('Source DB directory does not exist: ' + this.dbPath)
       return false
     }
-
-    // Make sure database file
-    // Rename DBName if OS is Windows
-    // Windows does not support colons in filenames
-    let DBName
-    if (os.isWindows) {
-      DBName = this.did.replace(/:/g, '_')
-    } else {
-      DBName = this.did
-    }
-    const databasePath = path.join(this.dbPath, DBName + '.db')
+    const databasePath = path.join(this.dbPath, this.did + '.db')
     try {
       await fs.promises.access(databasePath)
     } catch (error) {
@@ -464,16 +464,8 @@ module.exports = class DBMigrator {
    * @returns {object} destination database
    */
   async createAndOpenTargetDB () {
-    // Check DBName for OS Windows
-    // Windows does not support colons in filenames
-    let DBName
-    if (os.isWindows) {
-      DBName = this.did.replace(/:/g, '_')
-    } else {
-      DBName = this.did
-    }
     const now = new Date()
-    const dstTempName = '$$$' + DBName + '$$$-' + Utils.timeToFormattedTime(now)
+    const dstTempName = '$$$' + this.did + '$$$-' + timeToFormattedTime(now)
     // make sure tmp directory exists opr create it
     const tmpDirName = path.join(this.dbPath, '/tmp')
     await fs.promises.mkdir(tmpDirName, { recursive: true })
@@ -531,7 +523,7 @@ module.exports = class DBMigrator {
     // be done at low-level
     // TODO: Explore better solution through SQLite3 modifications
     const now = new Date()
-    let bckName = '-BckUp-' + Utils.timeToFormattedTime(now)
+    let bckName = '-BckUp-' + timeToFormattedTime(now)
 
     const bckExtension = path.extname(this.srcDBPath)
     const bckFileName = path.basename(this.srcDBPath, bckExtension)
