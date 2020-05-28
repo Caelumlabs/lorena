@@ -33,11 +33,11 @@ const main = async () => {
       let count = 0
       const times = 2
       while (count++ < times) {
-        debug("Call times")
         await idspace.listen()
       }
-      debug("Close")
-      // Close.
+
+      // Close IDSpace.
+      debug('Close IDspace')
       idspace.close()
       process.exit(1)
     })
