@@ -39,9 +39,9 @@ const getDefaultDID = async (dataPath) => {
 }
 
 /**
- * Checks needed Enviroment Variables.
+ * Checks needed Environment Variables.
  *
- * @returns {obkect} All options.
+ * @returns {object} All options.
  */
 const checkEnvOptions = () => {
   let options = {}
@@ -61,7 +61,7 @@ const checkEnvOptions = () => {
 }
 
 /**
- * Checks needed INIT Enviroment Variables.
+ * Checks needed INIT Environment Variables.
  *
  * @returns {object} All options.
  */
