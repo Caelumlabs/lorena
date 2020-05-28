@@ -51,7 +51,7 @@ test('Should use a SURI as a key', async () => {
 })
 
 test('Sohuld send Tokens from Alice to Bob', async () => {
-  jest.setTimeout(30000);
+  jest.setTimeout(30000)
   bob = blockchain.getAddress('//Bob')
   expect(bob).toEqual('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty')
   const ammount1 = await blockchain.addrState(alice)
@@ -61,7 +61,6 @@ test('Sohuld send Tokens from Alice to Bob', async () => {
 })
 
 test('Should Save a DID to Blockchain', async () => {
-/*
   await blockchain.registerDid(did, pubKey)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
   const registeredDid = JSON.parse(subs)
@@ -90,7 +89,6 @@ test('Should Save a DID to Blockchain', async () => {
   expect(keyRegister.valid_from.isEmpty).toEqual(false)
   // Key `valid_to` should be 0 representing an empty value
   expect(keyRegister.valid_to.isEmpty).toEqual(true)
-*/
 })
 
 test('Should Rotate a Key', async () => {})
@@ -136,5 +134,5 @@ describe('Lorena Substrate Tests', function () {
   })
 */
 test('should clean up after itself', () => {
-    blockchain.disconnect()
-  })
+  blockchain.disconnect()
+})
