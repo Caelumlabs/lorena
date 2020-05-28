@@ -8,6 +8,7 @@ const baseCredential = require('../credentials/credential.json')
  * @param {object} signature Signature of the Credential
  * @param {string} issuer DID for the Identity issuing the credential
  * @param {string} type Encryption Type
+ * @returns {*} signedCredential
  */
 const signCredential = (credential, signature, issuer, type) => {
   const signedCredential = baseCredential

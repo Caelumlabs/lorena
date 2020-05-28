@@ -20,7 +20,7 @@ test('KeyPair generation: ', () => {
 })
 
 test('Should create a KeyPair from a Seed', () => {
-  const bob  = crypto.keyPairFromSeed(alice.mnemonic)
+  const bob = crypto.keyPairFromSeed(alice.mnemonic)
   expect(alice.keyPair.secretKey.toString).toEqual(bob.keyPair.secretKey.toString)
 })
 

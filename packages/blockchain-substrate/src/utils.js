@@ -3,7 +3,8 @@
 class Utils {
   /**
    * Converts Hex to Base64
-   * @param {string} str
+   *
+   * @param {string} str source
    * @returns {object} Base64 encoded from Hex
    */
   static hexToBase64 (str) {
@@ -12,7 +13,8 @@ class Utils {
 
   /**
    * Converts Base64 to Hex
-   * @param {string} str
+   *
+   * @param {string} str source
    * @returns {object} Hex encoded from Base64
    */
   static base64ToHex (str) {
@@ -21,7 +23,8 @@ class Utils {
 
   /**
    * Converts to UTF8 Array
-   * @param {string} str
+   *
+   * @param {string} str source
    * @returns {object} UTF8 Array
    */
   static toUTF8Array (str) {

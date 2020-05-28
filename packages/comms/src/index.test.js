@@ -1,14 +1,8 @@
 const Comms = require('./index')
-const fs = require('fs')
-const path = require('path')
-const util = require('util')
 const uuidv4 = require('uuid/v4')
 
-// Convert fs.readFile into Promise version of same
-const readFile = util.promisify(fs.readFile)
-
 let token = ''
-let roomId, contentUri
+let roomId
 var matrix = new Comms('https://labdev.matrix.lorena.tech')
 const matrixUser = uuidv4()
 const password = uuidv4()
