@@ -23,7 +23,7 @@ test('Organization: should have full info', () => {
   expect(organization.subject.foundingDate).toEqual('2018-05-12')
 
   const location = new cred.Location()
-  location.streetAddress('Reina Cristina 9, ppal')
+  location.streetAddress('Reina Cristina 9, principal')
   location.addressLocality('Sitges')
   location.postalCode('08001')
   location.addressRegion('Barcelona')
@@ -31,7 +31,7 @@ test('Organization: should have full info', () => {
   organization.location(location)
 
   expect(organization.subject.location['@type']).toEqual('PostalAddress')
-  expect(organization.subject.location.streetAddress).toEqual('Reina Cristina 9, ppal')
+  expect(organization.subject.location.streetAddress).toEqual('Reina Cristina 9, principal')
   expect(organization.subject.location.addressLocality).toEqual('Sitges')
   expect(organization.subject.location.postalCode).toEqual('08001')
   expect(organization.subject.location.addressRegion).toEqual('Barcelona')

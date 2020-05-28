@@ -12,11 +12,10 @@
     "@polkadot/util-crypto": "^2.10.1"
   },
   "scripts": {
-    "test": "jest --silent ",
-    "coverage": "jest --coverage",
+    "test": "jest --silent",
+    "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"
-    
   },
   "husky": {
     "hooks": {

@@ -6,6 +6,12 @@
   "author": "Alex Puig",
   "license": "MIT",
   "private": true,
+  "scripts": {
+    "test": "jest --silent --passWithNoTests",
+    "coverage": "jest --coverage --passWithNoTests",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix"
+  },
   "dependencies": {
     "@lorena/blockchain-substrate": "^0.0.0",
     "@lorena/credentials": "^0.0.0",

@@ -6,6 +6,12 @@
   "author": "Chuck Ledux",
   "license": "MIT",
   "private": false,
+  "scripts": {
+    "test": "jest --silent",
+    "coverage": "jest --coverage",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix"
+  },
   "dependencies": {
     "@lorena/blockchain-substrate": "^0.0.0",
     "@lorena/storage": "^0.0.0",
