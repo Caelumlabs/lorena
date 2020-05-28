@@ -16,6 +16,10 @@
     "check-packages": "yarn clean && yarn compile && yarn test && yarn lint"
   },
   "devDependencies": {
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.1",
+    "@babel/node": "^7.10.1",
+    "@babel/preset-env": "^7.10.1",
     "eslint": "^7.1.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-chai-friendly": "^0.6.0",
