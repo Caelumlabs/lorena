@@ -1,4 +1,4 @@
-// Librtaries
+// Libraries
 const { start, stop } = require('nact')
 var path = require('path')
 
@@ -16,7 +16,7 @@ const DBM = require('./db/lorena-migrate-db')
 const MAIL = require('./utils/sendgrid')
 const ContactsApi = require('../api/contacts')
 // const Register = require('./lorena-register')
-// const Recipe = require('./lorena-recipe')
+const Recipe = {} // const Recipe = require('./lorena-recipe')
 
 // Debug
 var debug = require('debug')('idspace:debug:main')
@@ -164,7 +164,7 @@ module.exports = class IDSpace {
    * Loads initial Recipes.
    */
   async initRegister () {
-    this.context.register = new Register(this.system, this.context.database, true)
+    // this.context.register = new Register(this.system, this.context.database, true)
     // first load system recipes
     await this.loadActors(path.join(__dirname, '../recipes_installed'))
     await this.loadActors(path.join(__dirname, '../recipes'))
@@ -178,6 +178,29 @@ module.exports = class IDSpace {
   async loadActors (actorsPath) {
     debug('Recipes : ' + actorsPath)
     await this.context.register.loadActors(actorsPath)
+  }
+
+  /**
+   * Deletes all information for a DID
+   *
+   * @param {string} did Did
+   * @param {string} password Did Password
+   */
+  async delete (did, password) {
+    debug(`DID : Deleting ${did}`)
+    await this.openDB(did)
+    this.context.info = await this.context.database.getContact()
+    await this.initComms()
+    debug(`Matrix user: ${this.context.info.matrixUser}`)
+    await this.loginCommsUser(this.context.info.matrixUser, password)
+    debug('DID : Delete rooms')
+    const rooms = await this.context.comms.joinedRooms()
+    rooms.forEach(async (roomId) => {
+      await this.context.comms.leaveRoom(roomId)
+      debug('Leave room : ' + roomId)
+    })
+    this.context.database.delete()
+    debug(`DID : Deleted ${did}`)
   }
 
   /**

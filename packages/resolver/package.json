@@ -3,9 +3,15 @@
   "version": "0.0.0",
   "description": "Lorena DID Resolver",
   "main": "src/index.js",
-  "author": "Chuck Ledux",
+  "author": "Caelum Labs",
   "license": "MIT",
   "private": false,
+  "scripts": {
+    "test": "jest --silent",
+    "coverage": "jest --coverage",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix"
+  },
   "dependencies": {
     "@lorena/blockchain-substrate": "^0.0.0",
     "@lorena/storage": "^0.0.0",
