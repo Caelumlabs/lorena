@@ -24,15 +24,27 @@ const main = async () => {
       }
       debug(`${idspace.context.info.did}`)
       debug('Listening...')
+
+      // Health Check.
+      const health = new HealthChecker(idspace.context.info.did, 23246)
+      health.listen()
+
+      // Handle events.
+      let count = 0
+      const times = 2
+      while (count++ < times) {
+        debug("Call times")
+        await idspace.listen()
+      }
+      debug("Close")
+      // Close.
+      idspace.close()
+      process.exit(1)
     })
     .catch((e) => {
       error(e)
       process.exit(1)
     })
-  // Run the IDSpace
-  // const health = new HealthChecker(this.did, 23246)
-  // health.listen()
-  // idspace.run()
 }
 
 main()

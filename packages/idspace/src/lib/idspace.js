@@ -104,10 +104,6 @@ module.exports = class IDSpace {
     // await this.context.blockchain.registerDidDocument(this.context.info.did, this.context.info.diddoc)
     // await this.context.blockchain.rotateKey(this.context.info.did, this.context.info.wallet.keyPair.publicKey)
 
-    // TODO: Change DID owner
-    // Move funds to new wallet
-    // Add first publicKey
-
     // Blockchain.
     await this.saveBasicSettings()
 
@@ -123,7 +119,7 @@ module.exports = class IDSpace {
    * Init Crypto
    */
   async initCrypto (did) {
-    debug('Crypto : new DID & keypair')
+    debug('Crypto : new Matrix user & Wallet')
     // Get matrix user
     const matrixUser = this.context.crypto.random(12)
     this.context.info.matrixUser = matrixUser.toLowerCase()
@@ -182,28 +178,6 @@ module.exports = class IDSpace {
   async loadActors (actorsPath) {
     debug('Recipes : ' + actorsPath)
     await this.context.register.loadActors(actorsPath)
-  }
-  /**
-   * Deletes all information for a DID
-   *
-   * @param {string} did Did
-   * @param {string} password Did Password
-   */
-  async delete (did, password) {
-    debug(`DID : Deleting ${did}`)
-    await this.openDB(did)
-    this.context.info = await this.context.database.getContact()
-    await this.initComms()
-    debug(`Matrix user: ${this.context.info.matrixUser}`)
-    await this.loginCommsUser(this.context.info.matrixUser, password)
-    debug('DID : Delete rooms')
-    const rooms = await this.context.comms.joinedRooms()
-    rooms.forEach(async (roomId) => {
-      await this.context.comms.leaveRoom(roomId)
-      debug('Leave room : ' + roomId)
-    })
-    this.context.database.delete()
-    debug(`DID : Deleted ${did}`)
   }
 
   /**
