@@ -55,7 +55,7 @@ test('should use matrix as a comms interface to Lorena', async done => {
     expect(msg.length).toBeGreaterThan(10)
     endTest(0)
   })
-  m1.disconnect(u1, p1)
+  m1.disconnect()
 
   // Tests with User 2
   events = await m2.connect(u2, p2)
@@ -83,19 +83,19 @@ test('should use matrix as a comms interface to Lorena', async done => {
   expect(rooms).toBeDefined()
   expect(rooms.length).toBe(1)
   expect(rooms[0]).toEqual(newRoomId)
-  m2.disconnect(u1, p1)
+  m2.disconnect()
 
   events = await m1.connect(u1, p1)
   events.once('contact-accepted', (msg) => {
     endTest(3)
   })
 
-  m1.disconnect(u1, p1)
+  m1.disconnect()
 })
 
 /*
 test('should return all matrix rooms', async () => {
-  
+
 })
 
 test('should leave a room', async () => {
