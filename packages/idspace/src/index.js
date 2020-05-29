@@ -26,8 +26,8 @@ const main = async () => {
       debug('Listening...')
 
       // Health Check.
-      const health = new HealthChecker(idspace.context.info.did, 23246)
-      health.listen()
+      // const health = new HealthChecker(idspace.context.info.did, 23246)
+      // health.listen()
 
       // Handle events.
       await idspace.listen()
