@@ -1,4 +1,4 @@
-const Matrix = require('@lorena/comms')
+const Comms = require('@lorena/comms')
 const Zenroom = require('@lorena/crypto')
 const IpfsClient = require('ipfs-http-client')
 const Credential = require('@lorena/credentials')
@@ -22,7 +22,7 @@ module.exports = class Lorena extends EventEmitter {
     if (opts.debug) debug.enabled = true
     this.zenroom = new Zenroom(opts.silent || false)
     this.wallet = walletHandler
-    this.matrix = false
+    this.comms = false
     this.recipeId = 0
     this.queue = []
     this.processing = false
@@ -52,13 +52,13 @@ module.exports = class Lorena extends EventEmitter {
       this.wallet.info.type = info.type
       this.wallet.info.blockchainServer = info.blockchainEndpoint
       this.wallet.info.matrixServer = info.matrixEndpoint
-      this.matrix = new Matrix(this.wallet.info.matrixServer)
+      this.comms = new Comms(this.wallet.info.matrixServer)
 
       this.wallet.info.matrixUser = this.zenroom.random(12).toLowerCase()
       this.wallet.info.matrixPass = this.zenroom.random(12)
-      this.matrix.available(this.wallet.info.matrixUser).then((available) => {
+      this.comms.available(this.wallet.info.matrixUser).then((available) => {
         if (available) {
-          return this.matrix.register(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
+          return this.comms.register(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
         } else {
           reject(new Error('Could not init wallet'))
         }
@@ -164,17 +164,16 @@ module.exports = class Lorena extends EventEmitter {
     else if (this.wallet.info.matrixUser) {
       try {
         // Connect to Matrix.
-        this.matrix = new Matrix(this.wallet.info.matrixServer)
-        await this.matrix.connect(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
+        this.comms = new Comms(this.wallet.info.matrixServer)
+        const connection = await this.comms.connect(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
 
-        // Ready to use events.
-        const events = await this.matrix.events('')
-        this.nextBatch = events.nextBatch
+        connection.on('contact-incoming', this.onContactIncoming)
+        connection.on('contact-add', this.onContactAdd)
+        connection.on('msg-notify', this.onMsgNotify)
+        this.nextBatch = connection.nextBatch
         this.ready = true
         this.processQueue()
         this.emit('ready')
-        this.once('receiveMessages', this.receiveMessages)
-        this.emit('receiveMessages')
         return true
       } catch (error) {
         debug('%O', error)
@@ -190,63 +189,43 @@ module.exports = class Lorena extends EventEmitter {
   disconnect () {
     this.emit('disconnecting')
     this.disconnecting = true
+    if (this.comms) {
+      this.comms.disconnect()
+    }
     LorenaDidResolver.disconnectAll()
   }
 
-  /**
-   * Loop through received messages.
-   */
-  async receiveMessages () {
-    if (this.disconnecting) {
-      return
-    }
-    this.once('receiveMessages', this.receiveMessages)
-    let parsedElement
-    const events = await this.getMessages()
-    this.processQueue()
-    for await (const element of events) {
-      try {
-        switch (element.type) {
-          case 'contact-incoming':
-            // add(collection, value)
-            this.wallet.add('links', {
-              linkId: element.linkId,
-              roomId: element.roomId,
-              alias: '',
-              did: '',
-              matrixUser: element.sender,
-              status: 'incoming'
-            })
-            await this.matrix.acceptConnection(element.roomId)
-            this.emit('contact-incoming', element.sender)
-            this.emit('change')
-            break
-          case 'contact-add':
-            // update(collection, where, value) value can be partial
-            this.wallet.update('links', { linkId: element.linkId }, {
-              status: 'connected'
-            })
-            // await this.matrix.acceptConnection(element.roomId)
-            this.emit('link-added', element.sender)
-            this.emit('change')
-            break
-          default:
-            parsedElement = JSON.parse(element.payload.body)
-            parsedElement.linkId = element.linkId
-            this.emit(`message:${parsedElement.recipe}`, parsedElement)
-            this.emit('message', parsedElement)
-            if (parsedElement.recipe === 'member-notify') {
-              this.handleMemberNotify(parsedElement)
-            }
-            break
-        }
-      } catch (error) {
-        debug('%O', error)
-        this.emit('warning', 'element unknown')
-      }
-    }
-    if (!this.disconnecting) {
-      this.emit('receiveMessages')
+  onContactIncoming (element) {
+    // 'contact-incoming':
+    this.wallet.add('links', {
+      linkId: element.linkId,
+      roomId: element.roomId,
+      alias: '',
+      did: '',
+      matrixUser: element.sender,
+      status: 'incoming'
+    })
+    this.comms.acceptConnection(element.roomId)
+    this.emit('contact-incoming', element.sender)
+    this.emit('change')
+  }
+
+  onContactAdd (element) {
+    // case 'contact-add':
+    this.wallet.update('links', { linkId: element.linkId }, {
+      status: 'connected'
+    })
+    this.emit('link-added', element.sender)
+    this.emit('change')
+  }
+
+  onMsgNotify (element) {
+    const parsedElement = JSON.parse(element.payload.body)
+    parsedElement.linkId = element.linkId
+    this.emit(`message:${parsedElement.recipe}`, parsedElement)
+    this.emit('message', parsedElement)
+    if (parsedElement.recipe === 'member-notify') {
+      this.handleMemberNotify(parsedElement)
     }
   }
 
@@ -255,7 +234,7 @@ module.exports = class Lorena extends EventEmitter {
    *
    * @param {*} element event to process
    */
-  async handleMemberNotify (element) {
+  handleMemberNotify (element) {
     debug('handleMemberNotify: ', element)
     this.wallet.data.credentials[0] = element.payload.credential
     // TODO: Update credential based on credential ID
@@ -271,7 +250,7 @@ module.exports = class Lorena extends EventEmitter {
    */
   async getMessages () {
     try {
-      const result = await this.matrix.events(this.nextBatch)
+      const result = await this.comms.events(this.nextBatch)
       this.nextBatch = result.nextBatch
       return (result.events)
     } catch (e) {
@@ -288,7 +267,7 @@ module.exports = class Lorena extends EventEmitter {
     try {
       if (this.queue.length > 0) {
         const sendPayload = JSON.stringify(this.queue.pop())
-        await this.matrix.sendMessage(this.wallet.info.roomId, 'm.action', sendPayload)
+        await this.comms.sendMessage(this.wallet.info.roomId, 'm.action', sendPayload)
       }
       if (this.queue.length === 0) {
         this.processing = false
@@ -341,7 +320,7 @@ module.exports = class Lorena extends EventEmitter {
       this.processing = true
       const sendPayload = JSON.stringify(action)
       const link = this.wallet.get('links', { linkId })
-      await this.matrix.sendMessage(link.roomId, 'm.action', sendPayload)
+      await this.comms.sendMessage(link.roomId, 'm.action', sendPayload)
     } else {
       this.queue.push(action)
     }
@@ -453,7 +432,7 @@ module.exports = class Lorena extends EventEmitter {
       ...options
     }
     return new Promise((resolve, reject) => {
-      this.matrix.createConnection(link.roomName, matrixUserID)
+      this.comms.createConnection(link.roomName, matrixUserID)
         .then((roomId) => {
           link.roomId = roomId
           this.wallet.add('links', link)
@@ -614,7 +593,7 @@ module.exports = class Lorena extends EventEmitter {
   async deleteLink (linkId) {
     return new Promise((resolve) => {
       const link = this.wallet.get('links', { linkId })
-      this.matrix.leaveRoom(link.roomId)
+      this.comms.leaveRoom(link.roomId)
         .then(() => {
           this.wallet.remove('links', { linkId })
           this.emit('change')
