@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@lorena/comms": "^0.0.0",
-    "@lorena/credential": "^0.0.0",
+    "@lorena/credentials": "^0.0.0",
     "@lorena/crypto": "^0.0.0",
     "@lorena/resolver": "^0.0.0",
     "@lorena/wallet": "^0.0.0"
