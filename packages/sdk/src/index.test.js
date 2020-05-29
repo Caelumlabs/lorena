@@ -96,7 +96,7 @@ test('should connect', async () => {
   expect(result).toBe(true)
 })
 
-test.skip('should unlock wallet', (done) => {
+test('should unlock wallet', done => { // eslint-disable-line jest/no-test-callback
   lorena.on('unlocked', () => {
     expect(true).toBe(true)
     done()
@@ -104,7 +104,7 @@ test.skip('should unlock wallet', (done) => {
   lorena.unlock(password)
 })
 
-test.skip('should lock wallet', (done) => {
+test('should lock wallet', done => { // eslint-disable-line jest/no-test-callback
   lorena.on('locked', () => {
     expect(true).toBe(true)
     done()
