@@ -1,12 +1,7 @@
 import Lorena from '../index.js'
 import Wallet from '@lorena-ssi/wallet-lib'
-import chai, { expect } from 'chai'
 import { describe, it } from 'mocha'
 import { promises as fsPromises } from 'fs'
-// Configure chai
-chai.use(require('chai-as-promised'))
-chai.use(require('chai-spies'))
-chai.use(require('chai-uuid'))
 
 const importWallet = async (path) => {
   try {
