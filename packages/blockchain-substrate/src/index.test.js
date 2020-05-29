@@ -1,11 +1,11 @@
 'use strict'
 const BlockchainSubstrate = require('./index.js')
-// const LorenaCrypto = require('@lorena/crypto')
+const LorenaCrypto = require('@lorena/crypto')
 const Utils = require('./utils')
 
-// const crypto = new LorenaCrypto(true)
+const crypto = new LorenaCrypto(true)
 
-/* const subscribe2RegisterEvents = (api, eventMethod) => {
+const subscribe2RegisterEvents = (api, eventMethod) => {
   return new Promise(resolve => {
     api.query.system.events(events => {
       events.forEach(record => {
@@ -23,13 +23,16 @@ const Utils = require('./utils')
       })
     })
   })
-} */
+}
 
-// const did = crypto.random(16)
-// const kZPair = crypto.newKeyPair()
-// const pubKey = kZPair.publicKey
-const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 let alice, bob
+let blockchain
+let did
+
+beforeAll(() => {
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  did = crypto.random(16)
+})
 
 test('should have good format conversion', () => {
   const base64 = 'Wldvd1pqVmZWbEoxYVdaWFdGOW5ja05I'
@@ -41,6 +44,7 @@ test('should have good format conversion', () => {
 })
 
 test('should Connect', async () => {
+  jest.setTimeout(50000)
   await blockchain.connect()
 })
 
@@ -50,6 +54,7 @@ test('Should use a SURI as a key', async () => {
 })
 
 test('Should send Tokens from Alice to Bob', async () => {
+  jest.setTimeout(30000)
   bob = blockchain.getAddress('//Bob')
   expect(bob).toEqual('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty')
   const amount1 = await blockchain.addrState(alice)
@@ -59,8 +64,7 @@ test('Should send Tokens from Alice to Bob', async () => {
 })
 
 test('Should Save a DID to Blockchain', async () => {
-/*
-  await blockchain.registerDid(did, pubKey)
+  await blockchain.registerDid(did, blockchain.keypair.publicKey)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
   const registeredDid = JSON.parse(subs)
   const identity = await blockchain.api.query.lorenaModule.identities(Utils.base64ToHex(did))
@@ -70,25 +74,24 @@ test('Should Save a DID to Blockchain', async () => {
   // Identity `owner` from RegisteredEvent should be address Alice
   expect(registeredDid[0]).toEqual(blockchain.keypair.address)
   // Check of object `Identity` was created as expected
-  expect(identityJson.owner).toEqual(substrate.keypair.address)
+  expect(identityJson.owner).toEqual(blockchain.keypair.address)
   // Identity `owner` from RegisteredEvent should be address Alice
-  expect(registeredDid[0]).toEqual(substrate.keypair.address)
+  expect(registeredDid[0]).toEqual(blockchain.keypair.address)
   // Identity `key_index` should be 1
   expect(identityJson.key_index).toEqual(1)
 
   // Check if object `Key` was created as expected
-  keyRegister = await substrate.getActualKey(did)
+  const keyRegister = await blockchain.getActualKey(did)
   // Key `key` should be the same as the one read from Substrate Events
   expect(keyRegister.key.toString()).toEqual(registeredDid[2])
-  // Key `key` should de zenroom publicKey converted from bytes to utf8
-  expect(Utils.hexToBase64(keyRegister.key.toString().split('x')[1])).toEqual(pubKey)
+  // Key `key` should de publicKey converted from bytes to utf8
+  expect(keyRegister.key.toString().split('x')[1]).toEqual(Utils.base64ToHex(blockchain.keypair.publicKey))
   // Key `diddoc` should be Empty
   expect(keyRegister.diddoc.isEmpty).toEqual(true)
   // Key `valid_from` should be a valid timestamp (less than a minute ago)
   expect(keyRegister.valid_from.isEmpty).toEqual(false)
   // Key `valid_to` should be 0 representing an empty value
   expect(keyRegister.valid_to.isEmpty).toEqual(true)
-*/
 })
 
 test('Should Rotate a Key', async () => {})
@@ -132,9 +135,7 @@ describe('Lorena Substrate Tests', function () {
     const key = await substrate.getActualDidKey(did)
     expect(key).equal(newPubKey)
   })
-
-  it('should clean up after itself', () => {
-    substrate.disconnect()
-  })
-})
 */
+test('should clean up after itself', () => {
+  blockchain.disconnect()
+})
