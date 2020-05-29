@@ -25,11 +25,14 @@ const subscribe2RegisterEvents = (api, eventMethod) => {
   })
 }
 
-const did = crypto.random(16)
-const kZpair = crypto.newKeyPair()
-const pubKey = kZpair.keyPair.publicKey
-const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 let alice, bob
+let blockchain
+let did
+
+beforeAll(() => {
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  did = crypto.random(16)
+})
 
 test('should have good format conversion', () => {
   const base64 = 'Wldvd1pqVmZWbEoxYVdaWFdGOW5ja05I'
@@ -61,7 +64,7 @@ test('Should send Tokens from Alice to Bob', async () => {
 })
 
 test('Should Save a DID to Blockchain', async () => {
-  await blockchain.registerDid(did, pubKey)
+  await blockchain.registerDid(did, blockchain.keypair.publicKey)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
   const registeredDid = JSON.parse(subs)
   const identity = await blockchain.api.query.lorenaModule.identities(Utils.base64ToHex(did))
@@ -81,8 +84,8 @@ test('Should Save a DID to Blockchain', async () => {
   const keyRegister = await blockchain.getActualKey(did)
   // Key `key` should be the same as the one read from Substrate Events
   expect(keyRegister.key.toString()).toEqual(registeredDid[2])
-  // Key `key` should de zenroom publicKey converted from bytes to utf8
-  expect(keyRegister.key.toString().split('x')[1]).toEqual(Utils.base64ToHex(pubKey))
+  // Key `key` should de publicKey converted from bytes to utf8
+  expect(keyRegister.key.toString().split('x')[1]).toEqual(Utils.base64ToHex(blockchain.keypair.publicKey))
   // Key `diddoc` should be Empty
   expect(keyRegister.diddoc.isEmpty).toEqual(true)
   // Key `valid_from` should be a valid timestamp (less than a minute ago)
