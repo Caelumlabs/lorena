@@ -81,19 +81,15 @@ module.exports = class Wallet {
    */
   async unlock (password, onlyCheck = false) {
     try {
-      const info = await this.read('info')
-      const infoDecrypted = await this.crypto.decryptSymmetric(password, JSON.parse(Buffer.from(info, 'base64').toString()))
-      const data = await this.read('data')
-      const dataDecrypted = await this.crypto.decryptSymmetric(password, JSON.parse(Buffer.from(data, 'base64').toString()))
+      const infoDecrypted = this.crypto.decryptObj(password, await this.read('info'))
+      const dataDecrypted = this.crypto.decryptObj(password, await this.read('data'))
       if (!infoDecrypted || !dataDecrypted) {
         return false
       }
       if (!onlyCheck) {
-        this.info = JSON.parse(infoDecrypted.message)
-        this.data = JSON.parse(dataDecrypted.message)
+        this.info = infoDecrypted
+        this.data = dataDecrypted
       }
-      // debug('Info %O', this.info)
-      // debug('Data %O', this.data)
       return true
     } catch (_e) {
       return false
@@ -115,11 +111,8 @@ module.exports = class Wallet {
       }
 
       // Otherwise, we're creating it for the first time.
-
-      const infoEncrypted = await this.crypto.encryptSymmetric(password, JSON.stringify(this.info), 'Wallet info')
-      await this.write('info', Buffer.from(JSON.stringify(infoEncrypted)).toString('base64'))
-      const dataEncrypted = await this.crypto.encryptSymmetric(password, JSON.stringify(this.data), 'Wallet data')
-      await this.write('data', Buffer.from(JSON.stringify(dataEncrypted)).toString('base64'))
+      await this.write('info', this.crypto.encryptObj(password, this.info))
+      await this.write('data', this.crypto.encryptObj(password, this.data))
       this.changed = false
       return true
     } catch (_e) {
