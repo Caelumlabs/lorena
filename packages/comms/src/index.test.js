@@ -105,4 +105,4 @@ test('should leave a room', async () => {
   expect(response.status).toBe(200)
 })
 
-})*/
+}) */
