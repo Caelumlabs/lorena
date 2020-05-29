@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Flags for node
+FLAG_NOWARN='--no-warnings'
+
+DEBUG="idspace:*" node ${FLAG_NOWARN} ./src/index.js "$@"
