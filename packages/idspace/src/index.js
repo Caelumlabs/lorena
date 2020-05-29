@@ -1,6 +1,6 @@
 // Lorena Libraries
 const IDSpace = require('./lib/idspace')
-const HealthChecker = require('./server/health-checker.js')
+// const HealthChecker = require('./server/health-checker.js')
 const { getDefaultDID } = require('./lib/utils/did')
 
 // Util Libraries
