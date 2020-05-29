@@ -73,8 +73,7 @@ module.exports = class IDSpace {
     this.connected = false
   }
 
-  async commsEngage ()
-  {
+  async commsEngage () {
     this.context.comms.on()
   }
 
@@ -238,26 +237,25 @@ module.exports = class IDSpace {
             await ContactsApi.addRoom(this.context, msg.roomId)
             await this.context.comms.acceptConnection(msg.roomId)
 
-            const m = this.context.comms.extractDid(event.sender)
-        this.context.comms.acceptConnection(event.roomId)
-          .then(async (res) => {
-            await this.context.database.insertContact({
-              room_id: event.roomId,
-              did: 'unknown',
-              matrixUser: m.matrixUser,
-              network: m.network,
-              createdBy: event.sender,
-              type: 'contact',
-              name: '',
-              alias: '',
-              recipeId: 0
-            })
-          })
-          .catch((e) => {
-            debug(e)
-            error('Invalid incoming connection')
-          })
-
+            const m = this.context.comms.extractDid(msg.sender)
+            this.context.comms.acceptConnection(msg.roomId)
+              .then(async (res) => {
+                await this.context.database.insertContact({
+                  room_id: msg.roomId,
+                  did: 'unknown',
+                  matrixUser: m.matrixUser,
+                  network: m.network,
+                  createdBy: msg.sender,
+                  type: 'contact',
+                  name: '',
+                  alias: '',
+                  recipeId: 0
+                })
+              })
+              .catch((e) => {
+                debug(e)
+                error('Invalid incoming connection')
+              })
           })
 
           // Someone accepted our contact invitation.
@@ -267,13 +265,12 @@ module.exports = class IDSpace {
               debug('Added : ' + contact.type)
 
               await this.context.database.updateContact(contact.roomId, 'join')
-
             } else if (contact.status === 'invited' && contact.recipeId !== 0 && contact.type === 'contact') {
               debug('Added : contact')
-              recipeInfo = await this.context.database.getRecipe(contact.recipeId)
+              const recipeInfo = await this.context.database.getRecipe(contact.recipeId)
               if (recipeInfo && recipeInfo.status === 'open') {
-                service = this.context.register.resolveAction('contact-add')
-                recipeService = new Recipe(event, this.context.info, contact, service, this.context, this.context.info.kZpair)
+                const service = this.context.register.resolveAction('contact-add')
+                const recipeService = new Recipe(msg, this.context.info, contact, service, this.context, this.context.info.kZpair)
                 await recipeService.load(recipeInfo, {})
                 await this.context.database.updateContact(contact.roomId, 'join')
               }
@@ -300,7 +297,7 @@ module.exports = class IDSpace {
             this.parseAction(event, contact)
             break
           case 'contact-add':
-            
+
             break
           case 'contact-incoming':
             await this.context.comms.acceptConnection(event.roomId)

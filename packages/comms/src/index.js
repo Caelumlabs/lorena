@@ -1,7 +1,6 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
 const axios = require('axios')
-const fs = require('fs')
 const EventEmitter = require('events')
 const Crypto = require('@lorena/crypto')
 
