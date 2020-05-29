@@ -1,0 +1,22 @@
+{
+  "name": "@lorena/sdk",
+  "version": "0.0.0",
+  "description": "Lorena SDK",
+  "main": "src/index.js",
+  "author": "Alex Puig",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "test": "jest --silent",
+    "coverage": "jest --coverage",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix"
+  },
+  "dependencies": {
+    "@lorena/comms": "^0.0.0",
+    "@lorena/credential": "^0.0.0",
+    "@lorena/crypto": "^0.0.0",
+    "@lorena/resolver": "^0.0.0",
+    "@lorena/wallet": "^0.0.0"
+  }
+}
