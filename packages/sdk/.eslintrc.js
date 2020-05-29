@@ -3,11 +3,12 @@ module.exports = {
     browser: true,
     commonjs: true,
     es6: true,
-    mocha: true,
+    mocha: true
   },
   extends: [
     'standard',
-    'plugin:chai-friendly/recommended',
+    'plugin:jest/recommended',
+    'plugin:jest/style',
     'plugin:jsdoc/recommended'
   ],
   globals: {
@@ -18,10 +19,10 @@ module.exports = {
     ecmaVersion: 2018
   },
   plugins: [
-    'chai-friendly',
+    'jest',
     'jsdoc'
   ],
   rules: {
-    "no-global-assign": ["error", {"exceptions": ["require"]}]
+    'no-global-assign': ['error', { exceptions: ['require'] }]
   }
 }

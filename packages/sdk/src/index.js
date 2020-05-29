@@ -1,19 +1,17 @@
-import Matrix from '@lorena-ssi/matrix-lib'
-import Zenroom from '@lorena-ssi/zenroom-lib'
-import IpfsClient from 'ipfs-http-client'
-import Credential from '@lorena-ssi/credential-lib'
-import LorenaDidResolver from '@lorena-ssi/did-resolver'
-import { Resolver } from 'did-resolver'
-import { EventEmitter } from 'events'
-import log from 'debug'
-import uuid from 'uuid/v4'
-
-const debug = log('did:debug:sdk')
+const Matrix = require('@lorena/comms')
+const Zenroom = require('@lorena/crypto')
+const IpfsClient = require('ipfs-http-client')
+const Credential = require('@lorena/credentials')
+const LorenaDidResolver = require('@lorena/resolver')
+const { Resolver } = require('did-resolver')
+const { EventEmitter } = require('events')
+const debug = require('debug')('did:debug:sdk')
+const uuid = require('uuid/v4')
 
 /**
  * Lorena SDK - Class
  */
-export default class Lorena extends EventEmitter {
+module.exports = class Lorena extends EventEmitter {
   /**
    * @param {object} walletHandler walletHandler
    * @param {object} opts opts
@@ -56,13 +54,9 @@ export default class Lorena extends EventEmitter {
       this.wallet.info.matrixServer = info.matrixEndpoint
       this.matrix = new Matrix(this.wallet.info.matrixServer)
 
-      this.zenroom.random(12).then((matrixUser) => {
-        this.wallet.info.matrixUser = matrixUser.toLowerCase()
-        return this.zenroom.random(12)
-      }).then((matrixPass) => {
-        this.wallet.info.matrixPass = matrixPass
-        return this.matrix.available(this.wallet.info.matrixUser)
-      }).then((available) => {
+      this.wallet.info.matrixUser = this.zenroom.random(12).toLowerCase()
+      this.wallet.info.matrixPass = this.zenroom.random(12)
+      this.matrix.available(this.wallet.info.matrixUser).then((available) => {
         if (available) {
           return this.matrix.register(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
         } else {
