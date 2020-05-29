@@ -38,7 +38,7 @@ const Wallet = require('./wallet.js');
     expect(w.data.credentials[0]).toEqual({ name: 'adminTest', role: 'superAdmin' })
   })
 
-  test.skip('should load the wallet (unlock) (fs only)', async () => {
+  test('should load the wallet (unlock) (fs only)', async () => {
     if (storage === 'fs') {
       const w2 = new Wallet('testWallet', { storage, silent: true })
       await w2.unlock('myPassword0')
@@ -62,7 +62,7 @@ const Wallet = require('./wallet.js');
     await w.lock('myPassword0')
   })
 
-  test.skip('should not lock with the wrong password ' + storage, async () => {
+  test('should not lock with the wrong password ' + storage, async () => {
     let result = await w.unlock('myPassword0')
     expect(result).toBe(true)
     w.add('credentials', { name: 'test6', role: 'user' })
@@ -70,10 +70,10 @@ const Wallet = require('./wallet.js');
     expect(result).toBe(false)
   })
 
-  test.skip('should NOT unlock wallet (because it does not exist) ' + storage, (done) => {
+  test('should NOT unlock wallet (because it does not exist) ' + storage, (done) => {
     w.delete().then(() => {
       w.unlock('myPassword0').then((response) => {
-        expect(response).toBeUndefined()
+        expect(response).toBe(false)
         done()
       })
     })
@@ -93,16 +93,9 @@ const Wallet = require('./wallet.js');
     })
   })
 
-  test.skip('should NOT unlock existing wallet with incorrect password ' + storage, (done) => {
+  test('should NOT unlock existing wallet with incorrect password ' + storage, (done) => {
     w.unlock('myPassword2').then((response) => {
-      expect(response).toBeUndefined()
-      done()
-    })
-  })
-
-  test.skip('should NOT unlock existing wallet with incorrect password ' + storage, (done) => {
-    w.unlock('myPassword2').then((response) => {
-      expect(response).toBeUndefined()
+      expect(response).toBe(false)
       done()
     })
   })
@@ -123,7 +116,7 @@ const Wallet = require('./wallet.js');
 })
 
 // Scenarios specific to filesystem
-test.skip('should lock and unlock a wallet in fs', (done) => {
+test('should lock and unlock a wallet in fs', (done) => {
   let w2
   const w1 = new Wallet('testWallet', { storage: 'fs', silent: true })
   w1.add('credentials', { name: 'adminTest', role: 'admin' })

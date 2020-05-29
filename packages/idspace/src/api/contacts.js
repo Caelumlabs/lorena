@@ -77,6 +77,18 @@ class ContactsApi {
         })
     })
   }
+
+  /**
+   * Adds a Room.
+   *
+   * @param {object} context IDsapce context
+   * @param {string} roomId Room ID
+   * @param {string} matrixUser Matrix User
+   * @returns {*} result
+   */
+  static async addRoom (context, roomId, matrixUser) {
+    return context.database.runSQL('INSERT INTO rooms (roomId, matrixUser) VALUES (?, ?)', [roomId, matrixUser])
+  }
 }
 
 module.exports = ContactsApi

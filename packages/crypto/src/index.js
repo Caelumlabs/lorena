@@ -47,19 +47,15 @@ module.exports = class LorenaCrypto {
    * @param {string} message Message to be encrypted
    * @returns {Promise} Return a promise with the execution of the encryption.
    */
-  async encryptSymmetric (password, message) {
-    return new Promise((resolve) => {
-      let secret = stringToU8a(password)
-      secret = u8aConcat(secret, new Uint8Array(32 - secret.length))
-      const messagePreEncryption = stringToU8a(message)
-      const noncePreEncryption = randomAsU8a(24)
+  encrypt (password, message) {
+    let secret = stringToU8a(password)
+    secret = u8aConcat(secret, new Uint8Array(32 - secret.length))
+    const messagePreEncryption = stringToU8a(message)
+    const noncePreEncryption = randomAsU8a(24)
 
-      // Encrypt the message
-      const result = naclEncrypt(messagePreEncryption, secret, noncePreEncryption)
-
-      // Show contents of the encrypted message
-      resolve(result)
-    })
+    // Encrypt the message
+    const result = naclEncrypt(messagePreEncryption, secret, noncePreEncryption)
+    return (result)
   }
 
   /**
@@ -69,13 +65,45 @@ module.exports = class LorenaCrypto {
    * @param {string} msgEncrypted Message to be decrypted
    * @returns {Promise} Return a promise with the execution of the encryption.
    */
-  async decryptSymmetric (password, msgEncrypted) {
-    return new Promise((resolve) => {
-      let secret = stringToU8a(password)
-      secret = u8aConcat(secret, new Uint8Array(32 - secret.length))
-      const messageDecrypted = naclDecrypt(msgEncrypted.encrypted, msgEncrypted.nonce, secret)
-      resolve(hexToString(u8aToHex(messageDecrypted)))
-    })
+  decrypt (password, msgEncrypted) {
+    let secret = stringToU8a(password)
+    secret = u8aConcat(secret, new Uint8Array(32 - secret.length))
+    const messageDecrypted = naclDecrypt(msgEncrypted.encrypted, msgEncrypted.nonce, secret)
+    return (hexToString(u8aToHex(messageDecrypted)))
+  }
+
+  /**
+   * Encrypts (symmetric) a message with a keypair.
+   *
+   * @param {string} password Password to encrypt the message
+   * @param {string} message Message to be encrypted
+   * @returns {Promise} Return a promise with the execution of the encryption.
+   */
+  encryptObj (password, obj) {
+    // Prepare Message.
+    const result = this.encrypt(password, JSON.stringify(obj))
+    return (JSON.stringify({
+      e: u8aToHex(result.encrypted),
+      n: u8aToHex(result.nonce)
+    }))
+  }
+
+  /**
+   * Encrypts (symmetric) a message with a keypair.
+   *
+   * @param {string} password Password to decrypt the message
+   * @param {string} msgEncrypted Message to be decrypted
+   * @returns {Promise} Return a promise with the execution of the encryption.
+   */
+  decryptObj (password, msgEncrypted) {
+    // Decrypt
+    const preEncrypted = JSON.parse(msgEncrypted)
+    const decryptMsg = {
+      encrypted: hexToU8a(preEncrypted.e),
+      nonce: hexToU8a(preEncrypted.n)
+    }
+    const messageDecrypted = this.decrypt(password, decryptMsg)
+    return (JSON.parse(messageDecrypted))
   }
 
   /**
