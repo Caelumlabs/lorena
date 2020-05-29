@@ -237,15 +237,15 @@ module.exports = class IDSpace {
             await ContactsApi.addRoom(this.context, msg.roomId)
             await this.context.comms.acceptConnection(msg.roomId)
 
-            const m = this.context.comms.extractDid(event.sender)
-            this.context.comms.acceptConnection(event.roomId)
+            const m = this.context.comms.extractDid(msg.sender)
+            this.context.comms.acceptConnection(msg.roomId)
               .then(async (res) => {
                 await this.context.database.insertContact({
-                  room_id: event.roomId,
+                  room_id: msg.roomId,
                   did: 'unknown',
                   matrixUser: m.matrixUser,
                   network: m.network,
-                  createdBy: event.sender,
+                  createdBy: msg.sender,
                   type: 'contact',
                   name: '',
                   alias: '',
@@ -267,10 +267,10 @@ module.exports = class IDSpace {
               await this.context.database.updateContact(contact.roomId, 'join')
             } else if (contact.status === 'invited' && contact.recipeId !== 0 && contact.type === 'contact') {
               debug('Added : contact')
-              recipeInfo = await this.context.database.getRecipe(contact.recipeId)
+              const recipeInfo = await this.context.database.getRecipe(contact.recipeId)
               if (recipeInfo && recipeInfo.status === 'open') {
-                service = this.context.register.resolveAction('contact-add')
-                recipeService = new Recipe(event, this.context.info, contact, service, this.context, this.context.info.kZpair)
+                const service = this.context.register.resolveAction('contact-add')
+                const recipeService = new Recipe(msg, this.context.info, contact, service, this.context, this.context.info.kZpair)
                 await recipeService.load(recipeInfo, {})
                 await this.context.database.updateContact(contact.roomId, 'join')
               }
