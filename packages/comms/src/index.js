@@ -2,6 +2,8 @@
 'use strict'
 const axios = require('axios')
 const fs = require('fs')
+const EventEmitter = require('events')
+const Crypto = require('@lorena/crypto')
 
 // Debug
 var debug = require('debug')('did:debug:matrix')
@@ -12,12 +14,19 @@ var debug = require('debug')('did:debug:matrix')
  */
 module.exports = class Comms {
   constructor (homeserver = process.env.SERVER_MATRIX) {
+    this.crypto = new Crypto()
     this.serverName = homeserver.split('//')[1]
     this.api = homeserver + '/_matrix/client/r0/'
     this.media = homeserver + '/_matrix/media/r0/'
     this.connection = {}
     this.txnId = 1
     this.matrixUser = ''
+    this.connected = false
+  }
+
+  emit (type, ...args) {
+    super.emit('*', ...args)
+    return super.emit(type, ...args) || super.emit('', ...args)
   }
 
   /**
@@ -27,7 +36,7 @@ module.exports = class Comms {
    * @param {string} password Matrix password
    * @returns {Promise} Return a promise with the connection when it's done.
    */
-  async connect (username, password) {
+  async connect (username, password, batch = '') {
     return new Promise((resolve, reject) => {
       axios.get(this.api + 'login')
         .then(async () => {
@@ -38,12 +47,31 @@ module.exports = class Comms {
           })
           this.connection = result.data
           this.matrixUser = '@' + username + ':' + this.serverName
-          resolve(result.data.access_token)
+          const emitter = new EventEmitter()
+          this.events(emitter, batch)
+          resolve(emitter)
         })
         .catch((error) => {
           reject(new Error('Could not connect to Matrix'), error)
         })
     })
+  }
+
+  /**
+   * Stop calling Matrix API
+   */
+  disconnect () {
+    this.connected = false
+  }
+
+  /**
+   * Random Username
+   *
+   * @returns {string} Random 12 chars string
+   */
+  randomUsername () {
+    const matrixUser = this.crypto.random(12)
+    return matrixUser.toLowerCase()
   }
 
   /**
@@ -75,29 +103,34 @@ module.exports = class Comms {
    * @param {string} nextBatch next batch of events to be asked to the matrix server.
    * @returns {Promise} Return a promise with the Name of the user.
    */
-  async events (nextBatch) {
-    return new Promise((resolve, reject) => {
-      const apiCall = this.api +
-        'sync?timeout=20000' +
-        '&access_token=' + this.connection.access_token +
-        (nextBatch === '' ? '' : '&since=' + nextBatch)
+  async events (emitter, nextBatch) {
+    let res
+    let batch = nextBatch
+    this.connected = true
+    return new Promise(async (resolve) => {
+      while (this.connected) {
+        const apiCall = this.api +
+          'sync?timeout=20000' +
+          '&access_token=' + this.connection.access_token +
+          (batch === '' ? '' : '&since=' + batch)
 
-      // Sync with the server
-      axios.get(apiCall).then(async (res) => {
+        // Sync with the server
+        res = await axios.get(apiCall)
+
         // incoming invitations.
-        let events = this.getIncomingInvitations(res.data.rooms.invite)
+        this.getIncomingInvitations(emitter, res.data.rooms.invite)
 
         // Accepted invitations
-        events = events.concat(this.getUpdatedInvitations(res.data.rooms.join))
+        this.getUpdatedInvitations(emitter, res.data.rooms.join)
 
         // Get Messages
-        events = events.concat(this.getMessages(res.data.rooms.join))
+        this.getMessages(emitter, res.data.rooms.join)
 
-        resolve({ nextBatch: res.data.next_batch, events })
-      })
-        .catch((error) => {
-          reject(new Error('Could not list events', error))
-        })
+        // Emit next Batch.
+        batch = res.data.next_batch
+        emitter.emit('next_batch', batch)
+      }
+      resolve()
     })
   }
 
@@ -186,33 +219,6 @@ module.exports = class Comms {
   }
 
   /**
-   * Sends a Message.
-   *
-   * @param {string} roomId Room to send the message to.
-   * @param {string} type Type of message.
-   * @param {string} body Body of the message.
-   * @param {string=} token access token (otherwise use the existing connection token)
-   * @returns {Promise} Result of sending a message
-   */
-  sendMessage (roomId, type, body, token = false) {
-    return new Promise((resolve, reject) => {
-      const apiToken = (token === false) ? this.connection.access_token : token
-      const apiSendMessage = this.api + 'rooms/' + escape(roomId) + '/send/m.room.message/' + this.txnId + '?access_token=' + apiToken
-      axios.put(apiSendMessage, {
-        msgtype: type,
-        body: body
-      })
-        .then((res, err) => {
-          this.txnId++
-          resolve(res)
-        })
-        .catch((error) => {
-          reject(new Error('Could not send message', error))
-        })
-    })
-  }
-
-  /**
    * Accepts invitation to join a room.
    *
    * @param {string} roomId RoomID
@@ -237,9 +243,8 @@ module.exports = class Comms {
    * @param {object} rooms Array of events related to rooms
    * @returns {object} array of invitations
    */
-  getIncomingInvitations (rooms) {
+  getIncomingInvitations (emitter, rooms) {
     const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
-    const invitations = []
     if (!roomEmpty) {
       for (const roomId in rooms) {
         let invitation = {
@@ -270,15 +275,9 @@ module.exports = class Comms {
 
         // If it's not me sending the invitation.
         if (invitation.sender !== this.matrixUser) {
-          invitations.push({
-            type: 'contact-incoming',
-            roomId,
-            sender: invitation.sender,
-            payload: ''
-          })
+          emitter.emit('contact-incoming', { type: 'contact-incoming', roomId, sender: invitation.sender, payload: '' })
         }
       }
-      return (invitations)
     }
   }
 
@@ -286,11 +285,9 @@ module.exports = class Comms {
    * Extract Accepted Invitations from the API Call to matrix server - events
    *
    * @param {object} rooms Array of events related to rooms
-   * @returns {Array} Array of all the new invitations to connect.
    */
-  getUpdatedInvitations (rooms) {
+  getUpdatedInvitations (emitter, rooms) {
     // Check if rooms is empty
-    var updatedInvitations = []
     const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
     if (!roomEmpty) {
       for (const roomId in rooms) {
@@ -302,18 +299,12 @@ module.exports = class Comms {
             // Get events for type m.room.member with membership join or leave.
             if (element.type === 'm.room.member' && element.sender !== this.matrixUser) {
               if (element.content.membership === 'join' || element.content.membership === 'leave') {
-                updatedInvitations.push({
-                  type: 'contact-add',
-                  roomId: roomId,
-                  sender: element.sender,
-                  payload: element.content.membership
-                })
+                emitter.emit('contact-accepted', { type: 'contact-add', roomId: roomId, sender: element.sender, payload: element.content.membership })
               }
             }
           }
         }
       }
-      return updatedInvitations
     }
   }
 
@@ -321,10 +312,8 @@ module.exports = class Comms {
    * Extract Messages from events
    *
    * @param {object} rooms Array of events related to rooms
-   * @returns {Array} Array of all the new invitations to connect.
    */
-  getMessages (rooms) {
-    const messages = []
+  getMessages (emitter, rooms) {
     // Check if rooms is empty
     const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
     if (!roomEmpty) {
@@ -335,19 +324,38 @@ module.exports = class Comms {
           for (let i = 0; i < events.length; i++) {
             const element = events[i]
             // Get messages.
-            if (element.type === 'm.room.message' && element.sender !== this.matrixUser) {
-              messages.push({
-                type: element.content.msgtype === 'm.action' ? 'msg-action' : 'msg-text',
-                roomId: roomId,
-                sender: element.sender,
-                payload: element.content
-              })
+            if (element.type === 'm.room.message' && element.sender !== this.matrixUser && element.content.msgtype === 'm.lorena') {
+              const payload = JSON.parse(element.content.body)
+              payload.roomId = roomId
+              console.log(payload)
+              emitter.emit('contact-message-' + payload['@type'], payload)
             }
           }
         }
       }
     }
-    return messages
+  }
+
+  /**
+   * Sends a Message.
+   *
+   * @param {string} roomId Room to send the message to.
+   * @param {string} body Body of the message.
+   * @returns {Promise} Result of sending a message
+   */
+  sendMessage (roomId, recipe, payload, recipeId = 0, thread = '', threadId = 0) {
+    return new Promise((resolve, reject) => {
+      const apiSendMessage = this.api + 'rooms/' + escape(roomId) + '/send/m.room.message/' + this.txnId + '?access_token=' + this.connection.access_token
+      const body = JSON.stringify({ '@type': 'recipe', encrypted: false, msg: { recipe, recipeId, thread, threadId, payload } })
+      axios.put(apiSendMessage, { msgtype: 'm.lorena', body })
+        .then((res, err) => {
+          this.txnId++
+          resolve(res)
+        })
+        .catch((error) => {
+          reject(new Error('Could not send message', error))
+        })
+    })
   }
 
   /**
@@ -400,47 +408,5 @@ module.exports = class Comms {
           reject(new Error('Could not download file', error))
         })
     })
-  }
-
-  /**
-   * TODO - this seems to have issues
-   *
-   * @param {string} path File path to send
-   * @param {string} roomId roomId to send the file to.
-   * @returns {Promise} no result yet TODO
-   */
-  sendFile (path, roomId) {
-    return new Promise((resolve) => {
-      const chunks = []
-      const reader = fs.createReadStream(path, { highWaterMark: 4 * 1024 })
-      reader
-        .on('data', function (chunk) {
-          chunks.push(chunk)
-          debug('Chunk ' + chunk.toString().length)
-        })
-        .on('end', function () {
-          debug('The End')
-          const file = fs.createWriteStream('example.pdf')
-          for (let i = 0; i < chunks.length; i++) {
-            file.write(chunks[i])
-          }
-          file.end()
-          resolve()
-        })
-    })
-  }
-
-  /**
-   * Returns the did associated to a matrix user
-   *
-   * @param {string} sender Sender
-   * @returns {string} Full DID
-   */
-  extractDid (sender) {
-    const parts = sender.split(':')
-    return {
-      matrixUser: parts[0].substr(1),
-      matrixFederation: parts[1]
-    }
   }
 }

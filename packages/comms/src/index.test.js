@@ -1,80 +1,101 @@
 const Comms = require('./index')
-const uuidv4 = require('uuid/v4')
 
-let token = ''
-let roomId
-var matrix = new Comms('https://labdev.matrix.lorena.tech')
-const matrixUser = uuidv4()
-const password = uuidv4()
-const matrixUser2 = uuidv4()
-const password2 = uuidv4()
+const m1 = new Comms('https://labdev.matrix.lorena.tech')
+const m2 = new Comms('https://labdev.matrix.lorena.tech')
+const u1 = m1.randomUsername()
+const u2 = m1.randomUsername()
+const p1 = 'rndPass'
+const p2 = 'rndPass'
 
-test('should not recognize a nonexistent user as existing', async () => {
-  expect(await matrix.available(matrixUser)).toEqual(true)
-})
-
-test('should register a new user', async () => {
-  expect(await matrix.register(matrixUser, password)).toEqual(matrixUser)
-  expect(await matrix.register(matrixUser2, password2)).toEqual(matrixUser2)
-})
-
-test('should recognize a user as already existing', async () => {
-  expect(await matrix.available(matrixUser)).toEqual(false)
-  expect(await matrix.available(matrixUser2)).toEqual(false)
-})
-
-test('should not register an already-existing user', async () => {
+test('Should register users', async () => {
+  expect(await m1.available(u1)).toEqual(true)
+  expect(await m1.register(u1, p1)).toEqual(u1)
+  expect(await m2.register(u2, p2)).toEqual(u2)
+  expect(await m1.available(u1)).toEqual(false)
+  expect(await m2.available(u2)).toEqual(false)
   try {
-    await matrix.register(matrixUser, password)
+    await m1.register(u1, p1)
     throw (new Error())
   } catch (e) {
     expect(e.message).toBe('Request failed with status code 400')
   }
 })
 
-test('should connect to matrix', async () => {
-  token = await matrix.connect(matrixUser, password)
-  expect(token.length).toBeGreaterThan(10)
-})
+test('should use matrix as a comms interface to Lorena', async done => {
+  const tests = [false, false, false, false, false]
 
-test('should return all matrix events in an array', async () => {
-  const events = await matrix.events('')
-  expect(events.nextBatch.length).toBeGreaterThan(8)
-  expect(events.events).toBeDefined()
-})
+  const endTest = (id) => {
+    console.log('TEST OK ' + id)
+    tests[id] = true
+    if (!tests.includes(false)) {
+      console.log('END TESTS')
+      done()
+    }
+  }
 
-test('should create connection with another user', async () => {
-  const name = (Math.floor(Math.random() * 9999)).toString()
-  const newRoomId = await matrix.createConnection(
-    name, // Room name (can be any)
-    `@${matrixUser2}:${matrix.serverName}` // User to connect with
-  )
+  // Tests with User 1
+  let events = await m1.connect(u1, p1)
+  expect(typeof events).toBe('object')
+  events.once('next_batch', (msg) => {
+    expect(msg.length).toBeGreaterThan(10)
+    endTest(0)
+  })
+
+  // Create connection to user2
+  const newRoomId = await m1.createConnection((Math.floor(Math.random() * 9999)).toString(), `@${u2}:${m2.serverName}`)
   expect(newRoomId).toBeDefined()
-  roomId = newRoomId
-})
 
-test('should sendMessage', async () => {
-  const response = await matrix.sendMessage(
-    roomId, // roomId (in this case from `randomRoomName`)
-    'm.text', // type
-    'Hello this is a test message...' // body
-  )
+  // Sends a message to user2
+  const response = await m1.sendMessage(newRoomId, 'ping', 'Hello this is a test message...', 10)
   expect(response).toBeDefined()
   expect(response.status).toBeDefined()
   expect(response.status).toBe(200)
-})
 
-test('should extractDid', () => {
-  const did = matrix.extractDid('!asdf:matrix.caelumlabs.com')
-  expect(did.matrixUser).toBe('asdf')
-  expect(did.matrixFederation).toBe('matrix.caelumlabs.com')
-})
+  events.once('next_batch', (msg) => {
+    expect(msg.length).toBeGreaterThan(10)
+    endTest(0)
+  })
+  m1.disconnect(u1, p1)
 
-test('should return all matrix rooms', async () => {
-  const rooms = await matrix.joinedRooms()
+  // Tests with User 2
+  events = await m2.connect(u2, p2)
+  events.once('next_batch', (msg) => {
+    expect(msg.length).toBeGreaterThan(10)
+    endTest(1)
+  })
+
+  // Accept connection
+  const accept = await m2.acceptConnection(newRoomId)
+  expect(accept).toBeDefined()
+  expect(accept.status).toBeDefined()
+  expect(accept.status).toBe(200)
+
+  events.once('contact-incoming', (msg) => {
+    endTest(2)
+  })
+
+  events.once('contact-message-recipe', (msg) => {
+    console.log('contact-message', msg)
+    endTest(4)
+  })
+
+  const rooms = await m2.joinedRooms()
   expect(rooms).toBeDefined()
   expect(rooms.length).toBe(1)
-  expect(rooms[0]).toEqual(roomId)
+  expect(rooms[0]).toEqual(newRoomId)
+  m2.disconnect(u1, p1)
+
+  events = await m1.connect(u1, p1)
+  events.once('contact-accepted', (msg) => {
+    endTest(3)
+  })
+
+  m1.disconnect(u1, p1)
+})
+
+/*
+test('should return all matrix rooms', async () => {
+  
 })
 
 test('should leave a room', async () => {
@@ -83,3 +104,5 @@ test('should leave a room', async () => {
   expect(response.status).toBeDefined()
   expect(response.status).toBe(200)
 })
+
+})*/

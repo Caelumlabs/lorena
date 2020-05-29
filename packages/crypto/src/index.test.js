@@ -4,7 +4,6 @@ const password = 'password random'
 
 let alice
 let signature = false
-let msgEncrypted = false
 let rnd = false
 const crypto = new LorenaCrypto(true)
 
@@ -58,13 +57,22 @@ test('Should Check the Signature', () => {
 })
 
 // Encryption.
-test('Should encrypt (symmetric) a message', async () => {
-  msgEncrypted = await crypto.encryptSymmetric(password, message)
+test('Should encrypt & decrypt a message', () => {
+  const msgEncrypted = crypto.encrypt(password, message)
   expect(msgEncrypted.encrypted).not.toBeUndefined()
   expect(msgEncrypted.nonce).not.toBeUndefined()
+  const msg = crypto.decrypt(password, msgEncrypted)
+  expect(msg).toEqual(message)
 })
 
-test('Should decrypt (symmetric) a message', async () => {
-  const msg = await crypto.decryptSymmetric(password, msgEncrypted)
-  expect(msg).toEqual(message)
+// Encryption.
+test('Should encrypt & decrypt an object', () => {
+  const msgEncrypted = crypto.encryptObj(password, { msg: message, test: 'áà # test' })
+  const testMesg = JSON.parse(msgEncrypted)
+  expect(testMesg.e).not.toBeUndefined()
+  expect(testMesg.n).not.toBeUndefined()
+
+  const result = crypto.decryptObj(password, msgEncrypted)
+  expect(result.msg).toEqual(message)
+  expect(result.test).toEqual('áà # test')
 })

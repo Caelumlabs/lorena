@@ -8,13 +8,19 @@ module.exports = [
         key TEXT PRIMARY KEY,
         type CHAR(1) NOT NULL DEFAULT ('S'),
         value TEXT NOT NULL);`,
+    `CREATE TABLE IF NOT EXISTS rooms (
+        linkId INTEGER PRIMARY KEY,
+        roomId TEXT,
+        matrixUser TEXT,
+        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+        leftAt DATETIME,
+        status TEXT
+    );`,
     `CREATE TABLE IF NOT EXISTS contacts (
         did TEXT PRIMARY KEY,
+        linkId INTEGER,
         diddoc TEXT,
-        matrixUser TEXT,
         network TEXT,
-        roomId TEXT,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
         joinAt DATETIME,
         leaveAt DATETIME,
         status TEXT,

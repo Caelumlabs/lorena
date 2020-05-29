@@ -1,6 +1,6 @@
 // Lorena Libraries
 const IDSpace = require('./lib/idspace')
-// const HealthChecker = require('./server/health-checker.js')
+const HealthChecker = require('./server/health-checker.js')
 const { getDefaultDID } = require('./lib/utils/did')
 
 // Util Libraries
@@ -30,11 +30,7 @@ const main = async () => {
       // health.listen()
 
       // Handle events.
-      let count = 0
-      const times = 2
-      while (count++ < times) {
-        await idspace.listen()
-      }
+      await idspace.listen()
 
       // Close IDSpace.
       debug('Close IDspace')

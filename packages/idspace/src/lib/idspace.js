@@ -70,6 +70,12 @@ module.exports = class IDSpace {
     this.actors = []
     this.context = context
     this.system = start()
+    this.connected = false
+  }
+
+  async commsEngage ()
+  {
+    this.context.comms.on()
   }
 
   /**
@@ -89,7 +95,6 @@ module.exports = class IDSpace {
     if (await this.context.comms.available(matrixUser)) {
       await this.context.comms.register(matrixUser, this.context.info.password)
     } else throw (new Error('Could not create a new Matrix user'))
-    await this.context.comms.connect(this.context.info.matrixUser, this.context.info.password)
 
     // DIDDOC
     const didDocument = new Credential.DidDoc(this.context.info.w3cDID)
@@ -155,7 +160,6 @@ module.exports = class IDSpace {
     this.context.info.diddoc = contact.diddoc
     this.context.info.matrixUser = contact.matrixUser
     this.context.info.wallet = await ContactsApi.getKey(this.context, this.context.info.did, 'crypto:keypair', 1)
-    await this.context.comms.connect(this.context.info.matrixUser, this.context.info.password)
     await this.context.blockchain.setKeyring(this.context.info.wallet.mnemonic)
     this.nextBatch = await this.context.database.get('next_batch')
   }
@@ -218,6 +222,67 @@ module.exports = class IDSpace {
    * Listen to events.
    */
   async listen () {
+    return new Promise((resolve, reject) => {
+      this.context.comms.connect(this.context.info.matrixUser, this.context.info.password)
+        .then((events) => {
+          let contact
+          this.connected = true
+
+          // Save next Batch for Matrix Calls.
+          events.on('next_batch', (nextBatch) => {
+            this.context.database.set('next_batch', nextBatch)
+          })
+
+          // Accept all incoming connections.
+          events.on('contact-incoming', async (msg) => {
+            await ContactsApi.addRoom(this.context, msg.roomId)
+            await this.context.comms.acceptConnection(msg.roomId)
+
+            const m = this.context.comms.extractDid(event.sender)
+        this.context.comms.acceptConnection(event.roomId)
+          .then(async (res) => {
+            await this.context.database.insertContact({
+              room_id: event.roomId,
+              did: 'unknown',
+              matrixUser: m.matrixUser,
+              network: m.network,
+              createdBy: event.sender,
+              type: 'contact',
+              name: '',
+              alias: '',
+              recipeId: 0
+            })
+          })
+          .catch((e) => {
+            debug(e)
+            error('Invalid incoming connection')
+          })
+
+          })
+
+          // Someone accepted our contact invitation.
+          events.on('contact-accepted', async (msg) => {
+            contact = await this.context.database.getContactByRoomId(msg.roomId)
+            if (contact.status === 'invited') {
+              debug('Added : ' + contact.type)
+
+              await this.context.database.updateContact(contact.roomId, 'join')
+
+            } else if (contact.status === 'invited' && contact.recipeId !== 0 && contact.type === 'contact') {
+              debug('Added : contact')
+              recipeInfo = await this.context.database.getRecipe(contact.recipeId)
+              if (recipeInfo && recipeInfo.status === 'open') {
+                service = this.context.register.resolveAction('contact-add')
+                recipeService = new Recipe(event, this.context.info, contact, service, this.context, this.context.info.kZpair)
+                await recipeService.load(recipeInfo, {})
+                await this.context.database.updateContact(contact.roomId, 'join')
+              }
+            }
+          })
+        })
+    })
+
+    /*
     let contact, service, recipeService, recipeInfo
     const batch = await this.context.comms.events(this.nextBatch)
     this.nextBatch = batch.nextBatch
@@ -235,19 +300,7 @@ module.exports = class IDSpace {
             this.parseAction(event, contact)
             break
           case 'contact-add':
-            if (contact.status === 'invited' && contact.recipeId === 0) {
-              debug('Added : ' + contact.type)
-              await this.context.database.updateContact(contact.roomId, 'join')
-            } else if (contact.status === 'invited' && contact.recipeId !== 0 && contact.type === 'contact') {
-              debug('Added : contact')
-              recipeInfo = await this.context.database.getRecipe(contact.recipeId)
-              if (recipeInfo && recipeInfo.status === 'open') {
-                service = this.context.register.resolveAction('contact-add')
-                recipeService = new Recipe(event, this.context.info, contact, service, this.context, this.context.info.kZpair)
-                await recipeService.load(recipeInfo, {})
-                await this.context.database.updateContact(contact.roomId, 'join')
-              }
-            }
+            
             break
           case 'contact-incoming':
             await this.context.comms.acceptConnection(event.roomId)
@@ -282,6 +335,7 @@ module.exports = class IDSpace {
     } else {
       // debug('shutting down...')
     }
+    */
   }
 
   /**
