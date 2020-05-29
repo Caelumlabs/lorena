@@ -70,7 +70,7 @@ describe('Lorena SDK', function () {
 
   it('use an old legacy wallet and upgrade it', async () => {
     // Load example wallet Json
-    const walletObject = await importWallet('./test/exampleWallet.json')
+    const walletObject = await importWallet('./fixtures/exampleWallet.json')
     const username = Object.keys(walletObject)[0]
     const zPassword = 'zeevee'
     const exampleWallet = new Wallet(username)
