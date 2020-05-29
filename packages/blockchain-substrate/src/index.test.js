@@ -1,9 +1,9 @@
 'use strict'
 const BlockchainSubstrate = require('./index.js')
-const LorenaCrypto = require('@lorena/crypto')
+const Crypto = require('@lorena/crypto')
 const Utils = require('./utils')
 
-const crypto = new LorenaCrypto(true)
+const crypto = new Crypto(true)
 
 const subscribe2RegisterEvents = (api, eventMethod) => {
   return new Promise(resolve => {
@@ -28,6 +28,7 @@ const subscribe2RegisterEvents = (api, eventMethod) => {
 let alice, bob
 let blockchain
 let did
+const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
 beforeAll(() => {
   blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
@@ -94,48 +95,40 @@ test('Should Save a DID to Blockchain', async () => {
   expect(keyRegister.valid_to.isEmpty).toEqual(true)
 })
 
-test('Should Rotate a Key', async () => {})
-test('Should Change the DID Document', async () => {})
+test.skip('Should Change the DID Document', async () => {})
 
-/*
-describe('Lorena Substrate Tests', function () {
+test('Register a Did Document', async () => {
+  await blockchain.registerDidDocument(did, diddocHash)
+})
 
-  it('Check DID registration', async () => {
+test('Check registration event', async () => {
+  const subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
+  const registeredDidDocument = JSON.parse(subs)
+  // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
+  expect(Utils.hexToBase64(registeredDidDocument[2].split('x')[1])).toEqual(diddocHash)
+})
 
-  })
+test('Check a Did Document', async () => {
+  const result = await blockchain.getDidDocHash(did)
+  expect(result).toEqual(diddocHash)
+})
 
-  it('Register a Did Document', async () => {
-    await substrate.registerDidDocument(did, diddocHash)
-  })
+test('GetKey from a DID', async () => {
+  const result = await blockchain.getActualDidKey(did)
+  expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
+})
 
-  it('Check registration event', async () => {
-    const subs = await subscribe2RegisterEvents(substrate.api, 'DidDocumentRegistered')
-    const registeredDidDocument = JSON.parse(subs)
-    // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
-    expect(Utils.hexToBase64(registeredDidDocument[2].split('x')[1])).to.eq(diddocHash)
-  })
+test('Should Rotate a Key', async () => {
+  const newKeyPair = await crypto.newKeyPair(did)
+  const newPubKey = newKeyPair.keyPair.publicKey
+  await blockchain.rotateKey(did, newPubKey)
+  const subs = await subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
+  const keyRotated = JSON.parse(subs)
+  expect(keyRotated[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
+  const key = await blockchain.getActualDidKey(did)
+  expect(key).toEqual(Utils.hexToBase64(newPubKey))
+})
 
-  it('Check a Did Document', async () => {
-    const result = await substrate.getDidDocHash(did)
-    expect(result).to.be.eq(diddocHash)
-  })
-
-  it('GetKey from a DID', async () => {
-    const result = await substrate.getActualDidKey(did)
-    expect(result).to.eq(pubKey)
-  })
-
-  it('Rotate Key', async () => {
-    const newKeyPair = await zenroom.newKeyPair(did)
-    const newPubKey = newKeyPair[did].keypair.public_key
-    await substrate.rotateKey(did, newPubKey)
-    const subs = await subscribe2RegisterEvents(substrate.api, 'KeyRotated')
-    const keyRotated = JSON.parse(subs)
-    expect(Utils.hexToBase64(keyRotated[2].split('x')[1])).to.eq(newPubKey)
-    const key = await substrate.getActualDidKey(did)
-    expect(key).equal(newPubKey)
-  })
-*/
 test('should clean up after itself', () => {
   blockchain.disconnect()
 })
