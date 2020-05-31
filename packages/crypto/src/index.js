@@ -1,43 +1,45 @@
-const { mnemonicGenerate, mnemonicToSeed, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
+const { mnemonicGenerate, mnemonicValidate, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
 const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString } = require('@polkadot/util')
-const { randomAsU8a, naclKeypairFromSeed, naclSign, naclVerify, blake2AsHex } = require('@polkadot/util-crypto')
-
+const { randomAsU8a, blake2AsHex } = require('@polkadot/util-crypto')
+// const { schnorrkelSign, schnorrkelVerify } = require('@polkadot/util-crypto')
+const { cryptoWaitReady, createKeyMulti } = require('@polkadot/util-crypto')
+const { Keyring } = require('@polkadot/keyring')
 /**
  * Javascript Class to interact with Zenroom.
  */
 module.exports = class LorenaCrypto {
   /**
-   * Creates a new keypair.
-   *
-   * @returns {Promise} Return a promise with the execution of the creation.
+   * Init Crypto library
    */
-  newKeyPair () {
-    const mnemonic = mnemonicGenerate()
-    const keyPair = naclKeypairFromSeed(mnemonicToSeed(mnemonic))
-    return ({ mnemonic, keyPair })
+  async init () {
+    await cryptoWaitReady()
+  }
+
+  keyPair (_mnemonic = false) {
+    const mnemonic = (_mnemonic === false) ? mnemonicGenerate() : _mnemonic
+    const keyring = new Keyring({ type: 'sr25519' })
+    if (mnemonicValidate(mnemonic)) {
+      const meta = { whenCreated: Date.now() }
+      const pair = keyring.addFromMnemonic(mnemonic, meta)
+      const keyringPairAddress = keyring.getPair(pair.address).address
+      const keyringPairPubKey = u8aToHex(keyring.getPair(pair.address).publicKey)
+      return ({
+        mnemonic,
+        address: keyringPairAddress,
+        publicKey: keyringPairPubKey,
+        keyPair: keyring.getPair(pair.address)
+      })
+    } else return false
   }
 
   /**
-   * @param {string} mnemonic Keypair from Seed.
-   *
-   * @returns {Promise} Return a promise with the execution of the creation.
+   * Create a multi Address.
+   * @param {Array} addresses Array of addresses to be uin the multiaddress
+   * @param {number} threshold number of needed addresses to verify
    */
-  keyPairFromSeed (mnemonic) {
-    const keyPair = naclKeypairFromSeed(mnemonicToSeed(mnemonic))
-    return ({ mnemonic, keyPair })
-  }
-
-  /**
-   * Creates a new keypair.
-   *
-   * @param {string} name  Holder of the keypair.
-   * @param {*} keys to create
-   * @returns {Promise} Return a promise with the execution of the creation.
-   */
-  async publicKey (name, keys) {
-    return new Promise((resolve) => {
-      resolve(true)
-    })
+  multiAddress (addresses, threshold = 1) {
+    const multiAddress = createKeyMulti(addresses, threshold)
+    return (multiAddress)
   }
 
   /**
@@ -114,8 +116,9 @@ module.exports = class LorenaCrypto {
    * @returns {object} Signature
    */
   signMessage (message, keyPair) {
-    const messageSignature = naclSign(message, keyPair)
-    return (u8aToHex(messageSignature))
+    const signedData = u8aToHex(keyPair.sign(stringToU8a(message)))
+    console.log(signedData)
+    return (signedData)
   }
 
   /**
@@ -127,7 +130,11 @@ module.exports = class LorenaCrypto {
    * @returns {boolean} Whether the signature is valid or not
    */
   checkSignature (message, signature, publicKey) {
-    return naclVerify(message, hexToU8a(signature), publicKey)
+    const verifier = new Keyring({ type: 'sr25519' })
+    const pair = verifier.addFromAddress(publicKey)
+    const keyPair = verifier.getPair(pair.address)
+    const isValid = keyPair.verify(message, signature)
+    return isValid
   }
 
   /**
@@ -137,7 +144,6 @@ module.exports = class LorenaCrypto {
    * @returns {string} Return a random string
    */
   random (length = 32) {
-    // const rnd = hexToString(u8aToHex(randomAsU8a(length * 2)))
     const rnd = blake2AsHex(randomAsU8a(length)).toString()
     return (rnd.slice(2, length + 2))
   }
