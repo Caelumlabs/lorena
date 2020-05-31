@@ -1,26 +1,30 @@
 const LorenaCrypto = require('./index')
+const crypto = new LorenaCrypto()
+
+let alice
+let rnd = false
 const message = 'Hello World'
 const password = 'password random'
 
-let alice
-let signature = false
-let rnd = false
-const crypto = new LorenaCrypto(true)
+test('Init Crypto', async () => {
+  await crypto.init()
+})
 
-test('KeyPair generation: ', () => {
-  alice = crypto.newKeyPair()
+test('KeyPair generation', async () => {
+  alice = crypto.keyPair()
   expect(alice.mnemonic).not.toBeUndefined()
   const mnemonicArray = alice.mnemonic.split(' ')
   expect(mnemonicArray.length).toEqual(12)
-  expect(alice.keyPair.publicKey).not.toBeUndefined()
-  expect(alice.keyPair.publicKey.length).toEqual(32)
-  expect(alice.keyPair.secretKey).not.toBeUndefined()
-  expect(alice.keyPair.secretKey.length).toEqual(64)
+  expect(alice.publicKey).not.toBeUndefined()
+  expect(alice.publicKey.length).toEqual(66)
+  expect(alice.address).not.toBeUndefined()
+  expect(alice.address.length).toEqual(48)
 })
 
-test('Should create a KeyPair from a Seed', () => {
-  const bob = crypto.keyPairFromSeed(alice.mnemonic)
-  expect(alice.keyPair.secretKey.toString).toEqual(bob.keyPair.secretKey.toString)
+test('KeyPair generation from mnemonic', async () => {
+  const alice2 = await crypto.keyPair(alice.mnemonic)
+  expect(alice.mnemonic).not.toBeUndefined()
+  expect(alice.pubKey).toEqual(alice2.pubKey)
 })
 
 test('Should hash a String: ', () => {
@@ -46,13 +50,10 @@ test('Should create a random PIN', () => {
   expect(rnd.length).toEqual(4)
 })
 
-test('Should create a new Signature: ', () => {
-  signature = crypto.signMessage(message, alice.keyPair)
+test('Should create a new Signature: ', async () => {
+  const signature = crypto.signMessage(message, alice.keyPair)
   expect(signature).not.toBeUndefined()
-})
-
-test('Should Check the Signature', () => {
-  const check = crypto.checkSignature(message, signature, alice.keyPair.publicKey)
+  const check = crypto.checkSignature(message, signature, alice.address)
   expect(check).toEqual(true)
 })
 
@@ -75,4 +76,22 @@ test('Should encrypt & decrypt an object', () => {
   const result = crypto.decryptObj(password, msgEncrypted)
   expect(result.msg).toEqual(message)
   expect(result.test).toEqual('áà # test')
+})
+
+// Multiaddress.
+test('USing multiaddresses', () => {
+  const a1 = crypto.keyPair()
+  const a2 = crypto.keyPair()
+  const a3 = crypto.keyPair()
+  const a4 = crypto.keyPair()
+  const a5 = crypto.keyPair()
+
+  const addresses = [a1.address, a2.address, a3.address, a4.address, a5.address]
+  const multiAddress = crypto.multiAddress(addresses)
+  expect(multiAddress).not.toBeUndefined()
+
+  const signature = crypto.signMessage(message, a1.keyPair)
+  expect(signature).not.toBeUndefined()
+  const check = crypto.checkSignature(message, signature, multiAddress)
+  expect(check).toEqual(true)
 })
