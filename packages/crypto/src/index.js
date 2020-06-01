@@ -39,6 +39,8 @@ module.exports = class LorenaCrypto {
    */
   multiAddress (addresses, threshold = 1) {
     const multiAddress = createKeyMulti(addresses, threshold)
+    // const u8 = hexToU8a(multiAddress)
+    // console.log(u8)
     return (multiAddress)
   }
 
@@ -117,7 +119,6 @@ module.exports = class LorenaCrypto {
    */
   signMessage (message, keyPair) {
     const signedData = u8aToHex(keyPair.sign(stringToU8a(message)))
-    console.log(signedData)
     return (signedData)
   }
 

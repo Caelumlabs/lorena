@@ -119,7 +119,7 @@ test('GetKey from a DID', async () => {
 })
 
 test('Should Rotate a Key', async () => {
-  const newKeyPair = await crypto.newKeyPair(did)
+  const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(did, newPubKey)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
