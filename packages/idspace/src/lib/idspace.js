@@ -57,6 +57,7 @@ module.exports = class IDSpace {
       const result = await dbm.doMigration()
       debug('DB Migration: ' + result)
     }
+    await context.crypto.init()
     await context.blockchain.connect()
     return new IDSpace(context)
   }
@@ -127,7 +128,7 @@ module.exports = class IDSpace {
     // Get matrix user
     const matrixUser = this.context.crypto.random(12)
     this.context.info.matrixUser = matrixUser.toLowerCase()
-    this.context.info.wallet = this.context.crypto.newKeyPair()
+    this.context.info.wallet = this.context.crypto.keyPair()
     this.context.info.w3cDID = 'did:lor:' + this.context.info.network + ':' + this.context.info.did
   }
 
@@ -234,7 +235,7 @@ module.exports = class IDSpace {
 
           // Accept all incoming connections.
           events.on('contact-incoming', async (msg) => {
-            await ContactsApi.addRoom(this.context, msg.roomId)
+            await ContactsApi.addConnection(this.context, msg.roomId)
             await this.context.comms.acceptConnection(msg.roomId)
 
             const m = this.context.comms.extractDid(msg.sender)

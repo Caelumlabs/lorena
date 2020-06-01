@@ -1,5 +1,5 @@
 const Comms = require('@lorena/comms')
-const Zenroom = require('@lorena/crypto')
+const Crypto = require('@lorena/crypto')
 const IpfsClient = require('ipfs-http-client')
 const Credential = require('@lorena/credentials')
 const LorenaDidResolver = require('@lorena/resolver')
@@ -20,9 +20,9 @@ module.exports = class Lorena extends EventEmitter {
     super()
     this.opts = opts
     if (opts.debug) debug.enabled = true
-    this.zenroom = new Zenroom(opts.silent || false)
     this.wallet = walletHandler
     this.comms = false
+    this.crypto = new Crypto()
     this.recipeId = 0
     this.queue = []
     this.processing = false
@@ -40,8 +40,10 @@ module.exports = class Lorena extends EventEmitter {
    * @returns {Promise} of initialized wallet
    */
   async initWallet (network) {
+    console.log('Init Wallet')
     return new Promise((resolve, reject) => {
       const info = LorenaDidResolver.getInfoForNetwork(network)
+      console.log(info)
       if (!info) {
         reject(new Error(`Unknown network ${network}`))
         return
@@ -54,8 +56,8 @@ module.exports = class Lorena extends EventEmitter {
       this.wallet.info.matrixServer = info.matrixEndpoint
       this.comms = new Comms(this.wallet.info.matrixServer)
 
-      this.wallet.info.matrixUser = this.zenroom.random(12).toLowerCase()
-      this.wallet.info.matrixPass = this.zenroom.random(12)
+      this.wallet.info.matrixUser = this.comms.randomUsername()
+      this.wallet.info.matrixPass = this.crypto.random(16)
       this.comms.available(this.wallet.info.matrixUser).then((available) => {
         if (available) {
           return this.comms.register(this.wallet.info.matrixUser, this.wallet.info.matrixPass)

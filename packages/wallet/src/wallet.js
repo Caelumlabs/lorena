@@ -5,7 +5,7 @@ const debug = require('debug')('did:debug:wallet-fs')
 debug.enabled = true
 
 module.exports = class Wallet {
-  constructor (username, opts = { storage: 'fs', silent: true }) {
+  constructor (username, opts = { storage: 'fs' }) {
     this.opts = opts
     if (opts.storage === 'mem') {
       this.storage = {}

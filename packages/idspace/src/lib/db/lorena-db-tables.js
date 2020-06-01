@@ -8,7 +8,7 @@ module.exports = [
         key TEXT PRIMARY KEY,
         type CHAR(1) NOT NULL DEFAULT ('S'),
         value TEXT NOT NULL);`,
-    `CREATE TABLE IF NOT EXISTS rooms (
+    `CREATE TABLE IF NOT EXISTS connections (
         linkId INTEGER PRIMARY KEY,
         roomId TEXT,
         matrixUser TEXT,

@@ -79,15 +79,10 @@ test('Achievement: should issue a new achievement', async () => {
   expect(achievement.subject.issuanceDate).toEqual('2020-04-23 00:00:00')
   expect(achievement.subject.expirationDate).toEqual('2020-04-23 23:59:59')
 
+  await crypto.init()
   const issuer = 'did:lor:lab:8000'
-  const signer = crypto.newKeyPair()
+  const signer = crypto.keyPair()
   const signature = crypto.signMessage(JSON.stringify(achievement.subject), signer.keyPair)
-  // seed = await crypto.keyPairFromSeed(seed.mnemonic)
-  //
-  // console.log(signature)
-  // const signedCredential = Credential.signCredential(organization, signature, BLOCKZERO, 'Ed25519Signature2018')
-  // console.log(crypto.checkSignature(JSON.stringify(organization.subject), signedCredential.proof.signature, seed.keyPair.publicKey))
-
   const signedCredential = await cred.signCredential(achievement, signature, issuer)
   expect(signedCredential.issuer).toEqual(issuer)
   expect(signedCredential.issuanceDate).not.toBeUndefined()

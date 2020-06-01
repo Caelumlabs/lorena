@@ -8,15 +8,14 @@ class ContactsApi {
    */
   static async insertContact (context, contact) {
     const sql = 'INSERT OR REPLACE INTO contacts ' +
-      ' (did, diddoc, matrixUser, network, roomId, type, name, status ) VALUES ' +
-      ' ($did, $diddoc, $matrixUser, $network, $roomId, $type, $name, $status )'
+      ' (did, linkId, diddoc, network, type, name, status ) VALUES ' +
+      ' ($did, $linkId, $diddoc, $network, $type, $name, $status )'
 
     const params = {
       $did: contact.did,
+      $linkId: contact.lonkId,
       $diddoc: contact.diddoc,
-      $matrixUser: contact.matrixUser,
       $network: contact.network,
-      $roomId: contact.room_id || '',
       $type: contact.type || 'contact',
       $name: contact.name || '',
       $status: contact.status || 'invited'
@@ -86,8 +85,8 @@ class ContactsApi {
    * @param {string} matrixUser Matrix User
    * @returns {*} result
    */
-  static async addRoom (context, roomId, matrixUser) {
-    return context.database.runSQL('INSERT INTO rooms (roomId, matrixUser) VALUES (?, ?)', [roomId, matrixUser])
+  static async addConnection (context, roomId, matrixUser) {
+    return context.database.runSQL('INSERT INTO connections (roomId, matrixUser) VALUES (?, ?)', [roomId, matrixUser])
   }
 }
 
