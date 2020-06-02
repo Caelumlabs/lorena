@@ -1,5 +1,6 @@
 const networks = require('../networks.json')
-const Storage = require('@lorena/storage')
+// const Storage = require('@lorena/storage')
+const Comms = require('@lorena/comms')
 const Blockchain = require('@lorena/blockchain-substrate')
 const bip39 = require('bip39')
 var debug = require('debug')('did-resolver:debug')
@@ -50,8 +51,10 @@ function getResolver () {
     }
 
     // Connect to Matrix to get the DID Document
-    const storage = await new Storage(info.matrixEndpoint)
-    const didDoc = await storage.get(didDocHash)
+    const comms = new Comms(info.matrixEndpoint)
+    // ToDo Use Storage or Comms depending on the Hash type
+    // const storage = new Storage(info.matrixEndpoint)
+    const didDoc = await comms.downloadFile(didDocHash)
 
     // no DID Document found: return nothing
     if (!didDoc || !didDoc.data) {
