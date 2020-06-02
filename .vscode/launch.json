@@ -6,6 +6,20 @@
   "configurations": [
     {
       "type": "node",
+      "name": "vscode-jest-tests",
+      "request": "launch",
+      "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+      "args": [
+        "packages/resolver",
+        "--runInBand"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "disableOptimisticBPs": true
+    },
+    {
+      "type": "node",
       "request": "launch",
       "name": "Jest watch",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
@@ -22,7 +36,7 @@
       "request": "launch",
       "name": "Jest test",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["--verbose", "-i", "--no-cache", "test"],
+      "args": ["packages/resolver --verbose", "--coverage", "-i", "--no-cache", "test"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "windows": {
