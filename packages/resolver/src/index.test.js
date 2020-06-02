@@ -52,6 +52,7 @@ for (const did of badDIDs) {
 const goodDIDs = [
   'did:lor:labdev:WjBSUVNIRjJhRFJoYjJsMU0wSnVka0Zz',
   'did:lor:labtest:TjFkVWNrbFFjMmRDUVhsYU9YWlZVbTA1'
+  // TODO: Add a DID which has its DIDDOC stored in IPFS
 ]
 
 for (const did of goodDIDs) {
