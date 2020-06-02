@@ -35,17 +35,18 @@ test('should construct the resolver', () => {
   expect(resolver.resolve).toBeDefined()
 })
 
-badDIDs.forEach((did) => {
-  test('should get an empty public key for a nonexistent DID', async () => {
+test('should get an empty public key for a nonexistent DID', async () => {
+  await badDIDs.forEach(async (did) => {
     // using a valid DID, retrieve public key
     const publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
     expect(publicKey).toBe('')
   })
+})
 
-  test('should get nothing for a nonexistent DID', async () => {
+test('should get nothing for a nonexistent DID', async () => {
+  await badDIDs.forEach(async (did) => {
     // using a invalid DID, empty did doc
     const doc = await resolver.resolve(did)
-    console.log(doc)
     expect(doc).toBeNull()
   })
 })
@@ -55,22 +56,31 @@ const goodDIDs = [
   'did:lor:labtest:VFhKQ2FsazVSM1pWY0VaWmJXVlpSVmRS'
 ]
 
-goodDIDs.forEach((did) => {
-  let publicKey
-  test('should get the public key for a DID', async () => {
+test('should get the public key for a DID', async () => {
+  await goodDIDs.forEach(async (did) => {
+    jest.setTimeout(10000)
     // using a valid DID, retrieve public key
-    publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
+    const publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
     expect(publicKey).toBeDefined()
   })
+})
 
-  test.skip('should get the complete DID Document for a DID', async () => {
+test.skip('should get the complete DID Document for a DID', async () => {
+  jest.setTimeout(30000)
+  console.log('111111111111111')
+  await goodDIDs.forEach(async (did) => {
+    console.log('2222222222222222')
+    console.log('33333333333 - did: ', did)
     // using a valid DID, retrieve public key
     const doc = await resolver.resolve(did)
+    console.log('44444444444 - doc: ', doc)
     expect(doc).toBeDefined()
     expect(doc.id).toEqual(did)
     expect(doc.authentication[0].id).to.contain(did)
     // the public key should be the same as the one in the blockchain
-    expect(doc.authentication[0].publicKey).toEqual(publicKey)
+    // expect(doc.authentication[0].publicKey).toEqual(publicKey)
+    // console.log('DOCCCCCCCCCCCCCCCCCC', doc.authentication[0].publicKey)
+    // console.log(publicKey)
   })
 })
 
