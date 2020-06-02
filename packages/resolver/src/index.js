@@ -1,5 +1,7 @@
 const networks = require('../networks.json')
+const CID = require('cids')
 const Storage = require('@lorena/storage')
+const Comms = require('@lorena/comms')
 const Blockchain = require('@lorena/blockchain-substrate')
 const bip39 = require('bip39')
 var debug = require('debug')('did-resolver:debug')
@@ -49,9 +51,17 @@ function getResolver () {
       return null
     }
 
-    // Connect to Matrix to get the DID Document
-    const storage = await new Storage(info.matrixEndpoint)
-    const didDoc = await storage.get(didDocHash)
+    // Get the diddoc
+    let didDoc
+    // if it's a ContentID, use the storage mechanism (IPFS)
+    if (CID.isCID(didDocHash)) {
+      const storage = new Storage(info.ipfsEndpoint)
+      didDoc = await storage.get(didDocHash)
+    } else {
+      // otherwise use Matrix storage
+      const comms = new Comms(info.matrixEndpoint)
+      didDoc = await comms.downloadFile(didDocHash)
+    }
 
     // no DID Document found: return nothing
     if (!didDoc || !didDoc.data) {
