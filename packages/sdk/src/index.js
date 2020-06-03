@@ -417,9 +417,11 @@ module.exports = class Lorena extends EventEmitter {
    * @returns {Promise} linkId created, or false
    */
   async createConnection (did, matrixUserID, options = {}) {
+    console.log('createConnection')
     if (matrixUserID === undefined) {
       matrixUserID = await this.getMatrixUserIDForDID(did)
     }
+    console.log(matrixUserID)
 
     const link = {
       linkId: uuid(),
@@ -433,9 +435,11 @@ module.exports = class Lorena extends EventEmitter {
       alias: '',
       ...options
     }
+    console.log(link)
     return new Promise((resolve, reject) => {
       this.comms.createConnection(link.roomName, matrixUserID)
         .then((roomId) => {
+          console.log(roomId)
           link.roomId = roomId
           this.wallet.add('links', link)
           this.emit('change')

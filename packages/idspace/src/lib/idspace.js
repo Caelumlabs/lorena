@@ -98,7 +98,9 @@ module.exports = class IDSpace {
 
     // DIDDOC
     const didDocument = new Credential.DidDoc(this.context.info.w3cDID)
+    didDocument.addService('matrix', 'matrixUser', '@' + matrixUser + ':' + this.context.comms.serverName)
     this.context.info.diddoc = await this.context.storage.put(didDocument.subject)
+    debug('Diddoc :' + this.context.info.diddoc)
 
     // Blockchain.
     // await this.context.blockchain.setKeyring(this.context.info.tempSeed)

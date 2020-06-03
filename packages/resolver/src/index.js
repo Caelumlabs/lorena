@@ -28,11 +28,14 @@ function getResolver () {
   ) /* : Promise<DIDDocument | null> */ {
     // console.log (parsed)
 
+    console.log('resolve1')
     const info = getInfoForDid(did)
     if (!info) {
       return null
     }
 
+    console.log('resolve2')
+    console.log(info)
     const connection = await getBlockchainConnection(did)
     let didDocHash
     try {

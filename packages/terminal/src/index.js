@@ -45,7 +45,6 @@ const main = async () => {
       password = await term.input('Password', { echoChar: true })
     }
     term.info('Wallet open')
-    await lorena.connect()
   } else if (loginOrAdd === 'Add Wallet') {
     const username = await term.input('Username')
     const wallet = new Wallet(username)
@@ -67,10 +66,10 @@ const main = async () => {
     // Creating wallet
     term.message(`Let's create your wallet in network ${didLink.split(':')[2]}!\n`)
     await createWallet(didLink.split(':')[2], lorena, password)
-    await lorena.connect()
   }
 
   // React to messages received.
+  await lorena.connect()
   lorena.on('message:credential-ask', async (payload) => term.message('Received credential', payload))
   lorena.on('message:action-post', async (payload) => term.message('Received action', payload))
   lorena.on('contact-incoming', async (payload) => term.message('Contact invitation Incoming from', payload))
