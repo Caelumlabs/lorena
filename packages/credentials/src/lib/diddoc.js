@@ -13,4 +13,21 @@ module.exports = class DidDoc {
       did: did
     }
   }
+
+  /**
+   * Add a service to the diddoc
+   * @param {string} id Identifier for the DID
+   * @param {*} type Type of Service
+   * @param {*} serviceEndpoint Service endpoint
+   */
+  addService (id, type, serviceEndpoint) {
+    if (!this.subject.service) {
+      this.subject.service = []
+    }
+    this.subject.service.push({
+      id: this.subject.did + '#' + id,
+      type,
+      serviceEndpoint
+    })
+  }
 }
