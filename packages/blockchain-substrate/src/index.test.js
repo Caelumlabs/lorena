@@ -30,8 +30,9 @@ let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
-beforeAll(() => {
+test('blah', async () => {
   blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  await crypto.init()
   did = crypto.random(16)
 })
 
@@ -94,8 +95,6 @@ test('Should Save a DID to Blockchain', async () => {
   // Key `valid_to` should be 0 representing an empty value
   expect(keyRegister.valid_to.isEmpty).toEqual(true)
 })
-
-test.skip('Should Change the DID Document', async () => {})
 
 test('Register a Did Document', async () => {
   await blockchain.registerDidDocument(did, diddocHash)
