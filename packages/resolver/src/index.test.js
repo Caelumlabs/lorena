@@ -35,7 +35,7 @@ test('should construct the resolver', () => {
   expect(resolver.resolve).toBeDefined()
 })
 
-badDIDs.forEach((did) => {
+for (const did of badDIDs) {
   test('should get an empty public key for a nonexistent DID', async () => {
     // using a valid DID, retrieve public key
     const publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
@@ -45,34 +45,36 @@ badDIDs.forEach((did) => {
   test('should get nothing for a nonexistent DID', async () => {
     // using a invalid DID, empty did doc
     const doc = await resolver.resolve(did)
-    console.log(doc)
     expect(doc).toBeNull()
   })
-})
+}
 
 const goodDIDs = [
   'did:lor:labdev:WjBSUVNIRjJhRFJoYjJsMU0wSnVka0Zz',
-  'did:lor:labtest:VFhKQ2FsazVSM1pWY0VaWmJXVlpSVmRS'
+  'did:lor:labtest:TjFkVWNrbFFjMmRDUVhsYU9YWlZVbTA1'
+  // TODO: Add a DID which has its DIDDOC stored in IPFS
 ]
 
-goodDIDs.forEach((did) => {
-  let publicKey
+for (const did of goodDIDs) {
   test('should get the public key for a DID', async () => {
+    jest.setTimeout(10000)
     // using a valid DID, retrieve public key
-    publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
+    const publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
     expect(publicKey).toBeDefined()
   })
 
-  test.skip('should get the complete DID Document for a DID', async () => {
+  test('should get the complete DID Document for a DID', async () => {
+    jest.setTimeout(50000)
     // using a valid DID, retrieve public key
     const doc = await resolver.resolve(did)
     expect(doc).toBeDefined()
     expect(doc.id).toEqual(did)
-    expect(doc.authentication[0].id).to.contain(did)
+    expect(doc.authentication[0].id).toMatch(new RegExp(did))
     // the public key should be the same as the one in the blockchain
+    const publicKey = await LorenaDidResolver.getPublicKeyForDid(did)
     expect(doc.authentication[0].publicKey).toEqual(publicKey)
   })
-})
+}
 
 test.skip('should get the fragment for a DID path', async () => {
   const did = 'did:lor:labdev:Wldvd1pqVmZWbEoxYVdaWFdGOW5ja05I/service/0#serviceEndpoint'
