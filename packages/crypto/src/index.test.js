@@ -80,7 +80,7 @@ test('Should encrypt & decrypt an object', () => {
 
 // Multiaddress.
 test('USing multiaddresses', () => {
-  crypto.testSchnorr()
+  // crypto.testSchnorr()
 
   /* const a1 = crypto.keyPair()
   const a2 = crypto.keyPair()
