@@ -1,6 +1,6 @@
 {
   "name": "@lorena/resolver",
-  "version": "0.0.0",
+  "version": "0.1.2",
   "description": "Lorena DID Resolver",
   "main": "src/index.js",
   "author": "Caelum Labs",
@@ -13,10 +13,11 @@
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@lorena/blockchain-substrate": "^0.0.0",
-    "@lorena/storage": "^0.0.0",
+    "@lorena/blockchain-substrate": "^0.1.2",
+    "@lorena/storage": "^0.1.2",
     "bip39": "^3.0.2",
     "debug": "^4.1.1",
     "did-resolver": "^1.1.0"
-  }
+  },
+  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
 }

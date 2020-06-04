@@ -1,6 +1,6 @@
 {
   "name": "@lorena/blockchain",
-  "version": "0.0.0",
+  "version": "0.1.2",
   "description": "Lorena Blockchain Interface",
   "main": "src/index.js",
   "license": "MIT",
@@ -15,5 +15,6 @@
     "hooks": {
       "pre-commit": "yarn lint"
     }
-  }
+  },
+  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
 }

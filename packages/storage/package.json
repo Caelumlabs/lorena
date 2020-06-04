@@ -1,6 +1,6 @@
 {
   "name": "@lorena/storage",
-  "version": "0.0.0",
+  "version": "0.1.2",
   "description": "Lorena Storage",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -21,5 +21,6 @@
     "cids": "^0.8.1",
     "debug": "^4.1.1",
     "ipfs-http-client": "^44.1.0"
-  }
+  },
+  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
 }

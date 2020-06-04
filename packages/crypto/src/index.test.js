@@ -79,9 +79,7 @@ test('Should encrypt & decrypt an object', () => {
 })
 
 // Multiaddress.
-test.skip('USing multiaddresses', () => {
-  crypto.testSchnorr()
-
+test.skip('Using multiaddresses', () => {
   const a1 = crypto.keyPair()
   const a2 = crypto.keyPair()
   const a3 = crypto.keyPair()

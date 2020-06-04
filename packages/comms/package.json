@@ -1,6 +1,6 @@
 {
   "name": "@lorena/comms",
-  "version": "0.0.0",
+  "version": "0.1.2",
   "description": "Lorena Communication Protocol",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -13,9 +13,10 @@
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@lorena/crypto": "^0.0.0",
+    "@lorena/crypto": "^0.1.2",
     "axios": "^0.19.2",
     "debug": "^4.1.1",
     "events": "^3.1.0"
-  }
+  },
+  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
 }

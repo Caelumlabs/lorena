@@ -1,6 +1,6 @@
 {
   "name": "@lorena/crypto",
-  "version": "0.0.0",
+  "version": "0.1.2",
   "description": "Crypto package for Lorena",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -23,5 +23,6 @@
     "hooks": {
       "pre-commit": "yarn lint"
     }
-  }
+  },
+  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
 }
