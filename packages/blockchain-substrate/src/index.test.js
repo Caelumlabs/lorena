@@ -30,9 +30,9 @@ let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
-beforeAll(() => {
-//  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+test('before all', async () => {
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  await crypto.init()
   did = crypto.random(16)
 })
 
@@ -86,8 +86,6 @@ test('Should Save a DID to Blockchain', async () => {
   expect(pubKey.toString().split('x')[1]).toEqual(Utils.base64ToHex(blockchain.keypair.publicKey))
 })
 
-test.skip('Should Change the DID Document', async () => {})
-
 test('Register a Did Document', async () => {
   await blockchain.registerDidDocument(did, diddocHash)
 })
@@ -99,7 +97,7 @@ test('Check registration event', async () => {
   expect(Utils.hexToBase64(registeredDidDocument[2].split('x')[1])).toEqual(diddocHash)
 })
 
-test.skip('Check a Did Document', async () => {
+test('Check a Did Document', async () => {
   const result = await blockchain.didDocumentFromDid(did)
   expect(result).toEqual(diddocHash)
 })
@@ -109,7 +107,7 @@ test.skip('GetKey from a DID', async () => {
   expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
 })
 
-test.skip('Should Rotate a Key', async () => {
+test('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(did, newPubKey)
