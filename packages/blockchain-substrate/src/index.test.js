@@ -30,9 +30,10 @@ let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
-beforeAll(() => {
-//  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+test('before all', async () => {
+  await crypto.init()
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  // blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   did = crypto.random(16)
 })
 
