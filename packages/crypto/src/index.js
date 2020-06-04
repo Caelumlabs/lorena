@@ -1,8 +1,8 @@
 const { mnemonicGenerate, mnemonicValidate, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
 const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString } = require('@polkadot/util')
 const { randomAsU8a, blake2AsHex } = require('@polkadot/util-crypto')
-// const { schnorrkelSign, schnorrkelVerify } = require('@polkadot/util-crypto')
-const { cryptoWaitReady, createKeyMulti } = require('@polkadot/util-crypto')
+const { schnorrkelSign, schnorrkelVerify, schnorrkelKeypairFromSeed } = require('@polkadot/util-crypto')
+const { cryptoWaitReady, createKeyMulti, encodeAddress } = require('@polkadot/util-crypto')
 const { Keyring } = require('@polkadot/keyring')
 /**
  * Javascript Class to interact with Zenroom.
@@ -118,7 +118,8 @@ module.exports = class LorenaCrypto {
    * @returns {object} Signature
    */
   signMessage (message, keyPair) {
-    const signedData = u8aToHex(keyPair.sign(stringToU8a(message)))
+    // const signedData = u8aToHex(keyPair.sign(stringToU8a(message)))
+    const signedData = keyPair.sign(stringToU8a(message))
     return (signedData)
   }
 
@@ -168,5 +169,24 @@ module.exports = class LorenaCrypto {
    */
   blake2 (source) {
     return (blake2AsHex(source))
+  }
+
+  testSchnorr () {
+    const message = 'Hello world'
+    const a1 = schnorrkelKeypairFromSeed(randomAsU8a())
+    const a2 = schnorrkelKeypairFromSeed(randomAsU8a())
+    const a3 = schnorrkelKeypairFromSeed(randomAsU8a())
+
+    const addresses = [a1.publicKey, a2.publicKey, a3.publicKey]
+    const multiAddress = createKeyMulti(addresses, 1)
+
+    // Convert byte array to SS58 encoding.
+    const SS58Prefix = 0
+    const Ss58Address = encodeAddress(multiAddress, SS58Prefix)
+    console.log(`\nMultisig Address: ${Ss58Address}`)
+
+    const signedData = schnorrkelSign(message, a1)
+    const isValid = schnorrkelVerify(message, signedData, Ss58Address)
+    console.log(isValid)
   }
 }

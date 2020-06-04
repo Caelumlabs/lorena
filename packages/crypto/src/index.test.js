@@ -22,7 +22,7 @@ test('KeyPair generation', async () => {
 })
 
 test('KeyPair generation from mnemonic', async () => {
-  const alice2 = await crypto.keyPair(alice.mnemonic)
+  const alice2 = crypto.keyPair(alice.mnemonic)
   expect(alice.mnemonic).not.toBeUndefined()
   expect(alice.pubKey).toEqual(alice2.pubKey)
 })
@@ -79,9 +79,10 @@ test('Should encrypt & decrypt an object', () => {
 })
 
 // Multiaddress.
-/*
 test('USing multiaddresses', () => {
-  const a1 = crypto.keyPair()
+  crypto.testSchnorr()
+
+  /* const a1 = crypto.keyPair()
   const a2 = crypto.keyPair()
   const a3 = crypto.keyPair()
   const a4 = crypto.keyPair()
@@ -94,7 +95,9 @@ test('USing multiaddresses', () => {
 
   const signature = crypto.signMessage(message, a1.keyPair)
   expect(signature).not.toBeUndefined()
+  expect(signature).toHaveLength(64)
+
+  // console.log(multiAddress)
   const check = crypto.checkSignature(message, signature, multiAddress)
-  expect(check).toEqual(true)
+  expect(check).toEqual(true) */
 })
-*/
