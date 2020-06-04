@@ -1,6 +1,6 @@
 {
   "name": "@lorena/blockchain-substrate",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lorena - Blockchain Substrate Lib",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -13,8 +13,8 @@
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@lorena/blockchain": "^0.1.1",
-    "@lorena/crypto": "^0.1.1",
+    "@lorena/blockchain": "^0.1.2",
+    "@lorena/crypto": "^0.1.2",
     "@polkadot/api": "^1.15.1",
     "@polkadot/types": "^1.15.1"
   },

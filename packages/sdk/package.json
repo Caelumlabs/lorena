@@ -1,6 +1,6 @@
 {
   "name": "@lorena/sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lorena SDK",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -13,11 +13,11 @@
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@lorena/comms": "^0.1.1",
-    "@lorena/credentials": "^0.1.1",
-    "@lorena/crypto": "^0.1.1",
-    "@lorena/resolver": "^0.1.1",
-    "@lorena/wallet": "^0.1.1"
+    "@lorena/comms": "^0.1.2",
+    "@lorena/credentials": "^0.1.2",
+    "@lorena/crypto": "^0.1.2",
+    "@lorena/resolver": "^0.1.2",
+    "@lorena/wallet": "^0.1.2"
   },
   "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
 }
