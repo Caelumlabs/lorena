@@ -6,6 +6,9 @@
   "author": "Alex Puig",
   "license": "MIT",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@lorena/sdk": "^0.1.2",
     "@lorena/wallet": "^0.1.2",
@@ -13,5 +16,5 @@
     "figlet": "^1.4.0",
     "terminal-kit": "^1.35.2"
   },
-  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
+  "gitHead": "f0bd4dad3525afc932b3ca66922c117ff03abb7d"
 }

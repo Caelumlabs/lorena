@@ -5,6 +5,9 @@
   "main": "src/index.js",
   "license": "MIT",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "jest --silent",
     "coverage": "jest --coverage",
@@ -16,5 +19,5 @@
       "pre-commit": "yarn lint"
     }
   },
-  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
+  "gitHead": "f0bd4dad3525afc932b3ca66922c117ff03abb7d"
 }

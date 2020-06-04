@@ -6,6 +6,9 @@
   "author": "Alex Puig",
   "license": "MIT",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@polkadot/keyring": "^2.11.1",
     "@polkadot/util": "^2.10.1",
@@ -24,5 +27,5 @@
       "pre-commit": "yarn lint"
     }
   },
-  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
+  "gitHead": "f0bd4dad3525afc932b3ca66922c117ff03abb7d"
 }

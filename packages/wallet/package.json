@@ -6,6 +6,9 @@
   "author": "Javi Santos",
   "license": "MIT",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "jest --silent --passWithNoTests",
     "coverage": "jest --coverage",
@@ -20,5 +23,5 @@
   "dependencies": {
     "@lorena/crypto": "^0.1.2"
   },
-  "gitHead": "5bc23ebda1b84a7b4f8b439c33f43a715d8263d0"
+  "gitHead": "f0bd4dad3525afc932b3ca66922c117ff03abb7d"
 }
