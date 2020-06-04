@@ -18,5 +18,6 @@
     "@lorena/crypto": "^0.1.0",
     "@lorena/resolver": "^0.1.0",
     "@lorena/wallet": "^0.1.0"
-  }
+  },
+  "gitHead": "51e518882925a4661d8271ed7c4008b605c2c540"
 }

@@ -6,7 +6,7 @@
   "repository": "https://github.com/Caelumlabs/lorena.git",
   "author": "Alex Puig",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "workspaces": [
     "packages/*"
   ],
