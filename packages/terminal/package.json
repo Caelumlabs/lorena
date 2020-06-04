@@ -1,14 +1,14 @@
 {
   "name": "@lorena/terminal",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Lorena terminal",
   "main": "src/index.js",
   "author": "Alex Puig",
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "@lorena/sdk": "^0.0.0",
-    "@lorena/wallet": "^0.0.0",
+    "@lorena/sdk": "^0.1.0",
+    "@lorena/wallet": "^0.1.0",
     "debug": "^4.1.1",
     "figlet": "^1.4.0",
     "terminal-kit": "^1.35.2"

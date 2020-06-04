@@ -1,6 +1,6 @@
 {
   "name": "@lorena/wallet",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Lorena Wallet",
   "main": "src/wallet.js",
   "author": "Javi Santos",
@@ -18,6 +18,6 @@
     }
   },
   "dependencies": {
-    "@lorena/crypto": "^0.0.0"
+    "@lorena/crypto": "^0.1.0"
   }
 }
