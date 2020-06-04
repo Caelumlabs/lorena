@@ -42,18 +42,18 @@ module.exports = class SubstrateLib extends BlockchainInterface {
       provider: this.provider,
       types: {
         PublicKey: {
-          pub_key:                'Vec<u8>',
-          valid_from:             'u64',
-          valid_to:               'u64'
+          pub_key: 'Vec<u8>',
+          valid_from: 'u64',
+          valid_to: 'u64'
         },
         DIDData: {
-          owner:                  'AccountId',
-          did_promoter:           'Hash',
-          level:                  'u16',
-          pub_keys:               'Vec<PublicKey<u64>>',
-          did_docs:               'Hash',
-          valid_from:             'u64',
-          valid_to:               'u64'
+          owner: 'AccountId',
+          did_promoter: 'Hash',
+          level: 'u16',
+          pub_keys: 'Vec<PublicKey>',
+          did_docs: 'Hash',
+          valid_from: 'u64',
+          valid_to: 'u64'
         }
       }
     })
