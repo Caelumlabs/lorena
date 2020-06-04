@@ -1,5 +1,5 @@
 const term = require('./term')
-const Credential = require('@lorena/credentials')
+const Credential = require('@caelumlabs/credentials')
 
 /**
  * Creates a new wallet.

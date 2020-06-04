@@ -14,7 +14,7 @@ npm @lorena-ssi/matrix-lib
 ## Getting Started
 
 ```javascript
-const Comms = require('@lorena/comms')
+const Comms = require('@caelumlabs/comms')
 // Creating class Matrix with parameter `homeserver`
 const matrix = new Comms('https://matrix.org')
 // Check if user exists

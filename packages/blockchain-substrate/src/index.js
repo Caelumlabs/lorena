@@ -1,6 +1,6 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
-const BlockchainInterface = require('@lorena/blockchain')
+const BlockchainInterface = require('@caelumlabs/blockchain')
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
 const { TypeRegistry } = require('@polkadot/types')
 const { Vec } = require('@polkadot/types/codec')

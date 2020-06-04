@@ -1,6 +1,6 @@
 'use strict'
 const BlockchainSubstrate = require('./index.js')
-const Crypto = require('@lorena/crypto')
+const Crypto = require('@caelumlabs/crypto')
 const Utils = require('./utils')
 
 const crypto = new Crypto(true)

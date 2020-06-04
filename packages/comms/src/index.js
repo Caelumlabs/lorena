@@ -2,7 +2,7 @@
 'use strict'
 const axios = require('axios')
 const EventEmitter = require('events')
-const Crypto = require('@lorena/crypto')
+const Crypto = require('@caelumlabs/crypto')
 
 // Debug
 var debug = require('debug')('did:debug:matrix')

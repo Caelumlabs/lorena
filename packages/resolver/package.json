@@ -1,5 +1,5 @@
 {
-  "name": "@lorena/resolver",
+  "name": "@caelumlabs/resolver",
   "version": "0.1.3",
   "description": "Lorena DID Resolver",
   "main": "src/index.js",
@@ -13,8 +13,8 @@
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@lorena/blockchain-substrate": "^0.1.3",
-    "@lorena/storage": "^0.1.3",
+    "@caelumlabs/blockchain-substrate": "^0.1.3",
+    "@caelumlabs/storage": "^0.1.3",
     "bip39": "^3.0.2",
     "debug": "^4.1.1",
     "did-resolver": "^1.1.0"

@@ -1,5 +1,5 @@
 {
-  "name": "@lorena/terminal",
+  "name": "@caelumlabs/terminal",
   "version": "0.1.3",
   "description": "Lorena terminal",
   "main": "src/index.js",
@@ -10,8 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@lorena/sdk": "^0.1.3",
-    "@lorena/wallet": "^0.1.3",
+    "@caelumlabs/sdk": "^0.1.3",
+    "@caelumlabs/wallet": "^0.1.3",
     "debug": "^4.1.1",
     "figlet": "^1.4.0",
     "terminal-kit": "^1.35.2"

@@ -1,8 +1,8 @@
 const networks = require('../networks.json')
 const CID = require('cids')
-const Storage = require('@lorena/storage')
-const Comms = require('@lorena/comms')
-const Blockchain = require('@lorena/blockchain-substrate')
+const Storage = require('@caelumlabs/storage')
+const Comms = require('@caelumlabs/comms')
+const Blockchain = require('@caelumlabs/blockchain-substrate')
 const bip39 = require('bip39')
 var debug = require('debug')('did-resolver:debug')
 

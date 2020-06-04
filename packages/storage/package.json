@@ -1,5 +1,5 @@
 {
-  "name": "@lorena/storage",
+  "name": "@caelumlabs/storage",
   "version": "0.1.3",
   "description": "Lorena Storage",
   "main": "src/index.js",
