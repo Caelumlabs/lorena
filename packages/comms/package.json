@@ -1,6 +1,6 @@
 {
-  "name": "@lorena/comms",
-  "version": "0.1.3",
+  "name": "@caelumlabs/comms",
+  "version": "0.1.5",
   "description": "Lorena Communication Protocol",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -16,10 +16,10 @@
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@lorena/crypto": "^0.1.3",
+    "@caelumlabs/crypto": "^0.1.5",
     "axios": "^0.19.2",
     "debug": "^4.1.1",
     "events": "^3.1.0"
   },
-  "gitHead": "376f9a2f81515d9bb5057f7c8857176201a6067d"
+  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }

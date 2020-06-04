@@ -1,6 +1,6 @@
 {
-  "name": "@lorena/terminal",
-  "version": "0.1.3",
+  "name": "@caelumlabs/terminal",
+  "version": "0.1.5",
   "description": "Lorena terminal",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -10,11 +10,11 @@
     "access": "public"
   },
   "dependencies": {
-    "@lorena/sdk": "^0.1.3",
-    "@lorena/wallet": "^0.1.3",
+    "@caelumlabs/sdk": "^0.1.5",
+    "@caelumlabs/wallet": "^0.1.5",
     "debug": "^4.1.1",
     "figlet": "^1.4.0",
     "terminal-kit": "^1.35.2"
   },
-  "gitHead": "376f9a2f81515d9bb5057f7c8857176201a6067d"
+  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }
