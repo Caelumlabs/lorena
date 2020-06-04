@@ -19,5 +19,5 @@
       "pre-commit": "yarn lint"
     }
   },
-  "gitHead": "376f9a2f81515d9bb5057f7c8857176201a6067d"
+  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }

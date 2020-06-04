@@ -6,6 +6,9 @@
   "author": "Caelum Labs",
   "license": "MIT",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "test": "jest --silent",
     "coverage": "jest --coverage",
@@ -19,5 +22,5 @@
     "debug": "^4.1.1",
     "did-resolver": "^1.1.0"
   },
-  "gitHead": "376f9a2f81515d9bb5057f7c8857176201a6067d"
+  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }
