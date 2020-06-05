@@ -2,11 +2,8 @@
 'use strict'
 const BlockchainInterface = require('@caelumlabs/blockchain')
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
-const { TypeRegistry } = require('@polkadot/types')
-const { Vec } = require('@polkadot/types/codec')
 const Utils = require('./utils')
 const { cryptoWaitReady } = require('@polkadot/util-crypto')
-const registry = new TypeRegistry()
 
 // Debug
 var debug = require('debug')('did:debug:lor-sub')
