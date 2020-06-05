@@ -149,7 +149,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *    registerDid ('E348FEE8328', 'ZenroomValidPublicKey')
    */
   async registerDid (did, assignTo, pubKey, level) {
-    // Level must be greater than 1 if the AssigTo account
+    // Level must be greater than 1 if the AssignTo account
     // Is not the same as the sender account
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
@@ -219,7 +219,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call LorenaModule RotateKey function
-    const transaction = await this.api.query.lorenaDids.rotateKey(hexDID, keyArray)
+    const transaction = await this.api.query.lorenaDids.rotate_key(hexDID, keyArray)
     await transaction.signAndSend(this.keypair)
   }
 }

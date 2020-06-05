@@ -73,7 +73,7 @@ test('Should Save a DID to Blockchain', async () => {
   const didData = await blockchain.api.query.lorenaDids.didData(Utils.base64ToHex(did))
   const didDataJson = JSON.parse(didData)
   // DID `owner` should be address Alice
-  expect(didDataJson.account).toEqual(blockchain.keypair.address)
+  expect(didDataJson.owner).toEqual(blockchain.keypair.address)
   // Identity `owner` from RegisteredEvent should be address Alice
   expect(registeredDid[1]).toEqual(blockchain.keypair.address)
 
@@ -87,30 +87,28 @@ test('Should Save a DID to Blockchain', async () => {
   expect(pubKey.toString().split('x')[1]).toEqual(Utils.base64ToHex(blockchain.keypair.publicKey))
 })
 
-test.skip('Should Change the DID Document', async () => {})
+let subs
 
-test('Register a Did Document', async () => {
+test('Register a Did Document and check registration event', async () => {
+  jest.setTimeout(30000)
   await blockchain.registerDidDocument(did, diddocHash)
-})
-
-test('Check registration event', async () => {
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
+  subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
   const registeredDidDocument = JSON.parse(subs)
   // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
   expect(Utils.hexToBase64(registeredDidDocument[2].split('x')[1])).toEqual(diddocHash)
 })
 
-test.skip('Check a Did Document', async () => {
-  const result = await blockchain.didDocumentFromDid(did)
+test('Check a Did Document', async () => {
+  const result = await blockchain.getDidDocHash(did)
   expect(result).toEqual(diddocHash)
 })
 
-test.skip('GetKey from a DID', async () => {
-  const result = await blockchain.publicKeyFromDid(did)
+test('GetKey from a DID', async () => {
+  const result = await blockchain.getActualDidKey(did)
   expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
 })
 
-test.skip('Should Rotate a Key', async () => {
+test('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(did, newPubKey)
