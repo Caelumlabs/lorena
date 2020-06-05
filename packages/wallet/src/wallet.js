@@ -1,4 +1,4 @@
-const Crypto = require('@lorena/crypto')
+const Crypto = require('@caelumlabs/crypto')
 const fsPromises = require('fs').promises
 const home = require('os').homedir
 const debug = require('debug')('did:debug:wallet-fs')

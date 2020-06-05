@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-const Lorena = require('@lorena/sdk')
-const Wallet = require('@lorena/wallet')
+const Lorena = require('@caelumlabs/sdk')
+const Wallet = require('@caelumlabs/wallet')
 
 const createWallet = require('./createWallet')
 const { importWallet } = require('./manageWallet')

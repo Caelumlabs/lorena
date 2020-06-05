@@ -1,5 +1,5 @@
 const cred = require('../index')
-const Crypto = require('@lorena/crypto')
+const Crypto = require('@caelumlabs/crypto')
 const crypto = new Crypto(true)
 
 test('Achievement: should add an Achievement', () => {

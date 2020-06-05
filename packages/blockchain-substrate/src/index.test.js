@@ -1,6 +1,6 @@
 'use strict'
 const BlockchainSubstrate = require('./index.js')
-const Crypto = require('@lorena/crypto')
+const Crypto = require('@caelumlabs/crypto')
 const Utils = require('./utils')
 
 const crypto = new Crypto(true)
@@ -30,9 +30,10 @@ let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
-beforeAll(() => {
-//  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+test('before all', async () => {
+  await crypto.init()
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  // blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   did = crypto.random(16)
 })
 
@@ -82,30 +83,28 @@ test('Should Save a DID to Blockchain', async () => {
   expect(account.toString()).toEqual(registeredDid[2])
 })
 
-test.skip('Should Change the DID Document', async () => {})
+let subs
 
-test('Register a Did Document', async () => {
+test('Register a Did Document and check registration event', async () => {
+  jest.setTimeout(30000)
   await blockchain.registerDidDocument(did, diddocHash)
-})
-
-test('Check registration event', async () => {
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
+  subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
   const registeredDidDocument = JSON.parse(subs)
   // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
   expect(Utils.hexToBase64(registeredDidDocument[2].split('x')[1])).toEqual(diddocHash)
 })
 
-test.skip('Check a Did Document', async () => {
-  const result = await blockchain.didDocumentFromDid(did)
+test('Check a Did Document', async () => {
+  const result = await blockchain.getDidDocHash(did)
   expect(result).toEqual(diddocHash)
 })
 
-test.skip('GetKey from a DID', async () => {
-  const result = await blockchain.publicKeyFromDid(did)
+test('GetKey from a DID', async () => {
+  const result = await blockchain.getActualDidKey(did)
   expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
 })
 
-test.skip('Should Rotate a Key', async () => {
+test('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(did, newPubKey)

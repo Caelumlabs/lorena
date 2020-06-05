@@ -8,7 +8,7 @@ Interactive terminal for Lorena
 ## Usage
 
 ```
-npm install @lorena/terminal
+npm install @caelumlabs/terminal
 ```
 
 npx lorena 

@@ -1,6 +1,6 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
-const BlockchainInterface = require('@lorena/blockchain')
+const BlockchainInterface = require('@caelumlabs/blockchain')
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
 const { TypeRegistry } = require('@polkadot/types')
 const { Vec } = require('@polkadot/types/codec')
@@ -215,7 +215,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call LorenaModule RotateKey function
-    const transaction = await this.api.query.lorenaDids.rotateKey(hexDID, keyArray)
+    const transaction = await this.api.query.lorenaDids.rotate_key(hexDID, keyArray)
     await transaction.signAndSend(this.keypair)
   }
 }

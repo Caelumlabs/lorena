@@ -1,5 +1,5 @@
 const Lorena = require('./index')
-const Wallet = require('@lorena/wallet')
+const Wallet = require('@caelumlabs/wallet')
 const fsPromises = require('fs').promises
 const path = require('path')
 
