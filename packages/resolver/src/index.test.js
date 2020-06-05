@@ -63,7 +63,7 @@ for (const did of goodDIDs) {
     expect(publicKey).toBeDefined()
   })
 
-  test('should get the complete DID Document for a DID', async () => {
+  test.skip('should get the complete DID Document for a DID', async () => {
     jest.setTimeout(50000)
     // using a valid DID, retrieve public key
     const doc = await resolver.resolve(did)
