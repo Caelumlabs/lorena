@@ -18,8 +18,11 @@
   "dependencies": {
     "@caelumlabs/blockchain": "^0.1.5",
     "@caelumlabs/crypto": "^0.1.5",
-    "@polkadot/api": "^1.15.1",
-    "@polkadot/types": "^1.15.1"
+    "@polkadot/api": "^1.17.2",
+    "@polkadot/types": "^1.17.2"
   },
-  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
+  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea",
+  "devDependencies": {
+    "eslint-plugin-jsdoc": "^27.0.4"
+  }
 }
