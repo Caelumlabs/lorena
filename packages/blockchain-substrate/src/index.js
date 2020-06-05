@@ -9,7 +9,7 @@ const { cryptoWaitReady } = require('@polkadot/util-crypto')
 const registry = new TypeRegistry()
 
 // Debug
-var debug = require('debug')('did:debug:sub')
+var debug = require('debug')('did:debug:lor-sub')
 
 /**
  * Javascript Class to interact with the Blockchain.
@@ -41,13 +41,17 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     this.api = await ApiPromise.create({
       provider: this.provider,
       types: {
-        Identity: {
-          owner: 'AccountId',
-          key_index: 'u64'
+        PublicKey: {
+          pub_key: 'Vec<u8>',
+          valid_from: 'u64',
+          valid_to: 'u64'
         },
-        Key: {
-          key: 'Vec<u8>',
-          diddoc: 'Vec<u8>',
+        DIDData: {
+          owner: 'AccountId',
+          did_promoter: 'Hash',
+          level: 'u16',
+          pub_keys: 'Vec<PublicKey>',
+          did_docs: 'Hash',
           valid_from: 'u64',
           valid_to: 'u64'
         }
@@ -144,25 +148,23 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Example:
    *    registerDid ('E348FEE8328', 'ZenroomValidPublicKey')
    */
-  async registerDid (did, pubKey) {
+  async registerDid (did, assignTo, level) {
+    // Level must be greater than 1 if the AssigTo account
+    // Is not the same as the sender account
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
-    // Convert pubKey to vec[u8]
-    const arr = Utils.toUTF8Array(pubKey)
-    const zKey = new Vec(registry, 'u8', arr)
 
     debug('Register did : ' + did)
-    debug('Assign pubKey : ' + pubKey)
+    debug('Assign to account : ' + assignTo)
+    debug('Level : ' + level)
 
-    const transaction = await this.api.tx.lorenaModule.registerDid(hexDID, zKey)
+    const transaction = await this.api.tx.lorenaDids.registerDid(hexDID, assignTo, level)
     await transaction.signAndSend(this.keypair)
   }
 
   async getActualKey (did) {
     const hexDid = Utils.base64ToHex(did)
-    const identity = await this.api.query.lorenaModule.identities(hexDid)
-
-    return this.api.query.lorenaModule.identityKeys([hexDid, identity.key_index.toString()])
+    return this.api.query.lorenaDids.publicKeyFromDid(hexDid)
   }
 
   /**
@@ -173,7 +175,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getActualDidKey (did) {
     const result = await this.getActualKey(did)
-    return Utils.hexToBase64(result.key.toString().split('x')[1])
+    return Utils.hexToBase64(result.toString().split('x')[1])
   }
 
   /**
@@ -185,7 +187,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async registerDidDocument (did, diddocHash) {
     const hexDid = Utils.base64ToHex(did)
     const docHash = Utils.toUTF8Array(diddocHash)
-    const transaction = await this.api.tx.lorenaModule.registerDidDocument(hexDid, docHash)
+    const transaction = await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
     await transaction.signAndSend(this.keypair)
   }
 
@@ -196,8 +198,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} the Hash
    */
   async getDidDocHash (did) {
-    const identity = await this.getActualKey(did)
-    const result = Utils.hexToBase64(identity.diddoc)
+    const diddoc = await this.api.query.lorenaDids.didDocumentFromDid(did)
+    const result = Utils.hexToBase64(diddoc)
     return result
   }
 
@@ -213,7 +215,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call LorenaModule RotateKey function
-    const transaction = await this.api.tx.lorenaModule.rotateKey(hexDID, keyArray)
+    const transaction = await this.api.query.lorenaDids.rotateKey(hexDID, keyArray)
     await transaction.signAndSend(this.keypair)
   }
 }
