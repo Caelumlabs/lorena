@@ -30,7 +30,7 @@ let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
-test('blah', async () => {
+test('init', async () => {
   blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
   await crypto.init()
   did = crypto.random(16)
