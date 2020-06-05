@@ -148,21 +148,17 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Example:
    *    registerDid ('E348FEE8328', 'ZenroomValidPublicKey')
    */
-  async registerDid (did, assignTo, pubKey, level) {
+  async registerDid (did, assignTo, level) {
     // Level must be greater than 1 if the AssigTo account
     // Is not the same as the sender account
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
-    // Convert pubKey to vec[u8]
-    const arr = Utils.toUTF8Array(pubKey)
-    const zKey = new Vec(registry, 'u8', arr)
 
     debug('Register did : ' + did)
-    debug('Assign pubKey : ' + pubKey)
     debug('Assign to account : ' + assignTo)
     debug('Level : ' + level)
 
-    const transaction = await this.api.tx.lorenaDids.registerDid(hexDID, assignTo, zKey, level)
+    const transaction = await this.api.tx.lorenaDids.registerDid(hexDID, assignTo, level)
     await transaction.signAndSend(this.keypair)
   }
 

@@ -66,24 +66,20 @@ test('Should send Tokens from Alice to Bob', async () => {
 })
 
 test('Should Save a DID to Blockchain', async () => {
-  await blockchain.registerDid(did, blockchain.keypair.address, blockchain.keypair.publicKey, 2)
+  await blockchain.registerDid(did, blockchain.keypair.address, 2)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
   const registeredDid = JSON.parse(subs)
   const didData = await blockchain.api.query.lorenaDids.didData(Utils.base64ToHex(did))
   const didDataJson = JSON.parse(didData)
   // DID `owner` should be address Alice
-  expect(didDataJson.account).toEqual(blockchain.keypair.address)
-  // Identity `owner` from RegisteredEvent should be address Alice
+  expect(didDataJson.owner).toEqual(blockchain.keypair.address)
+  // DID `owner` from RegisteredEvent should be address Alice
   expect(registeredDid[1]).toEqual(blockchain.keypair.address)
 
   // Check if storage is build correctly
   const account = await blockchain.api.query.lorenaDids.ownerFromDid(Utils.base64ToHex(did))
   // Account should be the same as the one read from Substrate Events
   expect(account.toString()).toEqual(registeredDid[2])
-  // Get Public Key
-  const pubKey = await blockchain.api.query.lorenaDids.publicKeyFromDid(Utils.base64ToHex(did))
-  // Public Key should be equal to entered
-  expect(pubKey.toString().split('x')[1]).toEqual(Utils.base64ToHex(blockchain.keypair.publicKey))
 })
 
 test.skip('Should Change the DID Document', async () => {})
