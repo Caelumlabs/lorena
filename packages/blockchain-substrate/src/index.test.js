@@ -87,6 +87,7 @@ test('Register a Did Document', async () => {
 })
 
 test('Check registration event', async () => {
+  jest.setTimeout(30000)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
   const registeredDidDocument = JSON.parse(subs)
   // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
