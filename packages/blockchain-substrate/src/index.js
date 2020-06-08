@@ -41,13 +41,18 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     this.api = await ApiPromise.create({
       provider: this.provider,
       types: {
-        Identity: {
-          owner: 'AccountId',
-          key_index: 'u64'
+        PublicKey: {
+          pub_key: 'Vec<u8>',
+          valid_from: 'u64',
+          valid_to: 'u64'
         },
-        Key: {
-          key: 'Vec<u8>',
-          diddoc: 'Vec<u8>',
+
+        DIDData: {
+          owner: 'AccountId',
+          did_promoter: 'Hash',
+          level: 'u16',
+          pub_keys: 'Vec<PublicKey>',
+          did_doc: 'Hash',
           valid_from: 'u64',
           valid_to: 'u64'
         }
@@ -106,8 +111,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async addrState (address = false) {
     return new Promise(async (resolve) => {
-      const addrTo = (address === false) ? this.keypair.address : address
-      const { nonce, data: balance } = await this.api.query.system.account(addrTo)
+      const addressTo = (address === false) ? this.keypair.address : address
+      const { nonce, data: balance } = await this.api.query.system.account(addressTo)
       resolve({ balance, nonce })
     })
   }
@@ -144,36 +149,47 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Example:
    *    registerDid ('E348FEE8328', 'ZenroomValidPublicKey')
    */
-  async registerDid (did, pubKey) {
+  async registerDid (did, accountTo, level) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
-    // Convert pubKey to vec[u8]
-    const arr = Utils.toUTF8Array(pubKey)
-    const zKey = new Vec(registry, 'u8', arr)
 
     debug('Register did : ' + did)
-    debug('Assign pubKey : ' + pubKey)
+    debug('Assign to account : ' + accountTo)
+    debug('Assigned level : ' + level)
 
-    const transaction = await this.api.tx.lorenaModule.registerDid(hexDID, zKey)
+    const transaction = await this.api.tx.lorenaDids.registerDid(hexDID, accountTo, level)
     await transaction.signAndSend(this.keypair)
   }
 
+  /**
+   * Get Public Key from Did.
+   *
+   * @param {string} did DID
+   */
+  async getDidData (did) {
+    const hexDid = Utils.base64ToHex(did)
+    return await this.api.query.lorenaDids.didData(hexDid)
+  }
+
+  /**
+   * Get Public Key from Did.
+   *
+   * @param {string} did DID
+   */
   async getActualKey (did) {
     const hexDid = Utils.base64ToHex(did)
-    const identity = await this.api.query.lorenaModule.identities(hexDid)
-
-    return this.api.query.lorenaModule.identityKeys([hexDid, identity.key_index.toString()])
+    const ret = await this.api.query.lorenaDids.publicKeyFromDid(hexDid)
+    return ret
   }
 
   /**
    * Returns the current Key.
    *
    * @param {string} did DID
-   * @returns {string} The active key
    */
   async getActualDidKey (did) {
     const result = await this.getActualKey(did)
-    return Utils.hexToBase64(result.key.toString().split('x')[1])
+    return result.toString().split('x')[1].replace(/0+$/g, '')
   }
 
   /**
@@ -185,7 +201,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async registerDidDocument (did, diddocHash) {
     const hexDid = Utils.base64ToHex(did)
     const docHash = Utils.toUTF8Array(diddocHash)
-    const transaction = await this.api.tx.lorenaModule.registerDidDocument(hexDid, docHash)
+    const transaction = await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
     await transaction.signAndSend(this.keypair)
   }
 
@@ -193,12 +209,11 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Retrieves the Hash of a Did Document for a DID
    *
    * @param {string} did DID
-   * @returns {string} the Hash
    */
   async getDidDocHash (did) {
-    const identity = await this.getActualKey(did)
-    const result = Utils.hexToBase64(identity.diddoc)
-    return result
+    const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(did)
+    const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
+    return Utils.hexToBase64(doc)
   }
 
   /**
@@ -212,8 +227,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
-    // Call LorenaModule RotateKey function
-    const transaction = await this.api.tx.lorenaModule.rotateKey(hexDID, keyArray)
+    // Call lorenaDids RotateKey function
+    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
     await transaction.signAndSend(this.keypair)
   }
 }
