@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "jest --silent --testTimeout=20000",
-    "coverage": "jest --coverage --testTimeout=20000",
+    "coverage": "jest --silent --coverage --testTimeout=20000",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"
   },

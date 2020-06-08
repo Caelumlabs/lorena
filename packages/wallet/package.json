@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "jest --silent --passWithNoTests",
-    "coverage": "jest --coverage",
+    "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"
   },

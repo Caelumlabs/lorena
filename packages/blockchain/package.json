@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "jest --silent",
-    "coverage": "jest --coverage",
+    "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint-fix": "eslint ./src --fix"
   },
