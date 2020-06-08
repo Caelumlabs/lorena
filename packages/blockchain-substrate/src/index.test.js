@@ -95,12 +95,12 @@ test('Register a Did Document and check registration event', async () => {
 })
 
 test('Check a Did Document', async () => {
-  const result = await blockchain.getDidDocHash(did)
+  const result = await blockchain.didDocumentFromDid(did)
   expect(result).toEqual(diddocHash)
 })
 
 test('GetKey from a DID', async () => {
-  const result = await blockchain.getActualDidKey(did)
+  const result = await blockchain.publicKeyFromDid(did)
   expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
 })
 

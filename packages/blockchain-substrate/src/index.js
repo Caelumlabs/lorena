@@ -215,7 +215,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call LorenaModule RotateKey function
-    const transaction = await this.api.query.lorenaDids.rotate_key(hexDID, keyArray)
+    const transaction = await this.api.query.lorenaDids.rotateKey(hexDID, keyArray)
     await transaction.signAndSend(this.keypair)
   }
 }
