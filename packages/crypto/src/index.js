@@ -1,9 +1,9 @@
-const { mnemonicGenerate, mnemonicValidate, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
-const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString } = require('@polkadot/util')
-const { randomAsU8a, blake2AsHex } = require('@polkadot/util-crypto')
-const { schnorrkelSign, schnorrkelVerify, schnorrkelKeypairFromSeed } = require('@polkadot/util-crypto')
-const { cryptoWaitReady, createKeyMulti, encodeAddress } = require('@polkadot/util-crypto')
 const { Keyring } = require('@polkadot/keyring')
+const { cryptoWaitReady, randomAsU8a, blake2AsHex } = require('@polkadot/util-crypto')
+const { naclKeypairFromString, naclBoxKeypairFromSecret, naclSeal, naclOpen } = require('@polkadot/util-crypto')
+const { mnemonicGenerate, mnemonicValidate, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
+const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString, stringToHex } = require('@polkadot/util')
+
 /**
  * Javascript Class to interact with Zenroom.
  */
@@ -23,25 +23,46 @@ module.exports = class LorenaCrypto {
       const pair = keyring.addFromMnemonic(mnemonic, meta)
       const keyringPairAddress = keyring.getPair(pair.address).address
       const keyringPairPubKey = u8aToHex(keyring.getPair(pair.address).publicKey)
+      const naclKeypair = naclKeypairFromString(mnemonic)
       return ({
         mnemonic,
         address: keyringPairAddress,
         publicKey: keyringPairPubKey,
-        keyPair: keyring.getPair(pair.address)
+        keyPair: keyring.getPair(pair.address),
+        box: naclBoxKeypairFromSecret(naclKeypair.secretKey)
       })
     } else return false
   }
 
-  /**
-   * Create a multi Address.
-   * @param {Array} addresses Array of addresses to be uin the multiaddress
-   * @param {number} threshold number of needed addresses to verify
-   */
-  multiAddress (addresses, threshold = 1) {
-    const multiAddress = createKeyMulti(addresses, threshold)
-    // const u8 = hexToU8a(multiAddress)
-    // console.log(u8)
-    return (multiAddress)
+  naclKeypair (_mnemonic = false) {
+    const mnemonic = (_mnemonic === false) ? mnemonicGenerate() : _mnemonic
+    const keypair = naclKeypairFromString(mnemonic)
+    const box = naclBoxKeypairFromSecret(keypair.secretKey)
+    return (box)
+  }
+
+  box (message, senderSecretKey, receiverPublicKey) {
+    const messagePreEncryption = stringToU8a(message)
+    const { nonce, sealed } = naclSeal(messagePreEncryption, senderSecretKey, receiverPublicKey)
+    return stringToHex(JSON.stringify({ nonce: u8aToHex(nonce), sealed: u8aToHex(sealed) }))
+  }
+
+  unbox (msgEncrypted, senderPublicKey, receiverSecretKey) {
+    const preMessage = JSON.parse(hexToString(msgEncrypted))
+    preMessage.nonce = hexToU8a(preMessage.nonce)
+    preMessage.sealed = hexToU8a(preMessage.sealed)
+    const messageDecrypted = naclOpen(preMessage.sealed, preMessage.nonce, senderPublicKey, receiverSecretKey)
+    return (hexToString(u8aToHex(messageDecrypted)))
+  }
+
+  boxObj (obj, senderSecretKey, receiverPublicKey) {
+    const messagePreEncryption = JSON.stringify(obj)
+    return this.box(messagePreEncryption, senderSecretKey, receiverPublicKey)
+  }
+
+  unboxObj (message, senderPublicKey, receiverSecretKey) {
+    const messageDecrypted = this.unbox(message, senderPublicKey, receiverSecretKey)
+    return (JSON.parse(messageDecrypted))
   }
 
   /**
@@ -169,24 +190,5 @@ module.exports = class LorenaCrypto {
    */
   blake2 (source) {
     return (blake2AsHex(source))
-  }
-
-  testSchnorr () {
-    const message = 'Hello world'
-    const a1 = schnorrkelKeypairFromSeed(randomAsU8a())
-    const a2 = schnorrkelKeypairFromSeed(randomAsU8a())
-    const a3 = schnorrkelKeypairFromSeed(randomAsU8a())
-
-    const addresses = [a1.publicKey, a2.publicKey, a3.publicKey]
-    const multiAddress = createKeyMulti(addresses, 1)
-
-    // Convert byte array to SS58 encoding.
-    const SS58Prefix = 0
-    const Ss58Address = encodeAddress(multiAddress, SS58Prefix)
-    console.log(`\nMultisig Address: ${Ss58Address}`)
-
-    const signedData = schnorrkelSign(message, a1)
-    const isValid = schnorrkelVerify(message, signedData, Ss58Address)
-    console.log(isValid)
   }
 }

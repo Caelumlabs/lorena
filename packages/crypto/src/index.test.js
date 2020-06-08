@@ -19,6 +19,9 @@ test('KeyPair generation', async () => {
   expect(alice.publicKey.length).toEqual(66)
   expect(alice.address).not.toBeUndefined()
   expect(alice.address.length).toEqual(48)
+  expect(alice.box).not.toBeUndefined()
+  expect(alice.box.publicKey).not.toBeUndefined()
+  expect(alice.box.secretKey).not.toBeUndefined()
 })
 
 test('KeyPair generation from mnemonic', async () => {
@@ -78,26 +81,13 @@ test('Should encrypt & decrypt an object', () => {
   expect(result.test).toEqual('áà # test')
 })
 
-// Multiaddress.
-test('USing multiaddresses', () => {
-  // crypto.testSchnorr()
+test('nacl encryption', () => {
+  const receiver = crypto.keyPair()
+  const msgEncrypted = crypto.box(message, alice.box.secretKey, receiver.box.publicKey)
+  const msg = crypto.unbox(msgEncrypted, alice.box.publicKey, receiver.box.secretKey)
+  expect(msg).toEqual(message)
 
-  /* const a1 = crypto.keyPair()
-  const a2 = crypto.keyPair()
-  const a3 = crypto.keyPair()
-  const a4 = crypto.keyPair()
-  const a5 = crypto.keyPair()
-
-  const addresses = [a1.address, a2.address, a3.address, a4.address, a5.address]
-  const multiAddress = crypto.multiAddress(addresses)
-  console.log(multiAddress.length)
-  expect(multiAddress).not.toBeUndefined()
-
-  const signature = crypto.signMessage(message, a1.keyPair)
-  expect(signature).not.toBeUndefined()
-  expect(signature).toHaveLength(64)
-
-  // console.log(multiAddress)
-  const check = crypto.checkSignature(message, signature, multiAddress)
-  expect(check).toEqual(true) */
+  const objEncrypted = crypto.boxObj({ msg: message }, alice.box.secretKey, receiver.box.publicKey)
+  const obj = crypto.unboxObj(objEncrypted, alice.box.publicKey, receiver.box.secretKey)
+  expect(obj).toEqual({ msg: message })
 })

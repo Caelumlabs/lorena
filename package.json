@@ -12,11 +12,13 @@
   ],
   "scripts": {
     "check-packages": "yarn clean && yarn compile && yarn test && yarn lint",
-    "coverage": "lerna run coverage",
+    "coverage": "lerna run coverage && istanbul report lcov --include=packages/*/coverage/*.json",
+    "coveralls": "cat coverage/lcov.info | coveralls",
     "lint": "lerna run lint",
     "test": "lerna run test"
   },
   "devDependencies": {
+    "coveralls": "^3.1.0",
     "eslint": "^7.1.0",
     "eslint-config-standard": "^14.1.1",
     "eslint-plugin-import": "^2.20.2",
@@ -26,6 +28,8 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "husky": "^4.2.5",
+    "istanbul": "^0.4.5",
+    "istanbul-merge": "^1.1.1",
     "jest": "^26.0.1",
     "lerna": "^3.22.0",
     "nyc": "^15.1.0"
