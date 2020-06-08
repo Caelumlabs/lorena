@@ -1,7 +1,7 @@
 'use strict'
-const BlockchainSubstrate = require('./index.js')
-const Crypto = require('@caelumlabs/crypto')
-const Utils = require('./utils')
+import BlockchainSubstrate from './index.js'
+import Crypto from '@caelumlabs/crypto'
+import { base64ToHex, hexToBase64 } from './utils'
 
 const crypto = new Crypto(true)
 
@@ -13,8 +13,8 @@ const subscribe2RegisterEvents = (api, eventMethod) => {
         const types = event.typeDef
         if (event.section === 'lorenaDids' && event.method === eventMethod) {
           for (let i = 0; i < event.data.length; i++) {
-            // All events have a a type 'AccountId'
-            if (types[i].type === 'AccountId') {
+            // All events have a a type 'Hash'
+            if (types[i].type === 'Hash') {
               resolve(event.data.toString())
             }
           }
@@ -40,8 +40,8 @@ test('before all', async () => {
 test('should have good format conversion', () => {
   const base64 = 'Wldvd1pqVmZWbEoxYVdaWFdGOW5ja05I'
   const hex = '576c647664317071566d5a5762456f7859566461574664474f57356a61303549'
-  const hexed = Utils.base64ToHex(base64)
-  const based = Utils.hexToBase64(hex)
+  const hexed = base64ToHex(base64)
+  const based = hexToBase64(hex)
   expect(hexed).toEqual(hex)
   expect(based).toEqual(base64)
 })
@@ -70,7 +70,7 @@ test('Should Save a DID to Blockchain', async () => {
   await blockchain.registerDid(did, blockchain.keypair.address, 2)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
   const registeredDid = JSON.parse(subs)
-  const didData = await blockchain.api.query.lorenaDids.didData(Utils.base64ToHex(did))
+  const didData = await blockchain.api.query.lorenaDids.didData(base64ToHex(did))
   const didDataJson = JSON.parse(didData)
   // DID `owner` should be address Alice
   expect(didDataJson.owner).toEqual(blockchain.keypair.address)
@@ -78,7 +78,7 @@ test('Should Save a DID to Blockchain', async () => {
   expect(registeredDid[1]).toEqual(blockchain.keypair.address)
 
   // Check if storage is build correctly
-  const account = await blockchain.api.query.lorenaDids.ownerFromDid(Utils.base64ToHex(did))
+  const account = await blockchain.api.query.lorenaDids.ownerFromDid(base64ToHex(did))
   // Account should be the same as the one read from Substrate Events
   expect(account.toString()).toEqual(registeredDid[2])
 })
@@ -91,17 +91,17 @@ test('Register a Did Document and check registration event', async () => {
   subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
   const registeredDidDocument = JSON.parse(subs)
   // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
-  expect(Utils.hexToBase64(registeredDidDocument[2].split('x')[1])).toEqual(diddocHash)
+  expect(hexToBase64(registeredDidDocument[2].split('x')[1])).toEqual(diddocHash)
 })
 
 test('Check a Did Document', async () => {
-  const result = await blockchain.didDocumentFromDid(did)
+  const result = await blockchain.api.query.lorenaDids.didDocumentFromDid(did)
   expect(result).toEqual(diddocHash)
 })
 
 test('GetKey from a DID', async () => {
-  const result = await blockchain.publicKeyFromDid(did)
-  expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
+  const result = await blockchain.api.query.lorenaDids.publicKeyFromDid(did)
+  expect(result).toEqual(hexToBase64(blockchain.keypair.publicKey))
 })
 
 test('Should Rotate a Key', async () => {
@@ -110,9 +110,9 @@ test('Should Rotate a Key', async () => {
   await blockchain.rotateKey(did, newPubKey)
   const subs = await subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
   const keyRotated = JSON.parse(subs)
-  expect(keyRotated[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
-  const key = await blockchain.publicKeyFromDid(did)
-  expect(key).toEqual(Utils.hexToBase64(newPubKey))
+  expect(keyRotated[2].split('x')[1]).toEqual(base64ToHex(newPubKey))
+  const key = await blockchain.api.query.lorenaDids.publicKeyFromDid(did)
+  expect(key).toEqual(hexToBase64(newPubKey))
 })
 
 test('should clean up after itself', () => {

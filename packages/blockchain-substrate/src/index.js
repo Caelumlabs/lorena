@@ -1,11 +1,11 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
-const BlockchainInterface = require('@caelumlabs/blockchain')
-const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
-const { TypeRegistry } = require('@polkadot/types')
-const { Vec } = require('@polkadot/types/codec')
-const Utils = require('./utils')
-const { cryptoWaitReady } = require('@polkadot/util-crypto')
+import BlockchainInterface from '@caelumlabs/blockchain'
+import { ApiPromise, WsProvider, Keyring } from '@polkadot/api'
+import { TypeRegistry } from '@polkadot/types'
+import { Vec } from '@polkadot/types/codec'
+import { base64ToHex, hexToBase64, toUTF8Array } from './utils'
+import { cryptoWaitReady } from '@polkadot/util-crypto'
 const registry = new TypeRegistry()
 
 // Debug
@@ -14,7 +14,7 @@ var debug = require('debug')('did:debug:lor-sub')
 /**
  * Javascript Class to interact with the Blockchain.
  */
-module.exports = class SubstrateLib extends BlockchainInterface {
+export default class SubstrateLib extends BlockchainInterface {
   /**
    * Constructor
    *
@@ -152,7 +152,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Level must be greater than 1 if the AssigTo account
     // Is not the same as the sender account
     // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
+    const hexDID = base64ToHex(did)
 
     debug('Register did : ' + did)
     debug('Assign to account : ' + assignTo)
@@ -163,7 +163,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   async getActualKey (did) {
-    const hexDid = Utils.base64ToHex(did)
+    const hexDid = base64ToHex(did)
     return this.api.query.lorenaDids.publicKeyFromDid(hexDid)
   }
 
@@ -175,7 +175,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getActualDidKey (did) {
     const result = await this.getActualKey(did)
-    return Utils.hexToBase64(result.toString().split('x')[1])
+    return hexToBase64(result.toString().split('x')[1])
   }
 
   /**
@@ -185,8 +185,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {string} diddocHash Did document Hash
    */
   async registerDidDocument (did, diddocHash) {
-    const hexDid = Utils.base64ToHex(did)
-    const docHash = Utils.toUTF8Array(diddocHash)
+    const hexDid = base64ToHex(did)
+    const docHash = toUTF8Array(diddocHash)
     const transaction = await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
     await transaction.signAndSend(this.keypair)
   }
@@ -199,7 +199,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getDidDocHash (did) {
     const diddoc = await this.api.query.lorenaDids.didDocumentFromDid(did)
-    const result = Utils.hexToBase64(diddoc)
+    const result = hexToBase64(diddoc)
     return result
   }
 
@@ -211,9 +211,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async rotateKey (did, pubKey) {
     // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
+    const hexDID = base64ToHex(did)
     // Convert pubKey to vec[u8]
-    const keyArray = Utils.toUTF8Array(pubKey)
+    const keyArray = toUTF8Array(pubKey)
     // Call LorenaModule RotateKey function
     const transaction = await this.api.query.lorenaDids.rotateKey(hexDID, keyArray)
     await transaction.signAndSend(this.keypair)
