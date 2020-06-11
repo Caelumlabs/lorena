@@ -1,6 +1,6 @@
 const cred = require('../index')
 
-test('Person: should set a addressLocality', () => {
+test('Person: should set a Location', () => {
   // new Person.
   const location = new cred.Location()
   location.addressLocality('MyOldTown')

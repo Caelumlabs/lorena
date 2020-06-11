@@ -17,11 +17,11 @@ test('Should register users', async () => {
     await m1.register(u1, p1)
     throw (new Error())
   } catch (e) {
-    expect(e.message).toBe('Request failed with status code 400')
+    expect(e.message).toBe('Request failed with status code 400') // eslint-disable-line jest/no-try-expect
   }
 })
 
-test('should use matrix as a comms interface to Lorena', async done => {
+test('should use matrix as a comms interface to Lorena', async done => { // eslint-disable-line jest/no-test-callback
   const tests = [false, false, false, false, false]
 
   const endTest = (id) => {
@@ -81,7 +81,7 @@ test('should use matrix as a comms interface to Lorena', async done => {
 
   const rooms = await m2.joinedRooms()
   expect(rooms).toBeDefined()
-  expect(rooms.length).toBe(1)
+  expect(rooms).toHaveLength(1)
   expect(rooms[0]).toEqual(newRoomId)
   m2.disconnect()
 

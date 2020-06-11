@@ -152,10 +152,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Registers Did in Substrate .
    *
    * @param {string} did DID
-   * @param {string} pubKey Zenroom Public Key
-   *
-   * Example:
-   *    registerDid ('E348FEE8328', 'ZenroomValidPublicKey')
+   * @param {*} accountTo assign to this account
+   * @param {number} level to assign
    */
   async registerDid (did, accountTo, level) {
     // Convert did string to hex
@@ -170,30 +168,32 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * Get Public Key from Did.
+   * Get data from DID.
    *
    * @param {string} did DID
+   * @returns {Promise} of didData
    */
   async getDidData (did) {
     const hexDid = Utils.base64ToHex(did)
-    return await this.api.query.lorenaDids.didData(hexDid)
+    return this.api.query.lorenaDids.didData(hexDid)
   }
 
   /**
    * Get Public Key from Did.
    *
    * @param {string} did DID
+   * @returns {Promise} of public key
    */
   async getActualKey (did) {
     const hexDid = Utils.base64ToHex(did)
-    const ret = await this.api.query.lorenaDids.publicKeyFromDid(hexDid)
-    return ret
+    return this.api.query.lorenaDids.publicKeyFromDid(hexDid)
   }
 
   /**
    * Returns the current Key.
    *
    * @param {string} did DID
+   * @returns {string} public key in hex format
    */
   async getActualDidKey (did) {
     const result = await this.getActualKey(did)
@@ -205,18 +205,20 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} did DID
    * @param {string} diddocHash Did document Hash
+   * @returns {Promise} of transaction
    */
   async registerDidDocument (did, diddocHash) {
     const hexDid = Utils.base64ToHex(did)
     const docHash = Utils.toUTF8Array(diddocHash)
     const transaction = await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
-    await transaction.signAndSend(this.keypair)
+    return await transaction.signAndSend(this.keypair)
   }
 
   /**
    * Retrieves the Hash of a Did Document for a DID
    *
    * @param {string} did DID
+   * @returns {string} hash in Base64 format
    */
   async getDidDocHash (did) {
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(did)
@@ -229,6 +231,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} did DID
    * @param {string} pubKey Public Key to register into the DID
+   * @returns {Promise} of transaction
    */
   async rotateKey (did, pubKey) {
     // Convert did string to hex
@@ -237,6 +240,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call lorenaDids RotateKey function
     const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
-    await transaction.signAndSend(this.keypair)
+    return transaction.signAndSend(this.keypair)
   }
 }

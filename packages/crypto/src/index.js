@@ -101,7 +101,7 @@ module.exports = class LorenaCrypto {
    * Encrypts (symmetric) a message with a keypair.
    *
    * @param {string} password Password to encrypt the message
-   * @param {string} message Message to be encrypted
+   * @param {string} obj Message to be encrypted
    * @returns {Promise} Return a promise with the execution of the encryption.
    */
   encryptObj (password, obj) {

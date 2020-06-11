@@ -16,12 +16,12 @@ test('should prepare the wallet', async () => {
 
 test('should construct a Lorena class', async () => {
   lorena = new Lorena(wallet)
-  expect(lorena).not.toBeUndefined()
+  expect(lorena).toBeDefined()
 })
 
 test('should construct a Lorena class with debug', async () => {
   lorena = new Lorena(wallet, { debug: true, silent: true })
-  expect(lorena).not.toBeUndefined()
+  expect(lorena).toBeDefined()
 })
 
 test('getLinkId passing a RoomID', () => {

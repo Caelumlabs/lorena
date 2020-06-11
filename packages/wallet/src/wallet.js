@@ -100,6 +100,7 @@ module.exports = class Wallet {
    * Encrypt and save configuration.
    *
    * @param {string} password Password to decrypt configuration
+   * @returns {boolean} success
    */
   async lock (password) {
     try {
