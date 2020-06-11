@@ -136,6 +136,19 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
+   * Transfer All Tokens
+   *
+   * @param {string} addrTo Address to send tokens to
+   * @returns {Promise} of sending tokens
+   */
+  async transferAllTokens (addrTo) {
+    const current = await this.addrState()
+    const amount = current.balance.free
+    const info = await this.api.tx.balances.transfer(addrTo, amount).paymentInfo(this.keypair)
+    return this.transferTokens(addrTo, amount.sub(info.partialFee))
+  }
+
+  /**
    * Registers Did in Substrate .
    *
    * @param {string} did DID
