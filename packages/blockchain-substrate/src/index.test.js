@@ -5,32 +5,10 @@ const Utils = require('./utils')
 
 const crypto = new Crypto(true)
 
-const subscribe2RegisterEvents = (api, eventMethod) => {
-  return new Promise(resolve => {
-    api.query.system.events(events => {
-      // loop through
-      events.forEach(record => {
-        // extract the phase, event and the event types
-        const { event } = record
-        const types = event.typeDef
-        if (event.section === 'lorenaDids' && event.method === eventMethod) {
-          for (let i = 0; i < event.data.length; i++) {
-            // All events have a a type 'AccountId'
-            if (types[i].type === 'AccountId') {
-              resolve(event.data.toString())
-            }
-          }
-          resolve([])
-        }
-      })
-    })
-  })
-}
-
 let alice, bob
 let blockchain
 let did
-const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
+const diddocHash = 'zdpuAqghmmBxwiS7byTRoqd2ZbhHbzcAf6AnxYPK7yeicEjDv'
 
 test('init', async () => {
   blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
@@ -72,7 +50,7 @@ test('Should Save a DID to Blockchain', async () => {
   alice = blockchain.setKeyring('//Alice')
   bob = blockchain.getAddress('//Bob')
   await blockchain.registerDid(did, alice, 2)
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
+  const subs = await blockchain.wait4Event('DidRegistered')
   const registeredDid = JSON.parse(subs)
   const didData = await blockchain.api.query.lorenaDids.didData(Utils.base64ToHex(did))
   const didDataJson = JSON.parse(didData)
@@ -89,7 +67,7 @@ test('Register a Did Document', async () => {
 // Disabled test due to CI failure
 test.skip('Check registration event', async () => {
   jest.setTimeout(30000)
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
+  const subs = await blockchain.wait4Event('DidDocumentRegistered')
   const registeredDidDocument = JSON.parse(subs)
   // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
   const regDidDoc = registeredDidDocument[2].replace(/0+$/g, '')
@@ -115,7 +93,7 @@ test('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(did, newPubKey)
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
+  const subs = await blockchain.wait4Event('KeyRotated')
   const keyRotated = JSON.parse(subs)
   expect(keyRotated[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
   const key = await blockchain.getActualDidKey(did)
