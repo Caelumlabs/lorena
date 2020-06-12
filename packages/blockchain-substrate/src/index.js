@@ -145,8 +145,29 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async changeDidOwner (did, newOwner) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
-    const transaction = await this.api.tx.lorenaDids.changeDidOwner(hexDID, newOwner)
-    await transaction.signAndSend(this.keypair)
+    return new Promise(async (resolve, reject) => {
+      await this.api.tx.lorenaDids.changeDidOwner(hexDID, newOwner)
+        .signAndSend(this.keypair, ({ status, events }) => {
+          if (status.isInBlock || status.isFinalized) {
+            const errors = events.filter(({ section, method }) =>
+              section === 'system' && method === 'ExtrinsicFailed'
+            )
+            if (errors.len > 0) {
+              errors.forEach(({ data: [error, info] }) => {
+                if (error.isModule) {
+                  const decoded = this.api.registry.findMetaError(error.asModule)
+                  const { documentation, method, section } = decoded
+                  console.log(`Module error:  ${section}.${method}: ${documentation.join(' ')}`)
+                } else {
+                  console.log('Error found ' + error.toString())
+                }
+              })
+              reject(error)
+            }
+          }
+        })
+      resolve(true)
+    })
   }
   
   /**
