@@ -294,8 +294,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
               } else {
                 console.log('Error found ' + error.toString())
               }
+              reject(error)
             })
-            reject(error)
           }
         }
       })

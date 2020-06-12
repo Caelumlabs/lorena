@@ -6,14 +6,14 @@ const Utils = require('./utils')
 const crypto = new Crypto(true)
 
 let alice, bob, charlie
-let aliceKey, bobKey, charlieKey
+let aliceKey, bobKey
 let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
 test('init', async () => {
-//  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  // blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   await crypto.init()
   did = crypto.random(16)
   alice = blockchain.setKeyring('//Alice')
@@ -21,7 +21,6 @@ test('init', async () => {
   charlie = blockchain.setKeyring('//Charlie')
   aliceKey = blockchain.getKeyring('//Alice')
   bobKey = blockchain.getKeyring('//Bob')
-  charlieKey = blockchain.getKeyring('//Charlie')
 })
 
 test('should have good format conversion', () => {
@@ -74,7 +73,6 @@ test('Register a Did Document', async () => {
   const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
   const registeredDocumentEvent = JSON.parse(subs)
   const didData = await blockchain.getDidData(did)
-  const didDataJson = JSON.parse(didData)
 
   // DID Document of event should be equal to entered
   expect(registeredDocumentEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
