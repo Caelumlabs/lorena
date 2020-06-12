@@ -5,8 +5,8 @@ const Utils = require('./utils')
 
 const crypto = new Crypto(true)
 
-let alice, bob
-let aliceKey, bobKey
+let alice, bob, charlie
+let aliceKey, bobKey, charlieKey
 let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
@@ -16,6 +16,12 @@ test('init', async () => {
   blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   await crypto.init()
   did = crypto.random(16)
+  alice = blockchain.setKeyring('//Alice')
+  bob = blockchain.getAddress('//Bob')
+  charlie = blockchain.setKeyring('//Charlie')
+  aliceKey = blockchain.getKeyring('//Alice')
+  bobKey = blockchain.getKeyring('//Bob')
+  charlieKey = blockchain.getKeyring('//Charlie')
 })
 
 test('should have good format conversion', () => {
@@ -48,11 +54,6 @@ test.skip('Should send Tokens from Alice to Bob', async () => {
 })
 
 test('Should Save a DID to Blockchain', async () => {
-  alice = blockchain.setKeyring('//Alice')
-  bob = blockchain.getAddress('//Bob')
-  aliceKey = blockchain.getKeyring('//Alice')
-  bobKey = blockchain.getKeyring('//Bob')
-
   await blockchain.registerDid(aliceKey, did, bob, 2)
   const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
   const registeredDidEvent = JSON.parse(subs)
@@ -75,8 +76,10 @@ test('Register a Did Document', async () => {
   const didData = await blockchain.getDidData(did)
   const didDataJson = JSON.parse(didData)
 
-  console.log('Diddata -> %O', didDataJson)
-
+  // DID Document of event should be equal to entered
+  expect(registeredDocumentEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
+  // DID Document of DIDData record should be equal to entered
+  expect(didData.did_doc.toString().split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
 })
 
 test.skip('Check registration event', async () => {
@@ -102,15 +105,25 @@ test.skip('GetKey from a DID', async () => {
   }
 })
 
-test.skip('Should Rotate a Key', async () => {
+test('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(bobKey, did, newPubKey)
   const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
-  const keyRotated = JSON.parse(subs)
-  expect(keyRotated[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
-  const key = await blockchain.getActualDidKey(did)
-  expect(Utils.hexToBase64(key)).toEqual(Utils.hexToBase64(newPubKey))
+  const registeredRotateKeyEvent = JSON.parse(subs)
+
+  // DID Document of event should be equal to entered
+  expect(registeredRotateKeyEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
+})
+
+test('Should Change Owner', async () => {
+  await blockchain.changeDidOwner(bobKey, did, charlie)
+  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'NewOwner')
+  console.log('subs -> %O', subs)
+  const registeredNewOwnerEvent = JSON.parse(subs)
+
+  // DID Document of event should be equal to entered
+  expect(registeredNewOwnerEvent[2]).toEqual(charlie)
 })
 
 test('should clean up after itself', () => {
