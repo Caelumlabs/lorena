@@ -5,36 +5,14 @@ const Utils = require('./utils')
 
 const crypto = new Crypto(true)
 
-const subscribe2RegisterEvents = (api, eventMethod) => {
-  return new Promise(resolve => {
-    api.query.system.events(events => {
-      // loop through
-      events.forEach(record => {
-        // extract the phase, event and the event types
-        const { event } = record
-        const types = event.typeDef
-        if (event.section === 'lorenaDids' && event.method === eventMethod) {
-          for (let i = 0; i < event.data.length; i++) {
-            // All events have a a type 'AccountId'
-            if (types[i].type === 'AccountId') {
-              resolve(event.data.toString())
-            }
-          }
-          resolve([])
-        }
-      })
-    })
-  })
-}
-
-let alice
+let alice, bob
 let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
 test('init', async () => {
-  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  //  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+//  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   await crypto.init()
   did = crypto.random(16)
 })
@@ -58,54 +36,39 @@ test('Should use a SURI as a key', async () => {
   expect(alice).toEqual('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY')
 })
 
-const zeldaAmount = 3000000000000000
-let zeldaAddress
-const zeldaMnemonic = 'upset tip zone bid verb problem despair clean basic carpet fuel feature'
-
-test('Should send Tokens from Alice to a new address', async () => {
+test.skip('Should send Tokens from Alice to Bob', async () => {
   jest.setTimeout(30000)
-  const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
-  expect(zeldaAddress).toEqual('5H42K5LNPmBKsVnTXTLtmjib7VfVbGVG92nTwNPbAs4AZQP5')
+  bob = blockchain.getAddress('//Bob')
+  expect(bob).toEqual('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty')
   const amount1 = await blockchain.addrState(alice)
-  await blockchain.transferTokens(zeldaAddress, zeldaAmount)
+  await blockchain.transferTokens('5Epmnp6ts1r3qRFEv9di7wxMNnihd1hXDCPp49GUeUqapSz1', 3000000000000000)
   const amount2 = await blockchain.addrState(alice)
   expect(amount1).not.toEqual(amount2)
 })
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms * 1000))
-test('Should sweep tokens from Zelda to Alice', async () => {
-  jest.setTimeout(90000)
-  blockchain.setKeyring(zeldaMnemonic)
-  const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
-  // expect(zeldaBalance1.balance.free).toEqual(zeldaAmount)
-  await blockchain.transferAllTokens(blockchain.getAddress('//Alice'))
-  sleep(10)
-  const zeldaBalance2 = await blockchain.addrState(zeldaAddress)
-  expect(zeldaBalance2.balance.free.toHuman()).toEqual('0')
-  expect(zeldaBalance2).not.toEqual(zeldaBalance1)
-})
-
-test.skip('Should Save a DID to Blockchain', async () => {
+test('Should Save a DID to Blockchain', async () => {
   alice = blockchain.setKeyring('//Alice')
-  await blockchain.registerDid(did, alice, 2)
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
-  const registeredDid = JSON.parse(subs)
-  const didData = await blockchain.api.query.lorenaDids.didData(Utils.base64ToHex(did))
+  bob = blockchain.getAddress('//Bob')
+
+  await blockchain.registerDid(did, bob, 2)
+  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
+  const registeredDidEvent = JSON.parse(subs)
+  const didData = await blockchain.getDidData(did)
   const didDataJson = JSON.parse(didData)
-  // Identity `owner` should be address Alice
-  expect(didDataJson.owner).toEqual(blockchain.keypair.address)
-  // Identity `owner` from RegisteredEvent should be address Alice
-  expect(registeredDid[1]).toEqual(blockchain.keypair.address)
+
+  // DID Owner should be address BOB
+  expect(didDataJson.owner).toEqual(bob)
+  // DID promoter should belong to Alice
+  const promoter = await blockchain.getOwnerFromDid(didData.did_promoter)
+  expect(promoter.toString()).toEqual(alice)
 })
 
 test.skip('Register a Did Document', async () => {
   await blockchain.registerDidDocument(did, diddocHash)
 })
 
-// Disabled test due to CI failure
 test.skip('Check registration event', async () => {
-  jest.setTimeout(30000)
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
+  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
   const registeredDidDocument = JSON.parse(subs)
   // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
   const regDidDoc = registeredDidDocument[2].replace(/0+$/g, '')
@@ -131,7 +94,7 @@ test.skip('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(did, newPubKey)
-  const subs = await subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
+  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
   const keyRotated = JSON.parse(subs)
   expect(keyRotated[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
   const key = await blockchain.getActualDidKey(did)
