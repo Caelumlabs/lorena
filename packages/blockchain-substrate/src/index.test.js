@@ -6,6 +6,7 @@ const Utils = require('./utils')
 const crypto = new Crypto(true)
 
 let alice, bob
+let aliceKey, bobKey
 let blockchain
 let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
@@ -49,13 +50,17 @@ test.skip('Should send Tokens from Alice to Bob', async () => {
 test('Should Save a DID to Blockchain', async () => {
   alice = blockchain.setKeyring('//Alice')
   bob = blockchain.getAddress('//Bob')
+  aliceKey = blockchain.getKeyring('//Alice')
+  bobKey = blockchain.getKeyring('//Bob')
 
-  await blockchain.registerDid(did, bob, 2)
+  await blockchain.registerDid(aliceKey, did, bob, 2)
   const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
   const registeredDidEvent = JSON.parse(subs)
   const didData = await blockchain.getDidData(did)
   const didDataJson = JSON.parse(didData)
 
+  // Promoter Account from even data should be address Alice
+  expect(registeredDidEvent[1]).toEqual(alice)
   // DID Owner should be address BOB
   expect(didDataJson.owner).toEqual(bob)
   // DID promoter should belong to Alice
@@ -63,8 +68,15 @@ test('Should Save a DID to Blockchain', async () => {
   expect(promoter.toString()).toEqual(alice)
 })
 
-test.skip('Register a Did Document', async () => {
-  await blockchain.registerDidDocument(did, diddocHash)
+test('Register a Did Document', async () => {
+  await blockchain.registerDidDocument(bobKey, did, diddocHash)
+  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
+  const registeredDocumentEvent = JSON.parse(subs)
+  const didData = await blockchain.getDidData(did)
+  const didDataJson = JSON.parse(didData)
+
+  console.log('Diddata -> %O', didDataJson)
+
 })
 
 test.skip('Check registration event', async () => {
@@ -93,7 +105,7 @@ test.skip('GetKey from a DID', async () => {
 test.skip('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
-  await blockchain.rotateKey(did, newPubKey)
+  await blockchain.rotateKey(bobKey, did, newPubKey)
   const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
   const keyRotated = JSON.parse(subs)
   expect(keyRotated[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))

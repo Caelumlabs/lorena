@@ -86,6 +86,11 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     return this.keypair.address
   }
 
+  getKeyring (seed) {
+    const keyring = new Keyring({ type: 'sr25519' })
+    return keyring.addFromUri(seed)
+  }
+
   /**
    * Get Address
    *
@@ -142,12 +147,12 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {AccountId} newOwner New owners account
    *
    */
-  async changeDidOwner (did, newOwner) {
+  async changeDidOwner (owner, did, newOwner) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     return new Promise(async (resolve, reject) => {
       await this.api.tx.lorenaDids.changeDidOwner(hexDID, newOwner)
-        .signAndSend(this.keypair, ({ status, events }) => {
+        .signAndSend(owner, ({ status, events }) => {
           if (status.isInBlock || status.isFinalized) {
             const errors = events.filter(({ section, method }) =>
               section === 'system' && method === 'ExtrinsicFailed'
@@ -178,7 +183,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {number} level Level to assign
    *
    */
-  async registerDid (did, accountTo, level) {
+  async registerDid (promoter, did, accountTo, level) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
 
@@ -188,7 +193,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
 
     return new Promise(async (resolve, reject) => {
       await this.api.tx.lorenaDids.registerDid(hexDID, accountTo, level)
-        .signAndSend(this.keypair, ({ status, events }) => {
+        .signAndSend(promoter, ({ status, events }) => {
           if (status.isInBlock || status.isFinalized) {
             const errors = events.filter(({ section, method }) =>
               section === 'system' && method === 'ExtrinsicFailed'
@@ -247,12 +252,13 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {string} did DID
    * @param {string} diddocHash Did document Hash
    */
-  async registerDidDocument (did, diddocHash) {
+  async registerDidDocument (owner, did, diddocHash) {
     const hexDid = Utils.base64ToHex(did)
     const docHash = Utils.toUTF8Array(diddocHash)
+    console.log('Entering Diddocumen')
     return new Promise(async (resolve, reject) => {
       await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
-        .signAndSend(this.keypair, ({ status, events }) => {
+        .signAndSend(owner, ({ status, events }) => {
           if (status.isInBlock || status.isFinalized) {
             const errors = events.filter(({ section, method }) =>
               section === 'system' && method === 'ExtrinsicFailed'
@@ -292,7 +298,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {string} did DID
    * @param {string} pubKey Public Key to register into the DID
    */
-  async rotateKey (did, pubKey) {
+  async rotateKey (owner, did, pubKey) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
@@ -300,7 +306,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Call lorenaDids RotateKey function
     return new Promise(async (resolve, reject) => {
       await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
-        .signAndSend(this.keypair, ({ status, events }) => {
+        .signAndSend(owner, ({ status, events }) => {
           if (status.isInBlock || status.isFinalized) {
             const errors = events.filter(({ section, method }) =>
               section === 'system' && method === 'ExtrinsicFailed'
