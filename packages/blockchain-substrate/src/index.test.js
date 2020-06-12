@@ -63,7 +63,7 @@ test('Should sweep tokens from Zelda to Alice', async () => {
   expect(zeldaBalance2).not.toEqual(zeldaBalance1)
 })
 
-test('Should Save a DID to Blockchain', async () => {
+test.skip('Should Save a DID to Blockchain', async () => {
   alice = blockchain.setKeyring('//Alice')
   await blockchain.registerDid(did, alice, 2)
   const subs = await blockchain.wait4Event('DidRegistered')
@@ -76,7 +76,7 @@ test('Should Save a DID to Blockchain', async () => {
   expect(registeredDid[1]).toEqual(blockchain.keypair.address)
 })
 
-test('Register a Did Document', async () => {
+test.skip('Register a Did Document', async () => {
   await blockchain.registerDidDocument(did, diddocHash)
 })
 
@@ -90,14 +90,14 @@ test.skip('Check registration event', async () => {
   expect(Utils.hexToBase64(regDidDoc.split('x')[1])).toEqual(diddocHash)
 })
 
-test('Check a Did Document', async () => {
+test.skip('Check a Did Document', async () => {
   const result = await blockchain.getDidDocHash(did)
   if (result !== '') {
     expect(result).toEqual(diddocHash)
   }
 })
 
-test('GetKey from a DID', async () => {
+test.skip('GetKey from a DID', async () => {
   const result = await blockchain.getActualDidKey(did)
   console.log('RESULT -> %O', result)
   if (result !== '') {
