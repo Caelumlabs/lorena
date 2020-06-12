@@ -141,44 +141,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * Change DID owner.
-   *
-   * @param {string} did DID
-   * @param {AccountId} newOwner New owners account
-   *
-   */
-  async changeDidOwner (owner, did, newOwner) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
-    return new Promise(async (resolve, reject) => {
-      await this.api.tx.lorenaDids.changeDidOwner(hexDID, newOwner)
-        .signAndSend(owner, ({ status, events }) => {
-          if (status.isInBlock || status.isFinalized) {
-            const errors = events.filter(({ section, method }) =>
-              section === 'system' && method === 'ExtrinsicFailed'
-            )
-            if (errors.len > 0) {
-              errors.forEach(({ data: [error, info] }) => {
-                if (error.isModule) {
-                  const decoded = this.api.registry.findMetaError(error.asModule)
-                  const { documentation, method, section } = decoded
-                  console.log(`Module error:  ${section}.${method}: ${documentation.join(' ')}`)
-                } else {
-                  console.log('Error found ' + error.toString())
-                }
-              })
-              reject(error)
-            }
-          }
-        })
-      resolve(true)
-    })
-  }
-  
-  /**
    * Registers Did in Substrate .
    *
-   * @param {string} did DID
+   * @param {AccountId} promoter Promoter's Account
+   * @param {DID} did DID
    * @param {AccountId} accountTo Account to assign DID
    * @param {number} level Level to assign
    *
@@ -186,34 +152,54 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async registerDid (promoter, did, accountTo, level) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
+    const transaction = await this.api.tx.lorenaDids.registerDid(hexDID, accountTo, level)
+    return await this.execTransaction(transaction, promoter)
+  }
 
-    debug('Register did : ' + did)
-    debug('Assign to account : ' + accountTo)
-    debug('Assigned level : ' + level)
+  /**
+   * Registers a Vec<u8> (of the DID document) for a DID
+   *
+   * @param {AccountId} owner Owner's Account
+   * @param {DID} did DID
+   * @param {Vec<u8>} diddocHash Did document Hash
+   */
+  async registerDidDocument (owner, did, diddocHash) {
+    const hexDid = Utils.base64ToHex(did)
+    const docHash = Utils.toUTF8Array(diddocHash)
+    const transaction = await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
+    return await this.execTransaction(transaction, owner)
+  }
 
-    return new Promise(async (resolve, reject) => {
-      await this.api.tx.lorenaDids.registerDid(hexDID, accountTo, level)
-        .signAndSend(promoter, ({ status, events }) => {
-          if (status.isInBlock || status.isFinalized) {
-            const errors = events.filter(({ section, method }) =>
-              section === 'system' && method === 'ExtrinsicFailed'
-            )
-            if (errors.len > 0) {
-              errors.forEach(({ data: [error, info] }) => {
-                if (error.isModule) {
-                  const decoded = this.api.registry.findMetaError(error.asModule)
-                  const { documentation, method, section } = decoded
-                  console.log(`Module error:  ${section}.${method}: ${documentation.join(' ')}`)
-                } else {
-                  console.log('Error found ' + error.toString())
-                }
-              })
-              reject(error)
-            }
-          }
-        })
-      resolve(true)
-    })
+  /**
+   * Rotate Key : changes the current key for a DID
+   *
+   * @param {AccountId} owner Owner's Account
+   * @param {DID} did DID
+   * @param {Vec<u8>} diddocHash Did document Hash
+   */
+  async rotateKey (owner, did, pubKey) {
+    // Convert did string to hex
+    const hexDID = Utils.base64ToHex(did)
+    // Convert pubKey to vec[u8]
+    const keyArray = Utils.toUTF8Array(pubKey)
+    // Call lorenaDids RotateKey function
+    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
+    return await this.execTransaction(transaction, owner)
+  }
+
+  /**
+   * Change DID owner.
+   *
+   * @param {AccountId} owner Owner's Account
+   * @param {DID} did DID
+   * @param {AccountId} newOwner New owner's Account
+   *
+   */
+  async changeDidOwner (owner, did, newOwner) {
+    // Convert did string to hex
+    const hexDID = Utils.base64ToHex(did)
+    const transaction = await this.api.tx.lorenaDids.changeDidOwner(hexDID, newOwner)
+    return await this.execTransaction(transaction, owner)
   }
 
   /**
@@ -247,41 +233,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * Registers a Vec<u8> (of the DID document) for a DID
-   *
-   * @param {string} did DID
-   * @param {string} diddocHash Did document Hash
-   */
-  async registerDidDocument (owner, did, diddocHash) {
-    const hexDid = Utils.base64ToHex(did)
-    const docHash = Utils.toUTF8Array(diddocHash)
-    console.log('Entering Diddocumen')
-    return new Promise(async (resolve, reject) => {
-      await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
-        .signAndSend(owner, ({ status, events }) => {
-          if (status.isInBlock || status.isFinalized) {
-            const errors = events.filter(({ section, method }) =>
-              section === 'system' && method === 'ExtrinsicFailed'
-            )
-            if (errors.len > 0) {
-              errors.forEach(({ data: [error, info] }) => {
-                if (error.isModule) {
-                  const decoded = this.api.registry.findMetaError(error.asModule)
-                  const { documentation, method, section } = decoded
-                  console.log(`Module error:  ${section}.${method}: ${documentation.join(' ')}`)
-                } else {
-                  console.log('Error found ' + error.toString())
-                }
-              })
-              reject(error)
-            }
-          }
-        })
-      resolve(true)
-    })
-  }
-
-  /**
    * Retrieves the Hash of a Did Document for a DID
    *
    * @param {string} did DID
@@ -290,43 +241,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(did)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
     return Utils.hexToBase64(doc)
-  }
-
-  /**
-   * Rotate Key : changes the current key for a DID
-   *
-   * @param {string} did DID
-   * @param {string} pubKey Public Key to register into the DID
-   */
-  async rotateKey (owner, did, pubKey) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
-    // Convert pubKey to vec[u8]
-    const keyArray = Utils.toUTF8Array(pubKey)
-    // Call lorenaDids RotateKey function
-    return new Promise(async (resolve, reject) => {
-      await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
-        .signAndSend(owner, ({ status, events }) => {
-          if (status.isInBlock || status.isFinalized) {
-            const errors = events.filter(({ section, method }) =>
-              section === 'system' && method === 'ExtrinsicFailed'
-            )
-            if (errors.len > 0) {
-              errors.forEach(({ data: [error, info] }) => {
-                if (error.isModule) {
-                  const decoded = this.api.registry.findMetaError(error.asModule)
-                  const { documentation, method, section } = decoded
-                  console.log(`Module error:  ${section}.${method}: ${documentation.join(' ')}`)
-                } else {
-                  console.log('Error found ' + error.toString())
-                }
-              })
-              reject(error)
-            }
-          }
-        })
-      resolve(true)
-    })
   }
 
   /**
@@ -355,6 +269,37 @@ module.exports = class SubstrateLib extends BlockchainInterface {
           }
         })
       })
+    })
+  }
+
+  /**
+   * Execute a transaction.
+   *
+   * @param {Transaction} transaction Transaction to execute
+   * @param {AccountId} executorAccount Account executing the transaction
+   */
+  async execTransaction (transaction, executorAccount) {
+    return new Promise(async (resolve, reject) => {
+      await transaction.signAndSend(executorAccount, ({ status, events }) => {
+        if (status.isInBlock || status.isFinalized) {
+          const errors = events.filter(({ section, method }) =>
+            section === 'system' && method === 'ExtrinsicFailed'
+          )
+          if (errors.len > 0) {
+            errors.forEach(({ data: [error, info] }) => {
+              if (error.isModule) {
+                const decoded = this.api.registry.findMetaError(error.asModule)
+                const { documentation, method, section } = decoded
+                console.log(`Module error:  ${section}.${method}: ${documentation.join(' ')}`)
+              } else {
+                console.log('Error found ' + error.toString())
+              }
+            })
+            reject(error)
+          }
+        }
+      })
+      resolve(true)
     })
   }
 }

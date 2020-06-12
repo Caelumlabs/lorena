@@ -82,14 +82,6 @@ test('Register a Did Document', async () => {
   expect(didData.did_doc.toString().split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
 })
 
-test.skip('Check registration event', async () => {
-  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
-  const registeredDidDocument = JSON.parse(subs)
-  // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
-  const regDidDoc = registeredDidDocument[2].replace(/0+$/g, '')
-  expect(Utils.hexToBase64(regDidDoc.split('x')[1])).toEqual(diddocHash)
-})
-
 test.skip('Check a Did Document', async () => {
   const result = await blockchain.getDidDocHash(did)
   if (result !== '') {
@@ -99,7 +91,6 @@ test.skip('Check a Did Document', async () => {
 
 test.skip('GetKey from a DID', async () => {
   const result = await blockchain.getActualDidKey(did)
-  console.log('RESULT -> %O', result)
   if (result !== '') {
     expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
   }
@@ -122,7 +113,7 @@ test('Should Change Owner', async () => {
   console.log('subs -> %O', subs)
   const registeredNewOwnerEvent = JSON.parse(subs)
 
-  // DID Document of event should be equal to entered
+  // New owner of event should be equal to entered
   expect(registeredNewOwnerEvent[2]).toEqual(charlie)
 })
 
