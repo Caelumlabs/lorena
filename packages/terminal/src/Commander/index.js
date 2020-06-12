@@ -62,7 +62,7 @@ class Commander {
         term.info(`Adding link ${did} with alias ${alias}`)
         const created = await this.lorena.createConnection(
           did,
-          undefined,
+          'undefined',
           { alias }
         )
         if (created) {

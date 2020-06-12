@@ -5,7 +5,7 @@ const Utils = require('./utils')
 
 const crypto = new Crypto(true)
 
-let alice, bob
+let alice
 let blockchain
 let did
 const diddocHash = 'zdpuAqghmmBxwiS7byTRoqd2ZbhHbzcAf6AnxYPK7yeicEjDv'
@@ -36,19 +36,35 @@ test('Should use a SURI as a key', async () => {
   expect(alice).toEqual('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY')
 })
 
-test('Should send Tokens from Alice to Bob', async () => {
+const zeldaAmount = 3000000000000000
+let zeldaAddress
+const zeldaMnemonic = 'upset tip zone bid verb problem despair clean basic carpet fuel feature'
+
+test('Should send Tokens from Alice to a new address', async () => {
   jest.setTimeout(30000)
-  bob = blockchain.getAddress('//Bob')
-  expect(bob).toEqual('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty')
+  const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
+  expect(zeldaAddress).toEqual('5H42K5LNPmBKsVnTXTLtmjib7VfVbGVG92nTwNPbAs4AZQP5')
   const amount1 = await blockchain.addrState(alice)
-  await blockchain.transferTokens('5Epmnp6ts1r3qRFEv9di7wxMNnihd1hXDCPp49GUeUqapSz1', 3000000000000000)
+  await blockchain.transferTokens(zeldaAddress, zeldaAmount)
   const amount2 = await blockchain.addrState(alice)
   expect(amount1).not.toEqual(amount2)
 })
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms * 1000))
+test('Should sweep tokens from Zelda to Alice', async () => {
+  jest.setTimeout(90000)
+  blockchain.setKeyring(zeldaMnemonic)
+  const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
+  // expect(zeldaBalance1.balance.free).toEqual(zeldaAmount)
+  await blockchain.transferAllTokens(blockchain.getAddress('//Alice'))
+  sleep(10)
+  const zeldaBalance2 = await blockchain.addrState(zeldaAddress)
+  expect(zeldaBalance2.balance.free.toHuman()).toEqual('0')
+  expect(zeldaBalance2).not.toEqual(zeldaBalance1)
+})
+
 test('Should Save a DID to Blockchain', async () => {
   alice = blockchain.setKeyring('//Alice')
-  bob = blockchain.getAddress('//Bob')
   await blockchain.registerDid(did, alice, 2)
   const subs = await blockchain.wait4Event('DidRegistered')
   const registeredDid = JSON.parse(subs)
@@ -89,7 +105,7 @@ test('GetKey from a DID', async () => {
   }
 })
 
-test('Should Rotate a Key', async () => {
+test.skip('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(did, newPubKey)
