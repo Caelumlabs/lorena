@@ -10,9 +10,11 @@ const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString, stringToHex } =
 module.exports = class LorenaCrypto {
   /**
    * Init Crypto library
+   *
+   * @returns {boolean} success
    */
   async init () {
-    await cryptoWaitReady()
+    return cryptoWaitReady()
   }
 
   keyPair (_mnemonic = false) {

@@ -125,9 +125,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
         .transfer(addrTo, amount)
         .signAndSend(this.keypair, (result) => {
           if (result.status.isInBlock) {
-            console.log(`Transaction included at blockHash ${result.status.asInBlock}`)
+            debug(`Transaction included at blockHash ${result.status.asInBlock}`)
           } else if (result.status.isFinalized) {
-            console.log(`Transaction finalized at blockHash ${result.status.asFinalized}`)
+            debug(`Transaction finalized at blockHash ${result.status.asFinalized}`)
             resolve(true)
             unsub()
           }
@@ -152,8 +152,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Registers Did in Substrate .
    *
    * @param {string} did DID
-   * @param {*} accountTo assign to this account
-   * @param {number} level to assign
+   * @param {string} accountTo Account to assign the DID to
+   * @param {number} level Current Organization Level
    */
   async registerDid (did, accountTo, level) {
     // Convert did string to hex
@@ -208,10 +208,20 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {Promise} of transaction
    */
   async registerDidDocument (did, diddocHash) {
-    const hexDid = Utils.base64ToHex(did)
-    const docHash = Utils.toUTF8Array(diddocHash)
-    const transaction = await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
-    return await transaction.signAndSend(this.keypair)
+    return new Promise(async (resolve) => {
+      const hexDID = Utils.base64ToHex(did)
+      const docHash = Utils.toUTF8Array(diddocHash)
+      const unsub = await this.api.tx.lorenaDids.registerDidDocument(hexDID, docHash)
+        .signAndSend(this.keypair, (result) => {
+          if (result.status.isInBlock) {
+            debug(`Rotate Key - Transaction included at blockHash ${result.status.asInBlock}`)
+          } else if (result.status.isFinalized) {
+            debug(`Rotate Key - Transaction finalized at blockHash ${result.status.asFinalized}`)
+            resolve(true)
+            unsub()
+          }
+        })
+    })
   }
 
   /**
@@ -221,8 +231,11 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} hash in Base64 format
    */
   async getDidDocHash (did) {
-    const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(did)
+    console.log('didDoc from ' + did)
+    const hexDID = Utils.base64ToHex(did)
+    const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
+    console.log('didDoc = ' + Utils.hexToBase64(doc))
     return Utils.hexToBase64(doc)
   }
 
@@ -234,12 +247,70 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {Promise} of transaction
    */
   async rotateKey (did, pubKey) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
-    // Convert pubKey to vec[u8]
-    const keyArray = Utils.toUTF8Array(pubKey)
-    // Call lorenaDids RotateKey function
-    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
-    return transaction.signAndSend(this.keypair)
+    return new Promise(async (resolve) => {
+      const hexDID = Utils.base64ToHex(did)
+      const keyArray = Utils.toUTF8Array(pubKey)
+      const unsub = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
+        .signAndSend(this.keypair, (result) => {
+          if (result.status.isInBlock) {
+            debug(`Rotate Key - Transaction included at blockHash ${result.status.asInBlock}`)
+          } else if (result.status.isFinalized) {
+            debug(`Rotate Key - Transaction finalized at blockHash ${result.status.asFinalized}`)
+            resolve(true)
+            unsub()
+          }
+        })
+    })
+  }
+
+  /**
+   * Change DID owner
+   *
+   * @param {string} did DID
+   * @param {string} accountId New Owner
+   * @returns {Promise} of change in owner
+   */
+  async changeOwner (did, accountId) {
+    return new Promise(async (resolve) => {
+      const hexDID = Utils.base64ToHex(did)
+      const unsub = await this.api.tx.lorenaDids.changeDidOwner(hexDID, accountId)
+        .signAndSend(this.keypair, (result) => {
+          if (result.status.isInBlock) {
+            debug(`Change Owner - Transaction included at blockHash ${result.status.asInBlock}`)
+          } else if (result.status.isFinalized) {
+            debug(`Change Owner - Transaction finalized at blockHash ${result.status.asFinalized}`)
+            resolve(true)
+            unsub()
+          }
+        })
+    })
+  }
+
+  /**
+   * Wait for events
+   *
+   * @param {string} eventMethod Event we are subscribing to
+   * @returns {Promise} of data from event requested
+   */
+  wait4Event (eventMethod) {
+    return new Promise(resolve => {
+      this.api.query.system.events(events => {
+        // loop through
+        events.forEach(record => {
+          // extract the phase, event and the event types
+          const { event } = record
+          const types = event.typeDef
+          if (event.section === 'lorenaDids' && event.method === eventMethod) {
+            for (let i = 0; i < event.data.length; i++) {
+              // All events have a a type 'AccountId'
+              if (types[i].type === 'AccountId') {
+                resolve(event.data.toString())
+              }
+            }
+            resolve([])
+          }
+        })
+      })
+    })
   }
 }

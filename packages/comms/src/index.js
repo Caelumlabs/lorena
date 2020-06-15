@@ -23,6 +23,13 @@ module.exports = class Comms {
     this.connected = false
   }
 
+  /**
+   * Init Crypto library
+   */
+  async init () {
+    await this.crypto.init()
+  }
+
   emit (type, ...args) {
     super.emit('*', ...args)
     return super.emit(type, ...args) || super.emit('', ...args)
@@ -243,7 +250,6 @@ module.exports = class Comms {
    *
    * @param {object} emitter of events
    * @param {object} rooms Array of events related to rooms
-   * @returns {object} array of invitations
    */
   getIncomingInvitations (emitter, rooms) {
     const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
@@ -344,6 +350,8 @@ module.exports = class Comms {
    * Sends a Message.
    *
    * @param {string} roomId Room to send the message to.
+   * @param {object} senderSecretKey to sign the message
+   * @param {object} receiverPublicKey to encrypt the message
    * @param {string} recipe to call
    * @param {*} payload to send
    * @param {number} recipeId called
@@ -351,10 +359,12 @@ module.exports = class Comms {
    * @param {number} threadId of call
    * @returns {Promise} Result of sending a message
    */
-  sendMessage (roomId, recipe, payload, recipeId = 0, thread = '', threadId = 0) {
+  sendMessage (roomId, senderSecretKey, receiverPublicKey, recipe, payload, recipeId = 0, thread = '', threadId = 0) {
     return new Promise((resolve, reject) => {
       const apiSendMessage = this.api + 'rooms/' + escape(roomId) + '/send/m.room.message/' + this.txnId + '?access_token=' + this.connection.access_token
-      const body = JSON.stringify({ '@type': 'recipe', encrypted: false, msg: { recipe, recipeId, thread, threadId, payload } })
+      const message = { recipe, recipeId, thread, threadId, payload }
+      // const msgEncrypted = this.crypto.boxObj(message, senderSecretKey, receiverPublicKey)
+      const body = JSON.stringify({ '@type': 'recipe', msg: message })
       axios.put(apiSendMessage, { msgtype: 'm.lorena', body })
         .then((res, err) => {
           this.txnId++
