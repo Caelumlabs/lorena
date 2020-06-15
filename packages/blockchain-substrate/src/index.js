@@ -168,30 +168,32 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * Get Public Key from Did.
+   * Get data from DID.
    *
    * @param {string} did DID
+   * @returns {Promise} of didData
    */
   async getDidData (did) {
     const hexDid = Utils.base64ToHex(did)
-    return await this.api.query.lorenaDids.didData(hexDid)
+    return this.api.query.lorenaDids.didData(hexDid)
   }
 
   /**
    * Get Public Key from Did.
    *
    * @param {string} did DID
+   * @returns {Promise} of public key
    */
   async getActualKey (did) {
     const hexDid = Utils.base64ToHex(did)
-    const ret = await this.api.query.lorenaDids.publicKeyFromDid(hexDid)
-    return ret
+    return this.api.query.lorenaDids.publicKeyFromDid(hexDid)
   }
 
   /**
    * Returns the current Key.
    *
    * @param {string} did DID
+   * @returns {string} public key in hex format
    */
   async getActualDidKey (did) {
     const result = await this.getActualKey(did)
@@ -203,6 +205,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} did DID
    * @param {string} diddocHash Did document Hash
+   * @returns {Promise} of transaction
    */
   async registerDidDocument (did, diddocHash) {
     return new Promise(async (resolve) => {
@@ -225,6 +228,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Retrieves the Hash of a Did Document for a DID
    *
    * @param {string} did DID
+   * @returns {string} hash in Base64 format
    */
   async getDidDocHash (did) {
     console.log('didDoc from ' + did)
@@ -240,6 +244,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} did DID
    * @param {string} pubKey Public Key to register into the DID
+   * @returns {Promise} of transaction
    */
   async rotateKey (did, pubKey) {
     return new Promise(async (resolve) => {
@@ -263,6 +268,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} did DID
    * @param {string} accountId New Owner
+   * @returns {Promise} of change in owner
    */
   async changeOwner (did, accountId) {
     return new Promise(async (resolve) => {
@@ -283,7 +289,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Wait for events
    *
-   * @param {srting} eventMethod Event we are subscribing to
+   * @param {string} eventMethod Event we are subscribing to
+   * @returns {Promise} of data from event requested
    */
   wait4Event (eventMethod) {
     return new Promise(resolve => {

@@ -10,9 +10,11 @@ const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString, stringToHex } =
 module.exports = class LorenaCrypto {
   /**
    * Init Crypto library
+   *
+   * @returns {boolean} success
    */
   async init () {
-    await cryptoWaitReady()
+    return cryptoWaitReady()
   }
 
   keyPair (_mnemonic = false) {
@@ -101,7 +103,7 @@ module.exports = class LorenaCrypto {
    * Encrypts (symmetric) a message with a keypair.
    *
    * @param {string} password Password to encrypt the message
-   * @param {string} message Message to be encrypted
+   * @param {string} obj Message to be encrypted
    * @returns {Promise} Return a promise with the execution of the encryption.
    */
   encryptObj (password, obj) {

@@ -3,13 +3,14 @@ module.exports = {
     browser: true,
     commonjs: true,
     es6: true,
-    mocha: true
+    node: true,
+    jest: true
   },
   extends: [
-    'standard',
     'plugin:jest/recommended',
     'plugin:jest/style',
-    'plugin:jsdoc/recommended'
+    'plugin:jsdoc/recommended',
+    'standard'
   ],
   globals: {
     Atomics: 'readonly',

@@ -12,7 +12,7 @@
     "test": "jest --silent",
     "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
-    "lint-fix": "eslint ./src --fix"
+    "lint:fix": "eslint ./src --fix"
   },
   "husky": {
     "hooks": {

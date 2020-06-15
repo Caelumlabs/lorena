@@ -13,8 +13,10 @@ const diddocHash = 'zdpuAqghmmBxwiS7byTRoqd2ZbhHbzcAf6AnxYPK7yeicEjDv'
 test('init', async () => {
   blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
   //  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+  expect(blockchain).toBeDefined()
   await crypto.init()
   did = crypto.random(16)
+  expect(did).not.toEqual('')
 })
 
 test('should have good format conversion', () => {
@@ -29,6 +31,7 @@ test('should have good format conversion', () => {
 test('should Connect', async () => {
   jest.setTimeout(50000)
   await blockchain.connect()
+  expect(blockchain).toBeDefined()
 })
 
 test('Should use a SURI as a key', async () => {
@@ -118,4 +121,5 @@ test.skip('Should Rotate a Key', async () => {
 
 test('should clean up after itself', () => {
   blockchain.disconnect()
+  expect(blockchain).toBeDefined()
 })

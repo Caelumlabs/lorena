@@ -40,6 +40,7 @@ module.exports = class Comms {
    *
    * @param {string} username Matrix username
    * @param {string} password Matrix password
+   * @param {string} batch to pass to events
    * @returns {Promise} Return a promise with the connection when it's done.
    */
   async connect (username, password, batch = '') {
@@ -106,6 +107,7 @@ module.exports = class Comms {
   /**
    * Listen to events.
    *
+   * @param {object} emitter of events
    * @param {string} nextBatch next batch of events to be asked to the matrix server.
    * @returns {Promise} Return a promise with the Name of the user.
    */
@@ -246,8 +248,8 @@ module.exports = class Comms {
   /**
    * Extract Invitations from the API Call to matrix server - events
    *
+   * @param {object} emitter of events
    * @param {object} rooms Array of events related to rooms
-   * @returns {object} array of invitations
    */
   getIncomingInvitations (emitter, rooms) {
     const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
@@ -290,6 +292,7 @@ module.exports = class Comms {
   /**
    * Extract Accepted Invitations from the API Call to matrix server - events
    *
+   * @param {object} emitter of events
    * @param {object} rooms Array of events related to rooms
    */
   getUpdatedInvitations (emitter, rooms) {
@@ -317,6 +320,7 @@ module.exports = class Comms {
   /**
    * Extract Messages from events
    *
+   * @param {object} emitter of events
    * @param {object} rooms Array of events related to rooms
    */
   getMessages (emitter, rooms) {
@@ -346,7 +350,13 @@ module.exports = class Comms {
    * Sends a Message.
    *
    * @param {string} roomId Room to send the message to.
-   * @param {string} body Body of the message.
+   * @param {object} senderSecretKey to sign the message
+   * @param {object} receiverPublicKey to encrypt the message
+   * @param {string} recipe to call
+   * @param {*} payload to send
+   * @param {number} recipeId called
+   * @param {number} thread of call
+   * @param {number} threadId of call
    * @returns {Promise} Result of sending a message
    */
   sendMessage (roomId, senderSecretKey, receiverPublicKey, recipe, payload, recipeId = 0, thread = '', threadId = 0) {

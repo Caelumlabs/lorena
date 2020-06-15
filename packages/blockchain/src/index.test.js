@@ -20,5 +20,5 @@ class Test2 extends BlockchainInterface {
 test('Create a Class with the Interface ', () => {
   expect(() => { Test1() }).toThrow(Error)
   const test = new Test2()
-  expect(test).not.toBeUndefined()
+  expect(test).toBeDefined()
 })

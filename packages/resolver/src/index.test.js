@@ -90,4 +90,5 @@ test('should get nothing for an unknown DID', async () => {
 
 test('should disconnect cached connections for a clean shutdown', () => {
   LorenaDidResolver.disconnectAll()
+  expect(LorenaDidResolver).toBeDefined()
 })

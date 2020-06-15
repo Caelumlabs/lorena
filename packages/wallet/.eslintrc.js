@@ -1,10 +1,13 @@
 module.exports = {
   env: {
     es6: true,
-    node: true,
-    jest: true
+    jest: true,
+    node: true
   },
   extends: [
+    'plugin:jest/recommended',
+    'plugin:jest/style',
+    'plugin:jsdoc/recommended',
     'standard'
   ],
   globals: {
@@ -12,9 +15,14 @@ module.exports = {
     SharedArrayBuffer: 'readonly'
   },
   parserOptions: {
-    ecmaVersion: 11,
+    ecmaVersion: 2018,
     sourceType: 'module'
   },
+  plugins: [
+    'jest',
+    'jsdoc'
+  ],
   rules: {
+    'jest/no-test-callback': 1
   }
 }

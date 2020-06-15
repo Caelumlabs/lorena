@@ -30,7 +30,7 @@ module.exports = class Organization {
   /**
    * Set the legal name
    *
-   * @param {string} name Full Legal Name in ine string
+   * @param {string} legalName Full Legal Name in one string
    */
   legalName (legalName) {
     this.subject.legalName = legalName
@@ -80,8 +80,8 @@ module.exports = class Organization {
   /**
    * Sets the member of a organization.
    *
-   * @param {string} roleName role name
-   * @param {*} persona Persona Object
+   * @param {string} name of the the organization
+   * @param {string} url of the organization
    */
   memberOf (name, url) {
     this.subject.memberOf = {
