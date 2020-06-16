@@ -12,8 +12,8 @@ let did
 const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
 
 test('init', async () => {
-//  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  // blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   await crypto.init()
   did = crypto.random(16)
   alice = blockchain.setKeyring('//Alice')
