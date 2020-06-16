@@ -203,6 +203,21 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
+   * Remove DID.
+   *
+   * @param {AccountId} owner Owner's Account
+   * @param {DID} did DID
+   * @param {AccountId} newOwner New owner's Account
+   *
+   */
+  async removeDid (owner, did) {
+    // Convert did string to hex
+    const hexDID = Utils.base64ToHex(did)
+    const transaction = await this.api.tx.lorenaDids.removeDid(hexDID)
+    return await this.execTransaction(transaction, owner)
+  }
+
+  /**
    * Get Public Key from Did.
    *
    * @param {string} did DID
@@ -246,11 +261,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Subscribe to register events
    *
-   * @param {string} api DID
-   * @param {string} pubKey Public Key to register into the DID
+   * @param {string} api Blockchain api
+   * @param {string} eventMethod Event to listen to
    */
-
-  async subscribe2RegisterEvents (api, eventMethod) {
+  async subscribe2Events (api, eventMethod) {
     return new Promise(resolve => {
       api.query.system.events(events => {
         // loop through
@@ -280,26 +294,25 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async execTransaction (transaction, executorAccount) {
     return new Promise(async (resolve, reject) => {
+      let result = true
       await transaction.signAndSend(executorAccount, ({ status, events }) => {
         if (status.isInBlock || status.isFinalized) {
-          const errors = events.filter(({ section, method }) =>
+          const errors = events.filter(({ event: { method, section } }) =>
             section === 'system' && method === 'ExtrinsicFailed'
           )
-          if (errors.len > 0) {
-            errors.forEach(({ data: [error, info] }) => {
+          if (errors.length > 0) {
+            errors.forEach(({ event: { data: [error, info] } }) => {
               if (error.isModule) {
-                const decoded = this.api.registry.findMetaError(error.asModule)
-                const { documentation, method, section } = decoded
-                console.log(`Module error:  ${section}.${method}: ${documentation.join(' ')}`)
+                console.log(`Module error: ${Uint8Array.of(error.asModule.index, error.asModule.error)}`)
               } else {
-                console.log('Error found ' + error.toString())
+                console.log('System error found ' + error.toString())
               }
             })
-            reject(error)
+            result = false
           }
+          result ? resolve(true) : resolve(false)
         }
       })
-      resolve(true)
     })
   }
 }

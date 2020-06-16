@@ -43,7 +43,7 @@ test('Should use a SURI as a key', async () => {
   expect(alice).toEqual('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY')
 })
 
-test.skip('Should send Tokens from Alice to Bob', async () => {
+test('Should send Tokens from Alice to Bob', async () => {
   jest.setTimeout(30000)
   bob = blockchain.getAddress('//Bob')
   expect(bob).toEqual('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty')
@@ -54,12 +54,14 @@ test.skip('Should send Tokens from Alice to Bob', async () => {
 })
 
 test('Should Save a DID to Blockchain', async () => {
-  await blockchain.registerDid(aliceKey, did, bob, 2)
-  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidRegistered')
+  const result = await blockchain.registerDid(aliceKey, did, bob, 2)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'DidRegistered')
   const registeredDidEvent = JSON.parse(subs)
   const didData = await blockchain.getDidData(did)
   const didDataJson = JSON.parse(didData)
 
+  // Result should equal to true => No errors
+  expect(result).toEqual(true)
   // Promoter Account from even data should be address Alice
   expect(registeredDidEvent[1]).toEqual(alice)
   // DID Owner should be address BOB
@@ -69,27 +71,34 @@ test('Should Save a DID to Blockchain', async () => {
   expect(promoter.toString()).toEqual(alice)
 })
 
+test('Should try again to register the same DID and fail', async () => {
+  const result = await blockchain.registerDid(aliceKey, did, bob, 2)
+
+  // Result should equal to false => error
+  expect(result).toEqual(false)
+})
+
 test('Register a Did Document', async () => {
-  await blockchain.registerDidDocument(bobKey, did, diddocHash)
-  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'DidDocumentRegistered')
+  const result = await blockchain.registerDidDocument(bobKey, did, diddocHash)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'DidDocumentRegistered')
   const registeredDocumentEvent = JSON.parse(subs)
   const didData = await blockchain.getDidData(did)
-  const didDataJson = JSON.parse(didData)
-
+  // Result should equal to true => No errors
+  expect(result).toEqual(true)
   // DID Document of event should be equal to entered
   expect(registeredDocumentEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
   // DID Document of DIDData record should be equal to entered
   expect(didData.did_doc.toString().split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
 })
 
-test.skip('Check a Did Document', async () => {
+test('Check a Did Document', async () => {
   const result = await blockchain.getDidDocHash(did)
   if (result !== '') {
     expect(result).toEqual(diddocHash)
   }
 })
 
-test.skip('GetKey from a DID', async () => {
+test('GetKey from a DID', async () => {
   const result = await blockchain.getActualDidKey(did)
   if (result !== '') {
     expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
@@ -100,21 +109,42 @@ test('Should Rotate a Key', async () => {
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
   await blockchain.rotateKey(bobKey, did, newPubKey)
-  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'KeyRotated')
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'KeyRotated')
   const registeredRotateKeyEvent = JSON.parse(subs)
 
   // DID Document of event should be equal to entered
   expect(registeredRotateKeyEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
 })
 
+test('Trying to Change Owner not beeing the owner. Should fail', async () => {
+  const result = await blockchain.changeDidOwner(aliceKey, did, charlie)
+  // Result should equal to false => error
+  expect(result).toEqual(false)
+})
+
 test('Should Change Owner', async () => {
   await blockchain.changeDidOwner(bobKey, did, charlie)
-  const subs = await blockchain.subscribe2RegisterEvents(blockchain.api, 'NewOwner')
-  console.log('subs -> %O', subs)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'NewOwner')
   const registeredNewOwnerEvent = JSON.parse(subs)
 
   // New owner of event should be equal to entered
   expect(registeredNewOwnerEvent[2]).toEqual(charlie)
+})
+
+test('Try to remove DID not being the owner. Should fail', async () => {
+  const result = await blockchain.removeDid(bobKey, did, charlie)
+  // Result should equal to false => error
+  expect(result).toEqual(false)
+})
+
+test('Should Remove DID', async () => {
+  await blockchain.removeDid(charlieKey, did)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'DidRemoved')
+  const didRemovedEvent = JSON.parse(subs)
+  console.log('SUBS -> %O', subs)
+
+  // New owner of event should be equal to entered
+  expect(Utils.hexToBase64(didRemovedEvent[1].split('x')[1])).toEqual(Utils.base64ToHex(did))
 })
 
 test('should clean up after itself', () => {
