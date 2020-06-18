@@ -5,18 +5,23 @@ const Utils = require('./utils')
 
 const crypto = new Crypto(true)
 
-let alice
+let alice, bob, charlie
+let aliceKey, bobKey, charlieKey
 let blockchain
 let did
 const diddocHash = 'zdpuAqghmmBxwiS7byTRoqd2ZbhHbzcAf6AnxYPK7yeicEjDv'
 
 test('init', async () => {
   blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  //  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
-  expect(blockchain).toBeDefined()
+  // blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   await crypto.init()
   did = crypto.random(16)
-  expect(did).not.toEqual('')
+  alice = blockchain.setKeyring('//Alice')
+  bob = blockchain.getAddress('//Bob')
+  charlie = blockchain.setKeyring('//Charlie')
+  aliceKey = blockchain.getKeyring('//Alice')
+  bobKey = blockchain.getKeyring('//Bob')
+  charlieKey = blockchain.getKeyring('//Charlie')
 })
 
 test('should have good format conversion', () => {
@@ -39,22 +44,114 @@ test('Should use a SURI as a key', async () => {
   expect(alice).toEqual('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY')
 })
 
-const zeldaAmount = 3000000000000000
-let zeldaAddress
-const zeldaMnemonic = 'upset tip zone bid verb problem despair clean basic carpet fuel feature'
-
-test('Should send Tokens from Alice to a new address', async () => {
+test('Should send Tokens from Alice to Bob', async () => {
   jest.setTimeout(30000)
-  const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
-  expect(zeldaAddress).toEqual('5H42K5LNPmBKsVnTXTLtmjib7VfVbGVG92nTwNPbAs4AZQP5')
+  bob = blockchain.getAddress('//Bob')
+  expect(bob).toEqual('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty')
   const amount1 = await blockchain.addrState(alice)
-  await blockchain.transferTokens(zeldaAddress, zeldaAmount)
+  await blockchain.transferTokens('5Epmnp6ts1r3qRFEv9di7wxMNnihd1hXDCPp49GUeUqapSz1', 3000000000000000)
   const amount2 = await blockchain.addrState(alice)
   expect(amount1).not.toEqual(amount2)
 })
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms * 1000))
-test('Should sweep tokens from Zelda to Alice', async () => {
+test('Should Save a DID to Blockchain', async () => {
+  const result = await blockchain.registerDid(aliceKey, did, bob, 2)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'DidRegistered')
+  const registeredDidEvent = JSON.parse(subs)
+  const didData = await blockchain.getDidData(did)
+  const didDataJson = JSON.parse(didData)
+
+  // Result should equal to true => No errors
+  expect(result).toEqual(true)
+  // Promoter Account from even data should be address Alice
+  expect(registeredDidEvent[1]).toEqual(alice)
+  // DID Owner should be address BOB
+  expect(didDataJson.owner).toEqual(bob)
+  // DID promoter should belong to Alice
+  const promoter = await blockchain.getOwnerFromDid(didData.did_promoter)
+  expect(promoter.toString()).toEqual(alice)
+})
+
+test('Should try again to register the same DID and fail', async () => {
+  const result = await blockchain.registerDid(aliceKey, did, bob, 2)
+
+  // Result should equal to false => error
+  expect(result).toEqual(false)
+})
+
+test('Register a Did Document', async () => {
+  const result = await blockchain.registerDidDocument(bobKey, did, diddocHash)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'DidDocumentRegistered')
+  const registeredDocumentEvent = JSON.parse(subs)
+  const didData = await blockchain.getDidData(did)
+  // Result should equal to true => No errors
+  expect(result).toEqual(true)
+  // DID Document of event should be equal to entered
+  expect(registeredDocumentEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
+  // DID Document of DIDData record should be equal to entered
+  expect(didData.did_doc.toString().split('x')[1]).toEqual(Utils.base64ToHex(diddocHash))
+})
+
+test('Check a Did Document', async () => {
+  const result = await blockchain.getDidDocHash(did)
+  if (result !== '') {
+    expect(result).toEqual(diddocHash)
+  }
+})
+
+test('GetKey from a DID', async () => {
+  const result = await blockchain.getActualDidKey(did)
+  if (result !== '') {
+    expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
+  }
+})
+
+test('Should Rotate a Key', async () => {
+  const newKeyPair = await crypto.keyPair()
+  const newPubKey = newKeyPair.keyPair.publicKey
+  await blockchain.rotateKey(bobKey, did, newPubKey)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'KeyRotated')
+  const registeredRotateKeyEvent = JSON.parse(subs)
+
+  // DID Document of event should be equal to entered
+  expect(registeredRotateKeyEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
+})
+
+test('Trying to Change Owner not beeing the owner. Should fail', async () => {
+  const result = await blockchain.changeDidOwner(aliceKey, did, charlie)
+  // Result should equal to false => error
+  expect(result).toEqual(false)
+})
+
+test('Should Change Owner', async () => {
+  await blockchain.changeDidOwner(bobKey, did, charlie)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'NewOwner')
+  const registeredNewOwnerEvent = JSON.parse(subs)
+
+  // New owner of event should be equal to entered
+  expect(registeredNewOwnerEvent[2]).toEqual(charlie)
+})
+
+test('Try to remove DID not being the owner. Should fail', async () => {
+  const result = await blockchain.removeDid(bobKey, did, charlie)
+  // Result should equal to false => error
+  expect(result).toEqual(false)
+})
+
+test('Should Remove DID', async () => {
+  await blockchain.removeDid(charlieKey, did)
+  const subs = await blockchain.subscribe2Events(blockchain.api, 'DidRemoved')
+  const didRemovedEvent = JSON.parse(subs)
+  console.log('SUBS -> %O', subs)
+
+  // New owner of event should be equal to entered
+  expect(Utils.hexToBase64(didRemovedEvent[1].split('x')[1])).toEqual(Utils.base64ToHex(did))
+})
+
+test.skip('Should sweep tokens from Zelda to Alice', async () => {
+  const zeldaMnemonic = 'some mnenomic'
+  const zeldaAddress = '0x0x0x0x0x0x'
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms * 1000))
   jest.setTimeout(90000)
   blockchain.setKeyring(zeldaMnemonic)
   const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
@@ -64,59 +161,6 @@ test('Should sweep tokens from Zelda to Alice', async () => {
   const zeldaBalance2 = await blockchain.addrState(zeldaAddress)
   expect(zeldaBalance2.balance.free.toHuman()).toEqual('0')
   expect(zeldaBalance2).not.toEqual(zeldaBalance1)
-})
-
-test.skip('Should Save a DID to Blockchain', async () => {
-  alice = blockchain.setKeyring('//Alice')
-  await blockchain.registerDid(did, alice, 2)
-  const subs = await blockchain.wait4Event('DidRegistered')
-  const registeredDid = JSON.parse(subs)
-  const didData = await blockchain.api.query.lorenaDids.didData(Utils.base64ToHex(did))
-  const didDataJson = JSON.parse(didData)
-  // Identity `owner` should be address Alice
-  expect(didDataJson.owner).toEqual(blockchain.keypair.address)
-  // Identity `owner` from RegisteredEvent should be address Alice
-  expect(registeredDid[1]).toEqual(blockchain.keypair.address)
-})
-
-test.skip('Register a Did Document', async () => {
-  await blockchain.registerDidDocument(did, diddocHash)
-})
-
-// Disabled test due to CI failure
-test.skip('Check registration event', async () => {
-  jest.setTimeout(30000)
-  const subs = await blockchain.wait4Event('DidDocumentRegistered')
-  const registeredDidDocument = JSON.parse(subs)
-  // Diddoc hash should change from empty to the matrix `mediaId` url represented by a `Vec<u8>`
-  const regDidDoc = registeredDidDocument[2].replace(/0+$/g, '')
-  expect(Utils.hexToBase64(regDidDoc.split('x')[1])).toEqual(diddocHash)
-})
-
-test.skip('Check a Did Document', async () => {
-  const result = await blockchain.getDidDocHash(did)
-  if (result !== '') {
-    expect(result).toEqual(diddocHash)
-  }
-})
-
-test.skip('GetKey from a DID', async () => {
-  const result = await blockchain.getActualDidKey(did)
-  console.log('RESULT -> %O', result)
-  if (result !== '') {
-    expect(result).toEqual(Utils.hexToBase64(blockchain.keypair.publicKey))
-  }
-})
-
-test.skip('Should Rotate a Key', async () => {
-  const newKeyPair = await crypto.keyPair()
-  const newPubKey = newKeyPair.keyPair.publicKey
-  await blockchain.rotateKey(did, newPubKey)
-  const subs = await blockchain.wait4Event('KeyRotated')
-  const keyRotated = JSON.parse(subs)
-  expect(keyRotated[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
-  const key = await blockchain.getActualDidKey(did)
-  expect(Utils.hexToBase64(key)).toEqual(Utils.hexToBase64(newPubKey))
 })
 
 test('should clean up after itself', () => {
