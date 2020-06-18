@@ -30,14 +30,10 @@ function getResolver () {
   ) /* : Promise<DIDDocument | null> */ {
     // console.log (parsed)
 
-    console.log('resolve1')
     const info = getInfoForDid(did)
     if (!info) {
       return null
     }
-
-    console.log('resolve2')
-    console.log(info)
     const connection = await getBlockchainConnection(did)
     let didDocHash
     try {
@@ -48,7 +44,6 @@ function getResolver () {
       debug(e)
       return null
     }
-
     // If there is no DID Document registered, return nothing
     if (didDocHash === '') {
       return null
@@ -58,10 +53,12 @@ function getResolver () {
     let didDoc
     // if it's a ContentID, use the storage mechanism (IPFS)
     if (CID.isCID(didDocHash)) {
+      console.log('GET DIDDOC IPFS')
       const storage = new Storage(info.ipfsEndpoint)
       didDoc = await storage.get(didDocHash)
     } else {
       // otherwise use Matrix storage
+      console.log('GET DIDDOC Matrix')
       const comms = new Comms(info.matrixEndpoint)
       didDoc = await comms.downloadFile(didDocHash)
     }

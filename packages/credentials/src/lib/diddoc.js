@@ -5,6 +5,7 @@
 module.exports = class DidDoc {
   /**
    * Constructor.
+   *
    * @param {string} did The DID corresponding to the issuer of that action
    */
   constructor (did) {
@@ -16,6 +17,7 @@ module.exports = class DidDoc {
 
   /**
    * Add a service to the diddoc
+   *
    * @param {string} id Identifier for the DID
    * @param {*} type Type of Service
    * @param {*} serviceEndpoint Service endpoint

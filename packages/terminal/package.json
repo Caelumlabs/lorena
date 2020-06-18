@@ -16,5 +16,11 @@
     "figlet": "^1.4.0",
     "terminal-kit": "^1.35.3"
   },
+  "scripts": {
+    "test": "jest --silent --passWithNoTests",
+    "coverage": "jest --silent --coverage",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix"
+  },
   "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }

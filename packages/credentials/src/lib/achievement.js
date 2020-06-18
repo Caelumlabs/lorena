@@ -5,8 +5,8 @@
 module.exports = class Achievement {
   /**
    * Constructor.
-   * @param {string} did The DID corresponding to the achievementDID
-   * @param {number} actionId Action unique identifier for the did
+   *
+   * @param {string} subject of the achievement
    */
   constructor (subject = '') {
     this.subject = {
@@ -22,7 +22,8 @@ module.exports = class Achievement {
 
   /**
    * Set the title
-   * @param {string} name Title in ine string
+   *
+   * @param {string} title of the achievement
    */
   title (title) {
     this.subject.title = title
@@ -30,6 +31,7 @@ module.exports = class Achievement {
 
   /**
    * Set the description
+   *
    * @param {string} description Full Name in ine string
    */
   description (description) {
@@ -38,6 +40,7 @@ module.exports = class Achievement {
 
   /**
    * Sets the url of the Achievement for the credential.
+   *
    * @param {string} url URL of the Achievement
    */
   url (url) {
@@ -46,7 +49,8 @@ module.exports = class Achievement {
 
   /**
    * Sets the issuer of the Achievement for the credential.
-   * @param {*} person Persona Object
+   *
+   * @param {string} did of issuer
    */
   issuer (did) {
     this.subject.issuer = did
@@ -54,7 +58,8 @@ module.exports = class Achievement {
 
   /**
    * Sets the Location for this Achievement.
-   * @param {Location} location Location Object
+   *
+   * @param {object} location Location Object
    */
   location (location) {
     this.subject.location = location.subject
@@ -62,15 +67,17 @@ module.exports = class Achievement {
 
   /**
    * Sets the agent of the Action for the credential.
-   * @param {*} subject Person/Organization Object
+   *
+   * @param {*} agent Person/Organization Object
    */
   agent (agent) {
     this.subject.agent = agent.subject
   }
 
   /**
-   * Sets the starting time.
-   * @param {string} start Starting Time
+   * Sets the issuance date
+   *
+   * @param {*} issuanceDate of the achievement
    */
   issuanceDate (issuanceDate) {
     this.subject.issuanceDate = issuanceDate
@@ -78,15 +85,17 @@ module.exports = class Achievement {
 
   /**
    * Sets the ending time.
-   * @param {string} end Ending Time
+   *
+   * @param {string} expirationDate of the achievement
    */
   expirationDate (expirationDate) {
     this.subject.expirationDate = expirationDate
   }
 
   /**
-   * Sets the ending time.
-   * @param {string} end Ending Time
+   * Sets the title of the learning achievement
+   *
+   * @param {string} learningAchievement title to set
    */
   learningAchievement (learningAchievement) {
     this.subject.learningAchievement = {
@@ -96,7 +105,8 @@ module.exports = class Achievement {
 
   /**
    * Sets the course id.
-   * @param {string} end Ending Time
+   *
+   * @param {string} course identifier
    */
   course (course) {
     this.subject.course = {

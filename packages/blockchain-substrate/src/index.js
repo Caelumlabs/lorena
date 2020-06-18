@@ -130,9 +130,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
         .transfer(addrTo, amount)
         .signAndSend(this.keypair, (result) => {
           if (result.status.isInBlock) {
-            console.log(`Transaction included at blockHash ${result.status.asInBlock}`)
+            debug(`Transaction included at blockHash ${result.status.asInBlock}`)
           } else if (result.status.isFinalized) {
-            console.log(`Transaction finalized at blockHash ${result.status.asFinalized}`)
+            debug(`Transaction finalized at blockHash ${result.status.asFinalized}`)
             resolve(true)
             unsub()
           }
@@ -221,16 +221,18 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Get Public Key from Did.
    *
    * @param {string} did DID
+   * @returns {Promise} of public key
    */
   async getDidData (did) {
     const hexDid = Utils.base64ToHex(did)
-    return await this.api.query.lorenaDids.didData(hexDid)
+    return this.api.query.lorenaDids.didData(hexDid)
   }
 
   /**
    * Get Owner Account of a DID.
    *
    * @param {string} did DID
+   * @returns {string} public key in hex format
    */
   async getOwnerFromDid (did) {
     return await this.api.query.lorenaDids.ownerFromDid(did)
@@ -251,10 +253,14 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Retrieves the Hash of a Did Document for a DID
    *
    * @param {string} did DID
+   * @returns {string} hash in Base64 format
    */
   async getDidDocHash (did) {
-    const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(did)
+    console.log('didDoc from ' + did)
+    const hexDID = Utils.base64ToHex(did)
+    const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
+    console.log('didDoc = ' + Utils.hexToBase64(doc))
     return Utils.hexToBase64(doc)
   }
 

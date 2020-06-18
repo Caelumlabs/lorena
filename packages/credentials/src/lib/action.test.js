@@ -16,6 +16,7 @@ test('Action: should add an agent to the action', () => {
   action.name('Task1')
   action.description('Description1')
   action.agent(agent)
+  expect(action.subject.description).toEqual('Description1')
 })
 
 test('Action: should add extra fields', () => {

@@ -9,11 +9,11 @@ let alice, bob, charlie
 let aliceKey, bobKey, charlieKey
 let blockchain
 let did
-const diddocHash = 'AQwafuaFswefuhsfAFAgsw'
+const diddocHash = 'zdpuAqghmmBxwiS7byTRoqd2ZbhHbzcAf6AnxYPK7yeicEjDv'
 
 test('init', async () => {
-  // blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
-  blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
+  blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  // blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   await crypto.init()
   did = crypto.random(16)
   alice = blockchain.setKeyring('//Alice')
@@ -36,6 +36,7 @@ test('should have good format conversion', () => {
 test('should Connect', async () => {
   jest.setTimeout(50000)
   await blockchain.connect()
+  expect(blockchain).toBeDefined()
 })
 
 test('Should use a SURI as a key', async () => {
@@ -147,6 +148,22 @@ test('Should Remove DID', async () => {
   expect(Utils.hexToBase64(didRemovedEvent[1].split('x')[1])).toEqual(Utils.base64ToHex(did))
 })
 
+test.skip('Should sweep tokens from Zelda to Alice', async () => {
+  const zeldaMnemonic = 'some mnenomic'
+  const zeldaAddress = '0x0x0x0x0x0x'
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms * 1000))
+  jest.setTimeout(90000)
+  blockchain.setKeyring(zeldaMnemonic)
+  const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
+  // expect(zeldaBalance1.balance.free).toEqual(zeldaAmount)
+  await blockchain.transferAllTokens(blockchain.getAddress('//Alice'))
+  sleep(10)
+  const zeldaBalance2 = await blockchain.addrState(zeldaAddress)
+  expect(zeldaBalance2.balance.free.toHuman()).toEqual('0')
+  expect(zeldaBalance2).not.toEqual(zeldaBalance1)
+})
+
 test('should clean up after itself', () => {
   blockchain.disconnect()
+  expect(blockchain).toBeDefined()
 })

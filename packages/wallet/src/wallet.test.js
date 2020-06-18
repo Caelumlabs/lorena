@@ -9,7 +9,8 @@ const Wallet = require('./wallet.js');
   })
 
   test('should delete the wallet (if any remaining from the last test) ' + storage, async () => {
-    await w.delete()
+    const result = await w.delete()
+    expect(result).toBe(true)
   })
 
   test('should add to credentials collection ' + storage, () => {
@@ -55,11 +56,12 @@ const Wallet = require('./wallet.js');
   test('should remove all coincidences ' + storage, () => {
     const role = 'user'
     w.remove('credentials', { role })
-    expect(w.data.credentials.length).toEqual(1)
+    expect(w.data.credentials).toHaveLength(1)
   })
 
   test('should lock ' + storage, async () => {
-    await w.lock('myPassword0')
+    const result = await w.lock('myPassword0')
+    expect(result).toBe(true)
   })
 
   test('should not lock with the wrong password ' + storage, async () => {
@@ -81,14 +83,14 @@ const Wallet = require('./wallet.js');
 
   test('should lock new wallet (thus creating it) ' + storage, (done) => {
     w.lock('myPassword1').then((response) => {
-      expect(response).not.toBeUndefined()
+      expect(response).toBeDefined()
       done()
     })
   })
 
   test('should lock existing wallet with correct password ' + storage, (done) => {
     w.lock('myPassword1').then((response) => {
-      expect(response).not.toBeUndefined()
+      expect(response).toBeDefined()
       done()
     })
   })
@@ -102,14 +104,14 @@ const Wallet = require('./wallet.js');
 
   test('should unlock wallet ' + storage, (done) => {
     w.unlock('myPassword1').then((response) => {
-      expect(response).not.toBeUndefined()
+      expect(response).toBeDefined()
       done()
     })
   })
 
   test('should delete wallet ' + storage, (done) => {
     w.delete().then((response) => {
-      expect(response).not.toBeUndefined()
+      expect(response).toBeDefined()
       done()
     })
   })
@@ -123,7 +125,7 @@ test('should lock and unlock a wallet in fs', (done) => {
   expect(w1.data.credentials[0]).toEqual({ name: 'adminTest', role: 'admin' })
   w1.lock('myPassword')
     .then((response) => {
-      expect(response).not.toBeUndefined()
+      expect(response).toBeDefined()
       w2 = new Wallet('testWallet', { storage: 'fs', silent: true })
       return w2.unlock('myPassword')
     })

@@ -1,4 +1,6 @@
 const Comms = require('./index')
+const LorenaCrypto = require('@caelumlabs/crypto')
+const crypto = new LorenaCrypto()
 
 const m1 = new Comms('https://labdev.matrix.lorena.tech')
 const m2 = new Comms('https://labdev.matrix.lorena.tech')
@@ -7,25 +9,32 @@ const u2 = m1.randomUsername()
 const p1 = 'rndPass'
 const p2 = 'rndPass'
 
+test('Init Crypto', async () => {
+  const result = await crypto.init()
+  expect(result).toEqual(true)
+})
+
 test('Should register users', async () => {
+  await m1.init()
   expect(await m1.available(u1)).toEqual(true)
   expect(await m1.register(u1, p1)).toEqual(u1)
-  expect(await m2.register(u2, p2)).toEqual(u2)
   expect(await m1.available(u1)).toEqual(false)
+
+  await m2.init()
+  expect(await m2.register(u2, p2)).toEqual(u2)
   expect(await m2.available(u2)).toEqual(false)
   try {
     await m1.register(u1, p1)
     throw (new Error())
   } catch (e) {
-    expect(e.message).toBe('Request failed with status code 400')
+    expect(e.message).toBe('Request failed with status code 400') // eslint-disable-line jest/no-try-expect
   }
 })
 
-test('should use matrix as a comms interface to Lorena', async done => {
+test('should use matrix as a comms interface to Lorena', async done => { // eslint-disable-line jest/no-test-callback
   const tests = [false, false, false, false, false]
 
   const endTest = (id) => {
-    console.log('TEST OK ' + id)
     tests[id] = true
     if (!tests.includes(false)) {
       console.log('END TESTS')
@@ -46,7 +55,10 @@ test('should use matrix as a comms interface to Lorena', async done => {
   expect(newRoomId).toBeDefined()
 
   // Sends a message to user2
-  const response = await m1.sendMessage(newRoomId, 'ping', 'Hello this is a test message...', 10)
+  const sender = crypto.keyPair()
+  const receiver = crypto.keyPair()
+
+  const response = await m1.sendMessage(newRoomId, sender.box.secretKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
   expect(response).toBeDefined()
   expect(response.status).toBeDefined()
   expect(response.status).toBe(200)
@@ -81,7 +93,7 @@ test('should use matrix as a comms interface to Lorena', async done => {
 
   const rooms = await m2.joinedRooms()
   expect(rooms).toBeDefined()
-  expect(rooms.length).toBe(1)
+  expect(rooms).toHaveLength(1)
   expect(rooms[0]).toEqual(newRoomId)
   m2.disconnect()
 
@@ -93,16 +105,12 @@ test('should use matrix as a comms interface to Lorena', async done => {
   m1.disconnect()
 })
 
-/*
-test('should return all matrix rooms', async () => {
-
+test.skip('should return all matrix rooms', async () => {
 })
 
-test('should leave a room', async () => {
-  const response = await matrix.leaveRoom(roomId)
-  expect(response).toBeDefined()
-  expect(response.status).toBeDefined()
-  expect(response.status).toBe(200)
+test.skip('should leave a room', async () => {
+  // const response = await matrix.leaveRoom(roomId)
+  // expect(response).toBeDefined()
+  // expect(response.status).toBeDefined()
+  // expect(response.status).toBe(200)
 })
-
-}) */
