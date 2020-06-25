@@ -34,7 +34,6 @@ const main = async () => {
     term.message('\n')
   }
 
-  let options = {}
   if (loginOrAdd === 'Login' || username) {
     // If login but we already have username `autocomplete`
     lorena = new Lorena(new Wallet(username || await term.input('Username')), { debug: true, silent: true })
@@ -57,15 +56,17 @@ const main = async () => {
     }
 
     const password = await term.input('Password', { echoChar: true })
-
+    /*
     term.message('Please add information on your fist link:\n')
     const didLink = await term.input('DID (did:lor:labtest:12345)')
     const alias = await term.input('ALIAS (defaultLink)')
     options = { did: didLink, alias }
+    */
 
     // Creating wallet
-    term.message(`Let's create your wallet in network ${didLink.split(':')[2]}!\n`)
-    await createWallet(didLink.split(':')[2], lorena, password)
+    const network = 'labdev'
+    term.message('Creating your wallet in network ' + network + ' \n')
+    await createWallet(network, lorena, password)
   }
 
   // React to messages received.
@@ -79,7 +80,7 @@ const main = async () => {
     term.info('Lorena ^+connected^')
 
     const commander = new Commander(lorena)
-    commander.run(options)
+    commander.run()
   })
 }
 

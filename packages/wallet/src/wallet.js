@@ -5,9 +5,9 @@ const debug = require('debug')('did:debug:wallet-fs')
 debug.enabled = true
 
 module.exports = class Wallet {
-  constructor (username, opts = { storage: 'fs' }) {
-    this.opts = opts
-    if (opts.storage === 'mem') {
+  constructor (username, opts) {
+    this.opts = opts || { storage: 'fs' }
+    if (this.opts.storage === 'mem') {
       this.storage = {}
     }
     this.name = username
@@ -35,7 +35,8 @@ module.exports = class Wallet {
         return false
       })
       return !result ? result : result.isDirectory()
-    } else if (this.opts.storage === 'mem') {
+    } else /* istanbul ignore next */
+    if (this.opts.storage === 'mem') {
       return !!this.storage[this.directoryPath]
     }
   }
@@ -48,7 +49,8 @@ module.exports = class Wallet {
       } catch (error) {
         throw new Error(error)
       }
-    } else if (this.opts.storage === 'mem') {
+    } else /* istanbul ignore next */
+    if (this.opts.storage === 'mem') {
       return this.storage[this.directoryPath][source]
     }
   }
@@ -63,7 +65,8 @@ module.exports = class Wallet {
         /* istanbul ignore next */
         return false
       }
-    } else if (this.opts.storage === 'mem') {
+    } else /* istanbul ignore next */
+    if (this.opts.storage === 'mem') {
       if (!this.storage[this.directoryPath]) {
         this.storage[this.directoryPath] = {}
       }
@@ -83,12 +86,11 @@ module.exports = class Wallet {
     try {
       const infoDecrypted = this.crypto.decryptObj(password, await this.read('info'))
       const dataDecrypted = this.crypto.decryptObj(password, await this.read('data'))
-      if (!infoDecrypted || !dataDecrypted) {
-        return false
-      }
+      const batch = await this.read('batch')
       if (!onlyCheck) {
         this.info = infoDecrypted
         this.data = dataDecrypted
+        this.batch = batch
       }
       return true
     } catch (_e) {
@@ -114,6 +116,7 @@ module.exports = class Wallet {
       // Otherwise, we're creating it for the first time.
       await this.write('info', this.crypto.encryptObj(password, this.info))
       await this.write('data', this.crypto.encryptObj(password, this.data))
+      await this.write('batch', this.batch)
       this.changed = false
       return true
     } catch (_e) {
@@ -133,7 +136,8 @@ module.exports = class Wallet {
       if (await this.exist()) {
         if (this.opts.storage === 'fs') {
           await fsPromises.rmdir(this.directoryPath, { recursive: true })
-        } else if (this.opts.storage === 'mem') {
+        } else /* istanbul ignore next */
+        if (this.opts.storage === 'mem') {
           this.storage = {}
         }
       }
@@ -208,5 +212,14 @@ module.exports = class Wallet {
     })
     this.data[collection] = found
     return found
+  }
+
+  setBatch (batch) {
+    this.changed = true
+    this.data.batch = batch
+  }
+
+  getBatch () {
+    return this.data.batch || ''
   }
 }

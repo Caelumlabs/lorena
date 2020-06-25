@@ -57,14 +57,12 @@ class Commander {
         }
       },
       'link-add': async () => {
-        const did = await term.input('DID (did:lor:labtest:12345)')
-        const alias = await term.input('ALIAS (defaultLink)')
+        // const did = await term.input('DID (did:lor:labtest:12345)')
+        const did = 'bafyreiadrwnrsw5l67n3t2h5s3azkrpjeygivevj3eho3cw25jloy5c4x4'
+        // const alias = await term.input('ALIAS (defaultLink)')
+        const alias = 'caelum'
         term.info(`Adding link ${did} with alias ${alias}`)
-        const created = await this.lorena.createConnection(
-          did,
-          'undefined',
-          { alias }
-        )
+        const created = await this.lorena.createConnection(did, { alias })
         if (created) {
           term.info('Created room', created)
           this.activeLink = await this.lorena.wallet.get('links', { alias })
@@ -225,21 +223,7 @@ class Commander {
   }
 
   async run (options = {}) {
-    // Check if is the first time and a link has been given
-    if (options.did === undefined || options.alias === undefined) {
-      this.activeLink = {}
-    } else {
-      // Create link
-      const created = await this.lorena.createConnection(options.did, undefined, { alias: options.alias })
-      if (created) {
-        term.info('Created room', created)
-        this.activeLink = await this.lorena.wallet.get('links', { alias: options.alias })
-        await this.save()
-      } else {
-        term.error('\nError\n')
-        this.activeLink = {}
-      }
-    }
+    this.activeLink = {}
     const { history, autoComplete } = this
     while (true) {
       if (Object.entries(this.activeLink).length === 0) term.lorena('')

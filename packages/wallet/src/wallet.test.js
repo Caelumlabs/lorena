@@ -2,7 +2,7 @@ const Wallet = require('./wallet.js');
 
 // run (almost) all tests for each supported storage type
 ['fs', 'mem'].forEach((storage) => {
-  const w = new Wallet('testWallet', { storage, silent: true })
+  const w = new Wallet('testWallet', { storage })
 
   test('should create Wallet class ' + storage, () => {
     expect(w.info.matrixUser).toEqual('')
@@ -57,6 +57,14 @@ const Wallet = require('./wallet.js');
     const role = 'user'
     w.remove('credentials', { role })
     expect(w.data.credentials).toHaveLength(1)
+  })
+
+  test('Batch for ' + storage, () => {
+    let batch = w.getBatch()
+    expect(batch).toBe('')
+    w.setBatch('wp11111')
+    batch = w.getBatch()
+    expect(batch).toBe('wp11111')
   })
 
   test('should lock ' + storage, async () => {
@@ -136,4 +144,9 @@ test('should lock and unlock a wallet in fs', (done) => {
     .then(() => {
       done()
     })
+})
+
+test('should create a default value', () => {
+  const w1 = new Wallet('testWallet')
+  expect(w1.opts.storage).toEqual('fs')
 })

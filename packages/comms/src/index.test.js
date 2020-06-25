@@ -2,8 +2,9 @@ const Comms = require('./index')
 const LorenaCrypto = require('@caelumlabs/crypto')
 const crypto = new LorenaCrypto()
 
-const m1 = new Comms('https://labdev.matrix.lorena.tech')
-const m2 = new Comms('https://labdev.matrix.lorena.tech')
+const testMatrixServer = 'https://labdev.matrix.lorena.tech'
+const m1 = new Comms(testMatrixServer)
+const m2 = new Comms(testMatrixServer)
 const u1 = m1.randomUsername()
 const u2 = m1.randomUsername()
 const p1 = 'rndPass'
@@ -23,6 +24,7 @@ test('Should register users', async () => {
   await m2.init()
   expect(await m2.register(u2, p2)).toEqual(u2)
   expect(await m2.available(u2)).toEqual(false)
+
   try {
     await m1.register(u1, p1)
     throw (new Error())
@@ -32,85 +34,76 @@ test('Should register users', async () => {
 })
 
 test('should use matrix as a comms interface to Lorena', async done => { // eslint-disable-line jest/no-test-callback
-  const tests = [false, false, false, false, false]
-
-  const endTest = (id) => {
+  const sender = crypto.keyPair()
+  const receiver = crypto.keyPair()
+  let boxReceived
+  const tests = [false, false, false, false, false, false]
+  const endTest = async (id, m1, m2) => {
     tests[id] = true
     if (!tests.includes(false)) {
-      console.log('END TESTS')
+      await m1.disconnect()
+      await m2.disconnect()
       done()
     }
   }
 
   // Tests with User 1
-  let events = await m1.connect(u1, p1)
-  expect(typeof events).toBe('object')
-  events.once('next_batch', (msg) => {
-    expect(msg.length).toBeGreaterThan(10)
-    endTest(0)
+  await m1.connect(u1, p1)
+  const loopm1 = await m1.loop()
+  loopm1('', m1.context).subscribe(async (msg) => {
+    switch (msg.type) {
+      case 'next_batch' :
+        expect(msg.value.length).toBeGreaterThan(10)
+        await endTest(0, m1, m2)
+        break
+      case 'contact-accepted' :
+        await endTest(3, m1, m2)
+        break
+    }
   })
 
-  // Create connection to user2
-  const newRoomId = await m1.createConnection((Math.floor(Math.random() * 9999)).toString(), `@${u2}:${m2.serverName}`)
+  await m2.connect(u2, p2)
+  const loopm2 = await m2.loop()
+  loopm2('', m2.context).subscribe(async (msg) => {
+    switch (msg.type) {
+      case 'next_batch' :
+        expect(msg.value.length).toBeGreaterThan(10)
+        await endTest(1, m1, m2)
+        break
+      case 'contact-incoming' :
+        await endTest(2, m1, m2)
+        await m2.acceptConnection(msg.value.roomId)
+        break
+      case 'contact-message' :
+        boxReceived = m2.unboxMessage(msg.value.msg, receiver.box.secretKey)
+        expect(boxReceived.msg.recipe).toEqual('ping')
+        expect(boxReceived.msg.recipeId).toEqual(10)
+        await endTest(4, m1, m2)
+        break
+      case 'contact-accepted' :
+        await endTest(5, m1, m2)
+        break
+    }
+  })
+
+  // Connect m1 and m2
+  const roomName = m1.randomUsername()
+  const newRoomId = await m1.createConnection(roomName, `@${u2}:${m2.context.serverName}`)
   expect(newRoomId).toBeDefined()
 
   // Sends a message to user2
+  const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
+  await m1.sendMessage(newRoomId, box)
+})
+
+test('should box and unbox the message', async () => { // eslint-disable-line jest/no-test-callback
   const sender = crypto.keyPair()
   const receiver = crypto.keyPair()
-
-  const response = await m1.sendMessage(newRoomId, sender.box.secretKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
-  expect(response).toBeDefined()
-  expect(response.status).toBeDefined()
-  expect(response.status).toBe(200)
-
-  events.once('next_batch', (msg) => {
-    expect(msg.length).toBeGreaterThan(10)
-    endTest(0)
-  })
-  m1.disconnect()
-
-  // Tests with User 2
-  events = await m2.connect(u2, p2)
-  events.once('next_batch', (msg) => {
-    expect(msg.length).toBeGreaterThan(10)
-    endTest(1)
-  })
-
-  // Accept connection
-  const accept = await m2.acceptConnection(newRoomId)
-  expect(accept).toBeDefined()
-  expect(accept.status).toBeDefined()
-  expect(accept.status).toBe(200)
-
-  events.once('contact-incoming', (msg) => {
-    endTest(2)
-  })
-
-  events.once('contact-message-recipe', (msg) => {
-    console.log('contact-message', msg)
-    endTest(4)
-  })
-
-  const rooms = await m2.joinedRooms()
-  expect(rooms).toBeDefined()
-  expect(rooms).toHaveLength(1)
-  expect(rooms[0]).toEqual(newRoomId)
-  m2.disconnect()
-
-  events = await m1.connect(u1, p1)
-  events.once('contact-accepted', (msg) => {
-    endTest(3)
-  })
-
-  m1.disconnect()
-})
-
-test.skip('should return all matrix rooms', async () => {
-})
-
-test.skip('should leave a room', async () => {
-  // const response = await matrix.leaveRoom(roomId)
-  // expect(response).toBeDefined()
-  // expect(response.status).toBeDefined()
-  // expect(response.status).toBe(200)
+  const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
+  const msgReceived1 = m2.unboxMessage(box, receiver.box.secretKey)
+  expect(msgReceived1.msg.recipe).toEqual('ping')
+  expect(msgReceived1.msg.recipeId).toEqual(10)
+  const msgReceived2 = m2.unboxMessage(box, receiver.box.secretKey, sender.box.publicKey)
+  expect(msgReceived2.msg.recipe).toEqual('ping')
+  expect(msgReceived2.msg.recipeId).toEqual(10)
 })

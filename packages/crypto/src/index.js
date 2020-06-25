@@ -67,6 +67,22 @@ module.exports = class LorenaCrypto {
     return (JSON.parse(messageDecrypted))
   }
 
+  stringToHex (str) {
+    return stringToHex(str)
+  }
+
+  hexToString (hex) {
+    return hexToString(hex)
+  }
+
+  u8aToHex (u8a) {
+    return u8aToHex(u8a)
+  }
+
+  hexToU8a (hex) {
+    return hexToU8a(hex)
+  }
+
   /**
    * Encrypts (symmetric) a message with a keypair.
    *

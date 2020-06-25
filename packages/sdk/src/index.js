@@ -1,9 +1,8 @@
 const Comms = require('@caelumlabs/comms')
 const Crypto = require('@caelumlabs/crypto')
-const IpfsClient = require('ipfs-http-client')
 const Credential = require('@caelumlabs/credentials')
-const LorenaDidResolver = require('@caelumlabs/resolver')
-const { Resolver } = require('did-resolver')
+const Storage = require('@caelumlabs/storage')
+const Blockchain = require('@caelumlabs/blockchain-substrate')
 const { EventEmitter } = require('events')
 const debug = require('debug')('did:debug:sdk')
 const uuid = require('uuid/v4')
@@ -30,7 +29,7 @@ module.exports = class Lorena extends EventEmitter {
     this.nextBatch = ''
     this.disconnecting = false
     this.threadId = 0
-    this.resolver = false
+    this.storage = new Storage()
   }
 
   /**
@@ -40,24 +39,30 @@ module.exports = class Lorena extends EventEmitter {
    * @returns {Promise} of initialized wallet
    */
   async initWallet (network) {
-    console.log('Init Wallet')
+    debug('Init Wallet')
     return new Promise((resolve, reject) => {
-      const info = LorenaDidResolver.getInfoForNetwork(network)
-      console.log(info)
-      if (!info) {
-        reject(new Error(`Unknown network ${network}`))
-        return
+      // TODO: Move to a .json file
+      const info = {
+        network: network,
+        type: 'substrate',
+        blockchainEndpoint: 'wss://labdev.substrate.lorena.tech',
+        matrixEndpoint: 'https://labdev.matrix.lorena.tech',
+        ipfsEndpoint: {
+          host: 'labtest.ipfs.lorena.tech',
+          port: '443',
+          protocol: 'https:'
+        }
       }
-      if (info.symbol) {
-        this.wallet.info.symbol = info.symbol
-      }
+
+      // Wallet info.
       this.wallet.info.type = info.type
       this.wallet.info.blockchainServer = info.blockchainEndpoint
       this.wallet.info.matrixServer = info.matrixEndpoint
       this.comms = new Comms(this.wallet.info.matrixServer)
-
       this.wallet.info.matrixUser = this.comms.randomUsername()
       this.wallet.info.matrixPass = this.crypto.random(16)
+
+      // Check username.
       this.comms.available(this.wallet.info.matrixUser).then((available) => {
         if (available) {
           return this.comms.register(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
@@ -101,9 +106,8 @@ module.exports = class Lorena extends EventEmitter {
     // Upgrade Wallet if it's necessary
     const packageJSON = require('../package.json')
     if (!this.wallet.info.version || this.wallet.info.version === undefined || this.wallet.info.version === '') {
-      console.log('Upgrading legacy wallet to SDK Version: ', packageJSON.version)
       this.wallet.data.links.forEach(element => {
-        element.linkId = uuid()
+        // element.linkId = uuid()
       })
       this.wallet.info.version = packageJSON.version
       this.emit('change')
@@ -138,6 +142,10 @@ module.exports = class Lorena extends EventEmitter {
     })
   }
 
+  getContact (roomId) {
+    return this.wallet.get('links', { roomId: roomId })
+  }
+
   /*
   *  an ID (roomId or LinkId) and returns the corresponding Link ID
   */
@@ -157,6 +165,46 @@ module.exports = class Lorena extends EventEmitter {
   }
 
   /**
+   * Listen to events
+   *
+   * @param {string} nextBatch Next Barch for Matrx calls
+   * @returns {Promise} endless execution
+   */
+  async listen () {
+    let batch = this.wallet.getBatch()
+    return new Promise(() => {
+      this.comms.connect(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
+        .then(() => {
+          return this.comms.loop()
+        })
+        .then((loop) => {
+          loop(batch, this.comms.context).subscribe(async (msg) => {
+            switch (msg.type) {
+              case 'next_batch' :
+                this.wallet.setBatch(msg.value)
+                // UPDATE batch
+                batch = msg.value
+                break
+              case 'contact-incoming' :
+                debug('Contact Incoming')
+                // By default, accept all incoming contacts.
+                this.onContactIncoming(msg.value)
+                break
+              case 'contact-accepted' :
+                // Connection has been accepted.
+                this.onContactAdd(msg.value)
+                break
+              case 'contact-message' :
+                // msgReceived = m2.decryptMessage(msg.value.msg, sender.box.publicKey, receiver.box.secretKey)
+                this.onMsgNotify(msg.value)
+                break
+            }
+          })
+        })
+    })
+  }
+
+  /**
    * Connect to Lorena IDspace.
    *
    * @returns {boolean} success (or errors thrown)
@@ -165,14 +213,12 @@ module.exports = class Lorena extends EventEmitter {
     if (this.ready === true) return true
     else if (this.wallet.info.matrixUser) {
       try {
+        // Connect to Blockchain
+        this.blockchain = new Blockchain(this.wallet.info.blockchainServer)
+        await this.blockchain.connect()
         // Connect to Matrix.
         this.comms = new Comms(this.wallet.info.matrixServer)
-        const connection = await this.comms.connect(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
-
-        connection.on('contact-incoming', this.onContactIncoming)
-        connection.on('contact-add', this.onContactAdd)
-        connection.on('msg-notify', this.onMsgNotify)
-        this.nextBatch = connection.nextBatch
+        this.listen()
         this.ready = true
         this.processQueue()
         this.emit('ready')
@@ -194,10 +240,10 @@ module.exports = class Lorena extends EventEmitter {
     if (this.comms) {
       this.comms.disconnect()
     }
-    LorenaDidResolver.disconnectAll()
   }
 
   onContactIncoming (element) {
+    debug('onContactIncoming')
     // 'contact-incoming':
     this.wallet.add('links', {
       linkId: element.linkId,
@@ -213,8 +259,10 @@ module.exports = class Lorena extends EventEmitter {
   }
 
   onContactAdd (element) {
-    // case 'contact-add':
-    this.wallet.update('links', { linkId: element.linkId }, {
+    debug('onContactAdd')
+    console.log(element)
+    const linkId = this.getLinkId(element.roomId)
+    this.wallet.update('links', { linkId: linkId }, {
       status: 'connected'
     })
     this.emit('link-added', element.sender)
@@ -350,65 +398,6 @@ module.exports = class Lorena extends EventEmitter {
   }
 
   /**
-   * Get the DID resolver for the lor namespace, caching as necessary
-   *
-   * @returns {object} resolver
-   */
-  getLorResolver () {
-    if (!this.lorResolver) {
-      this.lorResolver = LorenaDidResolver.getResolver()
-    }
-    return this.lorResolver
-  }
-
-  /**
-   * Get the general DID resolver for all namespaces, caching as necessary
-   *
-   * @returns {object} resolver
-   */
-  getResolver () {
-    if (!this.resolver) {
-      this.resolver = new Resolver(this.getLorResolver(), true)
-    }
-    return this.resolver
-  }
-
-  /**
-   * Get the specified DID document using the DID resolver
-   *
-   * @param {string} did to fetch
-   * @returns {object} diddoc
-   */
-  async getDiddoc (did) {
-    const diddoc = await this.getResolver().resolve(did)
-    return diddoc
-  }
-
-  /**
-   * Get the matrix User ID for the specified DID
-   *
-   * @param {string} did to fetch
-   * @returns {string} matrixUserID
-   */
-  async getMatrixUserIDForDID (did) {
-    const diddoc = await this.getDiddoc(did)
-    const matrixUserID = diddoc.service[0].serviceEndpoint
-    return matrixUserID
-  }
-
-  /**
-   * Get the public key for the specified DID
-   *
-   * @param {string} did to fetch
-   * @returns {string} public key
-   */
-  async getPublicKeyForDID (did) {
-    const diddoc = await this.getDiddoc(did)
-    const publicKey = diddoc.authentication[0].publicKey
-    return publicKey
-  }
-
-  /**
    * Open Connection with another user.
    *
    * @param {string} did DID
@@ -416,27 +405,26 @@ module.exports = class Lorena extends EventEmitter {
    * @param {object} options Object with other options like `alias`
    * @returns {Promise} linkId created, or false
    */
-  async createConnection (did, matrixUserID, options = {}) {
-    console.log('createConnection')
-    if (matrixUserID === undefined) {
-      matrixUserID = await this.getMatrixUserIDForDID(did)
-    }
-    console.log(matrixUserID)
-
+  async createConnection (did, options = {}) {
+    const didDocHash = await this.blockchain.getDidDocHash(did)
+    const didDoc = await this.storage.get(didDocHash)
+    console.log(didDoc)
+    const matrixUserID = didDoc.value.service[0].serviceEndpoint
     const link = {
       linkId: uuid(),
       did: false,
       linkDid: did,
       roomId: '',
-      roomName: await this.zenroom.random(12),
+      roomName: this.comms.randomUsername(),
       keyPair: false,
       matrixUser: matrixUserID,
       status: 'invited',
       alias: '',
       ...options
     }
-    console.log(link)
     return new Promise((resolve, reject) => {
+      console.log(link)
+      console.log(matrixUserID)
       this.comms.createConnection(link.roomName, matrixUserID)
         .then((roomId) => {
           console.log(roomId)
@@ -636,8 +624,10 @@ module.exports = class Lorena extends EventEmitter {
           certificate: credential,
           issuer: credential.issuer
         }
+        resolve(verified)
 
         // get Public Key -> Resolve from Blockchain & Check credential signature
+        /*
         this.getResolver().resolve(verified.issuer)
           .then((diddoc) => {
             if (!diddoc) {
@@ -670,6 +660,7 @@ module.exports = class Lorena extends EventEmitter {
             debug(e)
             resolve(false)
           })
+      */
       } catch (e) {
         debug(e)
         resolve(false)
