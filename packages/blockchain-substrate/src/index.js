@@ -141,13 +141,26 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * Registers Did in Substrate .
+   * Transfer All Tokens
    *
-   * @param {AccountId} promoter Promoter's Account
-   * @param {DID} did DID
-   * @param {AccountId} accountTo Account to assign DID
+   * @param {string} addrTo Address to send tokens to
+   * @returns {Promise} of sending tokens
+   */
+  async transferAllTokens (addrTo) {
+    const current = await this.addrState()
+    const amount = current.balance.free
+    const info = await this.api.tx.balances.transfer(addrTo, amount).paymentInfo(this.keypair)
+    return this.transferTokens(addrTo, amount.sub(info.partialFee))
+  }
+
+  /**
+   * Registers Did in Substrate.
+   *
+   * @param {string} promoter Promoter's Account
+   * @param {string} did DID
+   * @param {string} accountTo Account to assign DID
    * @param {number} level Level to assign
-   *
+   * @returns {Promise} of transaction
    */
   async registerDid (promoter, did, accountTo, level) {
     // Convert did string to hex
@@ -159,9 +172,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Registers a Vec<u8> (of the DID document) for a DID
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {Vec<u8>} diddocHash Did document Hash
+   * @param {string} owner Owner's Account
+   * @param {string} did DID
+   * @param {string} diddocHash Did document Hash
+   * @returns {Promise} of transaction
    */
   async registerDidDocument (owner, did, diddocHash) {
     const hexDid = Utils.base64ToHex(did)
@@ -173,9 +187,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Rotate Key : changes the current key for a DID
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {Vec<u8>} diddocHash Did document Hash
+   * @param {string} owner Owner's Account
+   * @param {string} did DID
+   * @param {string} pubKey new public key
+   * @returns {Promise} of transaction
    */
   async rotateKey (owner, did, pubKey) {
     // Convert did string to hex
@@ -190,10 +205,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Change DID owner.
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {AccountId} newOwner New owner's Account
-   *
+   * @param {string} owner Owner's Account
+   * @param {string} did DID
+   * @param {string} newOwner New owner's Account
+   * @returns {Promise} of transaction
    */
   async changeDidOwner (owner, did, newOwner) {
     // Convert did string to hex
@@ -205,10 +220,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Remove DID.
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {AccountId} newOwner New owner's Account
-   *
+   * @param {string} owner Owner's Account
+   * @param {string} did DID
+   * @returns {Promise} of transaction
    */
   async removeDid (owner, did) {
     // Convert did string to hex
@@ -242,6 +256,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Get Public Key from Did.
    *
    * @param {string} did DID
+   * @returns {string} of public key in hex (without 0x)
    */
   async getActualDidKey (did) {
     const hexDid = Utils.base64ToHex(did)
@@ -269,6 +284,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} api Blockchain api
    * @param {string} eventMethod Event to listen to
+   * @returns {Promise} of events
    */
   async subscribe2Events (api, eventMethod) {
     return new Promise(resolve => {
@@ -295,8 +311,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Execute a transaction.
    *
-   * @param {Transaction} transaction Transaction to execute
-   * @param {AccountId} executorAccount Account executing the transaction
+   * @param {*} transaction Transaction to execute
+   * @param {string} executorAccount Account executing the transaction
+   * @returns {Promise} of transaction result
    */
   async execTransaction (transaction, executorAccount) {
     return new Promise(async (resolve, reject) => {
