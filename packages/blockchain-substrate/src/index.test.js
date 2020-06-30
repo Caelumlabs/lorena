@@ -1,3 +1,4 @@
+/* eslint-disable jest/no-disabled-tests */
 'use strict'
 const BlockchainSubstrate = require('./index.js')
 const Crypto = require('@caelumlabs/crypto')
@@ -22,6 +23,7 @@ test('init', async () => {
   aliceKey = blockchain.getKeyring('//Alice')
   bobKey = blockchain.getKeyring('//Bob')
   charlieKey = blockchain.getKeyring('//Charlie')
+  expect(did.length).toHaveLength(16)
 })
 
 test('should have good format conversion', () => {

@@ -143,78 +143,74 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Registers Did in Substrate .
    *
-   * @param {AccountId} promoter Promoter's Account
-   * @param {DID} did DID
-   * @param {AccountId} accountTo Account to assign DID
+   * @param {string} did DID
+   * @param {string} accountTo Account to assign DID (AccountId)
    * @param {number} level Level to assign
-   *
+   * @returns {Promise} Result of the transaction
    */
-  async registerDid (promoter, did, accountTo, level) {
+  async registerDid (did, accountTo, level) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     const transaction = await this.api.tx.lorenaDids.registerDid(hexDID, accountTo, level)
-    return await this.execTransaction(transaction, promoter)
+    return await this.execTransaction(transaction)
   }
 
   /**
    * Registers a Vec<u8> (of the DID document) for a DID
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {Vec<u8>} diddocHash Did document Hash
+   * @param {string} did DID
+   * @param {object} diddocHash Did document Hash (Vec<u8>)
+   * @returns {Promise} Result of the transaction
    */
-  async registerDidDocument (owner, did, diddocHash) {
+  async registerDidDocument (did, diddocHash) {
     const hexDid = Utils.base64ToHex(did)
     const docHash = Utils.toUTF8Array(diddocHash)
     const transaction = await this.api.tx.lorenaDids.registerDidDocument(hexDid, docHash)
-    return await this.execTransaction(transaction, owner)
+    return await this.execTransaction(transaction)
   }
 
   /**
    * Rotate Key : changes the current key for a DID
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {Vec<u8>} diddocHash Did document Hash
+   * @param {string} did DID
+   * @param {object} pubKey Public Key to be rotated (Vec<u8>)
+   * @returns {Promise} Result of the transaction
    */
-  async rotateKey (owner, did, pubKey) {
+  async rotateKey (did, pubKey) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call lorenaDids RotateKey function
     const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
-    return await this.execTransaction(transaction, owner)
+    return await this.execTransaction(transaction)
   }
 
   /**
    * Change DID owner.
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {AccountId} newOwner New owner's Account
-   *
+   * @param {string} did DID
+   * @param {string} newOwner New owner's Account (AccountId)
+   * @returns {Promise} Result of the transaction
    */
-  async changeDidOwner (owner, did, newOwner) {
+  async changeOwner (did, newOwner) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     const transaction = await this.api.tx.lorenaDids.changeDidOwner(hexDID, newOwner)
-    return await this.execTransaction(transaction, owner)
+    return await this.execTransaction(transaction)
   }
 
   /**
    * Remove DID.
    *
-   * @param {AccountId} owner Owner's Account
-   * @param {DID} did DID
-   * @param {AccountId} newOwner New owner's Account
-   *
+   * @param {string} did DID
+   * @returns {Promise} Result of the transaction
    */
-  async removeDid (owner, did) {
+  async removeDid (did) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     const transaction = await this.api.tx.lorenaDids.removeDid(hexDID)
-    return await this.execTransaction(transaction, owner)
+    return await this.execTransaction(transaction)
   }
 
   /**
@@ -242,6 +238,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Get Public Key from Did.
    *
    * @param {string} did DID
+   * @returns {string} Actual Key
    */
   async getActualDidKey (did) {
     const hexDid = Utils.base64ToHex(did)
@@ -260,19 +257,18 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const hexDID = Utils.base64ToHex(did)
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
-    console.log('didDoc = ' + Utils.hexToBase64(doc))
     return Utils.hexToBase64(doc)
   }
 
   /**
    * Subscribe to register events
    *
-   * @param {string} api Blockchain api
    * @param {string} eventMethod Event to listen to
+   * @returns {Promise} Result of the transaction
    */
-  async subscribe2Events (api, eventMethod) {
+  async wait4Event (eventMethod) {
     return new Promise(resolve => {
-      api.query.system.events(events => {
+      this.api.query.system.events(events => {
         // loop through
         events.forEach(record => {
           // extract the phase, event and the event types
@@ -295,13 +291,14 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Execute a transaction.
    *
-   * @param {Transaction} transaction Transaction to execute
-   * @param {AccountId} executorAccount Account executing the transaction
+   * @param {object} transaction Transaction to execute (Transaction)
+   * @param {string} executorAccount Account executing the transaction (AccountId)
+   * @returns {Promise} result of the Transaction
    */
-  async execTransaction (transaction, executorAccount) {
-    return new Promise(async (resolve, reject) => {
+  async execTransaction (transaction) {
+    return new Promise(async (resolve) => {
       let result = true
-      await transaction.signAndSend(executorAccount, ({ status, events }) => {
+      await transaction.signAndSend(this.keypair, ({ status, events }) => {
         if (status.isInBlock || status.isFinalized) {
           const errors = events.filter(({ event: { method, section } }) =>
             section === 'system' && method === 'ExtrinsicFailed'
