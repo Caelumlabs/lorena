@@ -4,7 +4,7 @@ const BlockchainInterface = require('@caelumlabs/blockchain')
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
 const Utils = require('./utils')
 const { cryptoWaitReady } = require('@polkadot/util-crypto')
-const { hexToU8a } = require('@polkadot/util')
+// const { bufferToU8a } = require('@polkadot/util')
 
 // Debug
 var debug = require('debug')('did:debug:sub')
@@ -236,7 +236,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getDidData (did) {
     const hexDid = Utils.base64ToHex(did)
-    return this.api.query.lorenaDids.didData(hexDid)
+    const didData = await this.api.query.lorenaDids.didData(hexDid)
+    return JSON.parse(didData)
   }
 
   /**
@@ -259,8 +260,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const hexDid = Utils.base64ToHex(did)
     const result = await this.api.query.lorenaDids.publicKeyFromDid(hexDid)
     console.log(result)
-    console.log(hexToU8a(result))
-    return result.toString().split('x')[1].replace(/0+$/g, '')
+    // return bufferToU8a(result)
+    return (result)
   }
 
   /**
@@ -294,7 +295,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
             for (let i = 0; i < event.data.length; i++) {
               // All events have a a type 'AccountId'
               if (types[i].type === 'AccountId') {
-                resolve(event.data.toString())
+                resolve(JSON.parse(event.data.toString()))
               }
             }
             resolve([])
@@ -313,6 +314,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async execTransaction (transaction) {
     return new Promise(async (resolve) => {
       let result = true
+      console.log(this.keypair.address)
       await transaction.signAndSend(this.keypair, ({ status, events }) => {
         if (status.isInBlock || status.isFinalized) {
           const errors = events.filter(({ event: { method, section } }) =>

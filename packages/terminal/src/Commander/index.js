@@ -58,7 +58,7 @@ class Commander {
       },
       'link-add': async () => {
         // const did = await term.input('DID (did:lor:labtest:12345)')
-        const did = 'bafyreifnsizkg3odz4nr3osswiivpzoif4zuy236olyvn3b3aviqz4guwa'
+        const did = 'bafyreihllfhd4e7qpto3erbdykng2xhppsyvillf676u4tfkbiuv7wgbjm'
         // const alias = await term.input('ALIAS (defaultLink)')
         const alias = 'caelum'
         term.info(`Adding link ${did} with alias ${alias}`)

@@ -453,11 +453,18 @@ module.exports = class Lorena extends EventEmitter {
         debug(`memberOfConfirm: ${linkId} is not in links`)
         resolve(false)
       } else {
-        console.log(link.linkDid)
         this.blockchain.getActualDidKey(link.linkDid)
-          .then((pubKey) => {
-            console.log(pubKey)
-            resolve('Connected')
+          .then((publicKey) => {
+            console.log('PublicKey')
+            console.log(publicKey)
+            const sender = this.crypto.keyPair()
+            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-of', 'Hello this is a test message...', 10)
+          })
+          .then((box) => {
+            return this.comms.sendMessage(link.roomId, box)
+          })
+          .then(() => {
+            resolve('Member-of Sent')
           })
           .catch((e) => {
             console.log(e)
