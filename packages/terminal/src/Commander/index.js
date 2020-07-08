@@ -58,7 +58,7 @@ class Commander {
       },
       'link-add': async () => {
         // const did = await term.input('DID (did:lor:labtest:12345)')
-        const did = 'bafyreiadrwnrsw5l67n3t2h5s3azkrpjeygivevj3eho3cw25jloy5c4x4'
+        const did = 'bafyreifnsizkg3odz4nr3osswiivpzoif4zuy236olyvn3b3aviqz4guwa'
         // const alias = await term.input('ALIAS (defaultLink)')
         const alias = 'caelum'
         term.info(`Adding link ${did} with alias ${alias}`)
@@ -70,16 +70,20 @@ class Commander {
           term.error('\nError\n')
         }
       },
+      'link-ping': async () => {
+        if (this.checkActiveLink()) {
+          console.log(this.activeLink)
+          await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
+          // this.lorena.callrecipe('ping')
+        }
+      },
       'link-member-of': async () => {
         if (this.checkActiveLink()) {
           const rolename = await term.input('Rolename')
-          term.info(await this.lorena.memberOf(
-            this.activeLink.roomId,
-            {},
-            rolename
-          ))
+          await this.lorena.memberOf(this.activeLink.linkId, rolename)
         }
       },
+      /*
       'link-member-of-confirm': async () => {
         if (this.checkActiveLink()) {
           const secretCode = await term.input('Secret code')
@@ -155,7 +159,7 @@ class Commander {
       },
       'link-credential-list': async () => {
         term.json((await this.callRecipe('credential-list', { filter: 'certificate' })).payload)
-      },
+      } */
       export: async () => {
         const json = await this.lorena.wallet.toJSON()
         const path = await term.input('path') || '.'

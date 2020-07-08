@@ -4,6 +4,8 @@ const BlockchainInterface = require('@caelumlabs/blockchain')
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
 const Utils = require('./utils')
 const { cryptoWaitReady } = require('@polkadot/util-crypto')
+const { hexToU8a } = require('@polkadot/util')
+
 // Debug
 var debug = require('debug')('did:debug:sub')
 /**
@@ -141,12 +143,25 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * Registers Did in Substrate .
+   * Transfer All Tokens
+   *
+   * @param {string} addrTo Address to send tokens to
+   * @returns {Promise} of sending tokens
+   */
+  async transferAllTokens (addrTo) {
+    const current = await this.addrState()
+    const amount = current.balance.free
+    const info = await this.api.tx.balances.transfer(addrTo, amount).paymentInfo(this.keypair)
+    return this.transferTokens(addrTo, amount.sub(info.partialFee))
+  }
+
+  /**
+   * Registers Did in Substrate.
    *
    * @param {string} did DID
-   * @param {string} accountTo Account to assign DID (AccountId)
+   * @param {string} accountTo Account to assign DID
    * @param {number} level Level to assign
-   * @returns {Promise} Result of the transaction
+   * @returns {Promise} of transaction
    */
   async registerDid (did, accountTo, level) {
     // Convert did string to hex
@@ -243,6 +258,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async getActualDidKey (did) {
     const hexDid = Utils.base64ToHex(did)
     const result = await this.api.query.lorenaDids.publicKeyFromDid(hexDid)
+    console.log(result)
+    console.log(hexToU8a(result))
     return result.toString().split('x')[1].replace(/0+$/g, '')
   }
 
@@ -253,7 +270,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} hash in Base64 format
    */
   async getDidDocHash (did) {
-    console.log('didDoc from ' + did)
     const hexDID = Utils.base64ToHex(did)
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
@@ -292,7 +308,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Execute a transaction.
    *
    * @param {object} transaction Transaction to execute (Transaction)
-   * @param {string} executorAccount Account executing the transaction (AccountId)
    * @returns {Promise} result of the Transaction
    */
   async execTransaction (transaction) {

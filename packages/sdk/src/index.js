@@ -259,8 +259,6 @@ module.exports = class Lorena extends EventEmitter {
   }
 
   onContactAdd (element) {
-    debug('onContactAdd')
-    console.log(element)
     const linkId = this.getLinkId(element.roomId)
     this.wallet.update('links', { linkId: linkId }, {
       status: 'connected'
@@ -368,9 +366,14 @@ module.exports = class Lorena extends EventEmitter {
     }
     if (!this.processing && this.ready) { // execute just in time
       this.processing = true
-      const sendPayload = JSON.stringify(action)
+      // const sendPayload = JSON.stringify(action)
       const link = this.wallet.get('links', { linkId })
-      await this.comms.sendMessage(link.roomId, 'm.action', sendPayload)
+      console.log('Room ID:' + link.roomId)
+      console.log('DID:' + link.linkDid)
+      // const  = await this.blockchain.getDidDocHash(did)
+      const pubKey = await this.blockchain.getActualDidKey(link.linkDid)
+      console.log(pubKey)
+      // await this.comms.sendMessage(link.roomId, 'm.action', sendPayload)
     } else {
       this.queue.push(action)
     }
@@ -408,7 +411,6 @@ module.exports = class Lorena extends EventEmitter {
   async createConnection (did, options = {}) {
     const didDocHash = await this.blockchain.getDidDocHash(did)
     const didDoc = await this.storage.get(didDocHash)
-    console.log(didDoc)
     const matrixUserID = didDoc.value.service[0].serviceEndpoint
     const link = {
       linkId: uuid(),
@@ -423,11 +425,8 @@ module.exports = class Lorena extends EventEmitter {
       ...options
     }
     return new Promise((resolve, reject) => {
-      console.log(link)
-      console.log(matrixUserID)
       this.comms.createConnection(link.roomName, matrixUserID)
         .then((roomId) => {
-          console.log(roomId)
           link.roomId = roomId
           this.wallet.add('links', link)
           this.emit('change')
@@ -444,77 +443,27 @@ module.exports = class Lorena extends EventEmitter {
    * memberOf
    *
    * @param {string} linkId Connection to use
-   * @param {string} extra Extra information
-   * @param {string} roleName Name fo the role we ask for
+   * @param {string} rolename RoleName
    * @returns {Promise} Result of calling recipe member-of
    */
-  async memberOf (linkId, extra, roleName) {
+  async memberOf (linkId, rolename) {
     return new Promise((resolve, reject) => {
-      let challenge = ''
-      let link = {}
-      this.zenroom.random(32)
-        .then((result) => {
-          challenge = result
-          return this.wallet.get('links', { linkId })
-        })
-        .then((result) => {
-          if (!result) {
-            debug(`did:debug:sdk:memberOf: ${linkId} not found`)
-            throw new Error(`memberOf: ${linkId} not found`)
-          } else {
-            link = result
-            this.sendAction('member-of', 0, 'member-of', 1, { challenge }, linkId)
-              .then(() => {
-                return this.oneMsg('message:member-of')
-              })
-              .then(async (result) => {
-                if (result === false) throw (new Error('Timeout'))
-                const key = await this.getPublicKeyForDID(link.linkDid)
-                if (key === '') {
-                  debug(`memberOf: Public key not found for ${link.did}`)
-                  throw new Error(`Public key not found for ${link.did}`)
-                }
-                const pubKey = {}
-                pubKey[link.linkDid] = { public_key: key }
-                link.did = result.payload.did
-                link.keyPair = await this.zenroom.newKeyPair(link.did)
-                const check = await this.zenroom.checkSignature(link.linkDid, pubKey, result.payload.signature, link.did)
-                if (check.signature === 'correct') {
-                  const person = new Credential.Person(this.wallet.info.person)
-                  person.subject.did = link.did
-                  const signedCredential = await Credential.signCredential(this.zenroom, person, link.keyPair, link.did)
-                  const payload = {
-                    did: link.did,
-                    extra,
-                    roleName,
-                    member: signedCredential,
-                    publicKey: link.keyPair[link.did].keypair.public_key
-                  }
-                  return this.sendAction('member-of', result.threadId, 'member-of', 1, payload, linkId)
-                } else {
-                  debug(`memberOf: checkSignature result ${check}`)
-                  throw new Error(`Signature did not match public key ${key}`)
-                }
-              })
-              .then(async (result) => {
-                return this.oneMsg('message:member-of')
-              })
-              .then(async (result) => {
-                this.wallet.update('links', { linkId }, {
-                  status: 'requested',
-                  did: link.did,
-                  keyPair: link.keyPair
-                })
-                this.emit('change')
-                resolve(result.payload.msg)
-              })
-              .catch((e) => {
-                reject(e)
-              })
-          }
-        }).catch((e) => {
-          reject(e)
-        })
+      const link = this.wallet.get('links', { linkId })
+      if (!link) {
+        debug(`memberOfConfirm: ${linkId} is not in links`)
+        resolve(false)
+      } else {
+        console.log(link.linkDid)
+        this.blockchain.getActualDidKey(link.linkDid)
+          .then((pubKey) => {
+            console.log(pubKey)
+            resolve('Connected')
+          })
+          .catch((e) => {
+            console.log(e)
+            reject(new Error('BAD'))
+          })
+      }
     })
   }
 
