@@ -17,7 +17,7 @@
     "terminal-kit": "^1.35.13"
   },
   "scripts": {
-    "test": "jest --silent --passWithNoTests",
+    "test": "jest --silent",
     "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"

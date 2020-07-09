@@ -10,7 +10,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest --silent --passWithNoTests",
+    "test": "jest --silent",
     "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
