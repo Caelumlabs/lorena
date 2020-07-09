@@ -41,6 +41,7 @@ test('should Connect', async () => {
 })
 
 test('Should send Tokens from Alice to tempWallet', async () => {
+  jest.setTimeout(10000)
   const amount1 = await blockchain.addrState(aliceAddr)
   await blockchain.transferTokens(tempWallet.address, 3000000000000000)
   const amount2 = await blockchain.addrState(aliceAddr)
@@ -48,6 +49,7 @@ test('Should send Tokens from Alice to tempWallet', async () => {
 })
 
 test('Should send Tokens from Alice to Zelda', async () => {
+  jest.setTimeout(10000)
   const amount1 = await blockchain.addrState(aliceAddr)
   await blockchain.transferTokens(blockchain.getAddress(zeldaMnemonic), 3000000000000000)
   const amount2 = await blockchain.addrState(aliceAddr)
@@ -147,6 +149,7 @@ test('Should Remove DID', async () => {
   // New owner of event should be equal to entered
   expect(Utils.hexToBase64(didRemovedEvent[1].split('x')[1])).toEqual(Utils.base64ToHex(did))
 })
+*/
 
 test('Should sweep tokens from Zelda to Alice', async () => {
   const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
@@ -158,7 +161,7 @@ test('Should sweep tokens from Zelda to Alice', async () => {
   expect(zeldaBalance2.balance.free.toHuman()).toEqual('0')
   expect(zeldaBalance2).not.toEqual(zeldaBalance1)
 })
-*/
+
 test('should clean up after itself', () => {
   blockchain.disconnect()
   expect(blockchain).toBeDefined()
