@@ -41,7 +41,7 @@ test('should Connect', async () => {
 })
 
 test('Should send Tokens from Alice to tempWallet', async () => {
-  jest.setTimeout(10000)
+  jest.setTimeout(20000)
   const amount1 = await blockchain.addrState(aliceAddr)
   await blockchain.transferTokens(tempWallet.address, 3000000000000000)
   const amount2 = await blockchain.addrState(aliceAddr)
@@ -49,7 +49,7 @@ test('Should send Tokens from Alice to tempWallet', async () => {
 })
 
 test('Should send Tokens from Alice to Zelda', async () => {
-  jest.setTimeout(10000)
+  jest.setTimeout(20000)
   const amount1 = await blockchain.addrState(aliceAddr)
   await blockchain.transferTokens(blockchain.getAddress(zeldaMnemonic), 3000000000000000)
   const amount2 = await blockchain.addrState(aliceAddr)
@@ -57,6 +57,7 @@ test('Should send Tokens from Alice to Zelda', async () => {
 })
 
 test('Should Save a DID to Blockchain', async () => {
+  jest.setTimeout(20000)
   // Result should equal to true => No errors
   const result = await blockchain.registerDid(did, tempWallet.address, 2)
   expect(result).toEqual(true)
@@ -75,6 +76,7 @@ test('Should Save a DID to Blockchain', async () => {
 })
 
 test('Should try again to register the same DID and fail', async () => {
+  jest.setTimeout(20000)
   const result = await blockchain.registerDid(did, tempWallet.address, 2)
   expect(result).toEqual(false)
 })
@@ -101,6 +103,7 @@ test('Register a Did Document', async () => {
 */
 
 test('Should Rotate a Key', async () => {
+  jest.setTimeout(20000)
   blockchain.setKeyring(tempWallet.mnemonic)
   const newKeyPair = await crypto.keyPair()
   const newPubKey = newKeyPair.keyPair.publicKey
@@ -152,8 +155,8 @@ test('Should Remove DID', async () => {
 */
 
 test('Should sweep tokens from Zelda to Alice', async () => {
+  jest.setTimeout(20000)
   const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
-  jest.setTimeout(90000)
   blockchain.setKeyring(zeldaMnemonic)
   const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
   await blockchain.transferAllTokens(blockchain.getAddress('//Alice'))
