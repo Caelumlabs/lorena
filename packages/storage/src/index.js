@@ -10,9 +10,13 @@ var error = require('debug')('did:error:ipfs')
  * Javascript Class to interact with Zenroom.
  */
 module.exports = class Storage {
-  constructor () {
-    this.ipfs = new IpfsClient({ host: 'labdev.ipfs.lorena.tech', port: '5001' })
-    // this.ipfs = new IpfsClient({ host: 'labtest.ipfs.lorena.tech', port: '5001' })
+  /**
+   * Constructor
+   *
+   * @param {*} opts connection information
+   */
+  constructor (opts = { host: 'labdev.ipfs.lorena.tech', port: '5001' }) {
+    this.ipfs = new IpfsClient(opts)
   }
 
   /**
@@ -21,7 +25,7 @@ module.exports = class Storage {
    * @param {object} data Data object
    * @returns {Promise} CID or false
    */
-  put (data) {
+  async put (data) {
     return new Promise((resolve) => {
       this.ipfs.dag.put(data, { format: 'dag-cbor', hashAlg: 'sha2-256' })
         .then((cid) => {
@@ -47,7 +51,7 @@ module.exports = class Storage {
    * @param {string} cid ContentID
    * @returns {Promise} data or false
    */
-  get (cid) {
+  async get (cid) {
     return new Promise((resolve) => {
       this.ipfs.dag.get(cid)
         .then((data) => {
