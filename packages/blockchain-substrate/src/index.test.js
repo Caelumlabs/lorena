@@ -108,7 +108,7 @@ test('Should Rotate a Key', async () => {
   expect(registeredRotateKeyEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
 
   const key = await blockchain.getActualDidKey(did)
-  expect(key).toBe(newPubKey)
+  expect(Utils.toUTF8Array(key)).toEqual(Utils.toUTF8Array(newPubKey))
 })
 
 /*

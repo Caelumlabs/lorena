@@ -107,7 +107,7 @@ module.exports = class Lorena extends EventEmitter {
     const packageJSON = require('../package.json')
     if (!this.wallet.info.version || this.wallet.info.version === undefined || this.wallet.info.version === '') {
       this.wallet.data.links.forEach(element => {
-        // element.linkId = uuid()
+        element.linkId = uuid()
       })
       this.wallet.info.version = packageJSON.version
       this.emit('change')
