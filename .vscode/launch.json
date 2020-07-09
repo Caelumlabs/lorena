@@ -10,7 +10,7 @@
       "request": "launch",
       "program": "${workspaceFolder}/node_modules/jest/bin/jest",
       "args": [
-        "packages/resolver",
+        "packages/sdk",
         "--runInBand"
       ],
       "cwd": "${workspaceFolder}",
@@ -36,7 +36,7 @@
       "request": "launch",
       "name": "Jest test",
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["packages/resolver --verbose", "--coverage", "-i", "--no-cache", "test"],
+      "args": ["packages/sdk --verbose", "--coverage", "-i", "--no-cache", "test"],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "windows": {
