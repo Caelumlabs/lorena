@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/storage",
-  "version": "0.1.6",
+  "version": "0.1.8",
   "description": "Lorena Storage",
   "main": "src/index.js",
   "author": "Alex Puig",
