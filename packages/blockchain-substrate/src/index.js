@@ -4,7 +4,7 @@ const BlockchainInterface = require('@caelumlabs/blockchain')
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
 const Utils = require('./utils')
 const { cryptoWaitReady } = require('@polkadot/util-crypto')
-// const { bufferToU8a } = require('@polkadot/util')
+const { bufferToU8a } = require('@polkadot/util')
 
 // Debug
 var debug = require('debug')('did:debug:sub')
@@ -259,9 +259,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async getActualDidKey (did) {
     const hexDid = Utils.base64ToHex(did)
     const result = await this.api.query.lorenaDids.publicKeyFromDid(hexDid)
-    console.log(result)
-    // return bufferToU8a(result)
-    return (result)
+    return bufferToU8a(result)
+    // return (result)
   }
 
   /**

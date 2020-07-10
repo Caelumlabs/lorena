@@ -57,10 +57,9 @@ class Commander {
         }
       },
       'link-add': async () => {
-        // const did = await term.input('DID (did:lor:labtest:12345)')
-        const did = 'bafyreihllfhd4e7qpto3erbdykng2xhppsyvillf676u4tfkbiuv7wgbjm'
-        // const alias = await term.input('ALIAS (defaultLink)')
-        const alias = 'caelum'
+        const did = await term.input('DID')
+        // const did = 'bafyreihllfhd4e7qpto3erbdykng2xhppsyvillf676u4tfkbiuv7wgbjm'
+        const alias = await term.input('ALIAS (defaultLink)')
         term.info(`Adding link ${did} with alias ${alias}`)
         const created = await this.lorena.createConnection(did, { alias })
         if (created) {

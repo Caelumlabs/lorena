@@ -246,7 +246,6 @@ module.exports = class Comms {
   boxMessage (senderSecretKey, senderPublicKey, receiverPublicKey, recipe, payload, recipeId = 0, thread = '', threadId = 0) {
     const preMessage = { recipe, recipeId, thread, threadId, payload }
     const encryptedMessage = this.crypto.boxObj(preMessage, senderSecretKey, receiverPublicKey)
-    console.log(receiverPublicKey)
     const message = {
       version: 1,
       publicKey: this.crypto.u8aToHex(senderPublicKey),
@@ -266,7 +265,6 @@ module.exports = class Comms {
   unboxMessage (objEncrypted, receiverSecretKey, boxPublicKey = false) {
     const box = JSON.parse(this.crypto.hexToString(objEncrypted))
     box.publicKey = (boxPublicKey === false) ? this.crypto.hexToU8a(box.publicKey) : boxPublicKey
-    console.log(box.publicKey)
     box.msg = this.crypto.unboxObj(box.msg, box.publicKey, receiverSecretKey)
     return box
   }
