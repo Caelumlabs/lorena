@@ -14,10 +14,10 @@
     "@caelumlabs/wallet": "^0.1.5",
     "debug": "^4.1.1",
     "figlet": "^1.4.0",
-    "terminal-kit": "^1.35.3"
+    "terminal-kit": "^1.35.13"
   },
   "scripts": {
-    "test": "jest --silent --passWithNoTests",
+    "test": "jest --silent",
     "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"

@@ -107,7 +107,7 @@ module.exports = class Lorena extends EventEmitter {
     const packageJSON = require('../package.json')
     if (!this.wallet.info.version || this.wallet.info.version === undefined || this.wallet.info.version === '') {
       this.wallet.data.links.forEach(element => {
-        // element.linkId = uuid()
+        element.linkId = uuid()
       })
       this.wallet.info.version = packageJSON.version
       this.emit('change')
@@ -167,7 +167,6 @@ module.exports = class Lorena extends EventEmitter {
   /**
    * Listen to events
    *
-   * @param {string} nextBatch Next Barch for Matrx calls
    * @returns {Promise} endless execution
    */
   async listen () {
@@ -404,7 +403,6 @@ module.exports = class Lorena extends EventEmitter {
    * Open Connection with another user.
    *
    * @param {string} did DID
-   * @param {string} matrixUserID Matrix user ID in format @username:home.server.xxx
    * @param {object} options Object with other options like `alias`
    * @returns {Promise} linkId created, or false
    */

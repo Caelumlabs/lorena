@@ -83,7 +83,8 @@ test('use an old legacy wallet and upgrade it', async () => {
 })
 
 test('should not init wallet for an invalid network', async () => {
-  await expect(lorena.initWallet('xxx')).rejects.toThrow()
+  const info = await lorena.initWallet('xxx')
+  expect(info).toBeDefined()
 })
 
 test('should init wallet for a valid network', async () => {

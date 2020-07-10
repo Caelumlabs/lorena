@@ -10,8 +10,8 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest --silent --passWithNoTests",
-    "coverage": "jest --silent --coverage --passWithNoTests",
+    "test": "jest --silent",
+    "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
@@ -21,9 +21,9 @@
     }
   },
   "dependencies": {
-    "cids": "^0.8.1",
+    "cids": "^0.8.3",
     "debug": "^4.1.1",
-    "ipfs-http-client": "^44.2.0"
+    "ipfs-http-client": "^44.3.0"
   },
   "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }
