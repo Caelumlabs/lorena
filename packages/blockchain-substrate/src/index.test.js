@@ -11,7 +11,7 @@ const GENESIS_SEED_FROM = '//Alice'
 // let alice, bob, charlie
 const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 let did, tempWallet, aliceAddr
-// const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
+const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action steel giraffe oppose'
 
 test('init', async () => {
@@ -81,7 +81,6 @@ test('Should try again to register the same DID and fail', async () => {
   expect(result).toEqual(false)
 })
 
-/*
 test('Register a Did Document', async () => {
   console.log(tempWallet.address)
   blockchain.setKeyring(tempWallet.mnemonic)
@@ -100,7 +99,6 @@ test('Register a Did Document', async () => {
     expect(result).toEqual(diddocHash)
   }
 })
-*/
 
 test('Should Rotate a Key', async () => {
   jest.setTimeout(20000)
