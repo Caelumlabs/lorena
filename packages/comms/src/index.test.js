@@ -20,7 +20,6 @@ test('Should register users', async () => {
   expect(await m1.available(u1)).toEqual(true)
   expect(await m1.register(u1, p1)).toEqual(u1)
   expect(await m1.available(u1)).toEqual(false)
-
   await m2.init()
   expect(await m2.register(u2, p2)).toEqual(u2)
   expect(await m2.available(u2)).toEqual(false)

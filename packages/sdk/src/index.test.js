@@ -70,7 +70,6 @@ test('use an old legacy wallet and upgrade it', async () => {
     matrixUser: 'element.sender',
     status: 'incoming'
   }
-
   expect(mockLorena.wallet.data.links[0]).toBeUndefined()
   mockLorena.wallet.add('links', link)
   expect(mockLorena.wallet.data.links[0].linkId).toBeUndefined()

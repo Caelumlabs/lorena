@@ -2,8 +2,7 @@ const LorenaStorage = require('./index')
 const uuid = require('uuid/v4')
 
 const undefinedCid = 'bafyreifqwkmiw256ojf2zws6tzjeonw6bpd5vza4i22ccpcq4hjv2ts7cm'
-let storage
-let newUuid, newUuidCid
+let storage, newUuid, newUuidCid
 
 test('Init Storage', async () => {
   storage = new LorenaStorage({ host: 'labdev.ipfs.lorena.tech', port: '5001' })

@@ -73,7 +73,6 @@ class Commander {
         if (this.checkActiveLink()) {
           console.log(this.activeLink)
           await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
-          // this.lorena.callrecipe('ping')
         }
       },
       'link-member-of': async () => {

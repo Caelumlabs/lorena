@@ -1,7 +1,6 @@
 const BlockchainInterface = require('./index')
 
 class Test1 extends BlockchainInterface {}
-
 class Test2 extends BlockchainInterface {
   async connect () {}
   async disconnect () {}
