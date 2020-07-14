@@ -453,10 +453,8 @@ module.exports = class Lorena extends EventEmitter {
       } else {
         this.blockchain.getActualDidKey(link.linkDid)
           .then((publicKey) => {
-            console.log('PublicKey')
-            console.log(publicKey)
             const sender = this.crypto.keyPair()
-            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-of', 'Hello this is a test message...', 10)
+            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-of', [rolename, ''], 0)
           })
           .then((box) => {
             return this.comms.sendMessage(link.roomId, box)
