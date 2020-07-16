@@ -75,8 +75,8 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
         break
       case 'contact-message' :
         boxReceived = m2.unboxMessage(msg.value.msg, receiver.box.secretKey)
-        expect(boxReceived.msg.recipe).toEqual('ping')
-        expect(boxReceived.msg.recipeId).toEqual(10)
+        expect(boxReceived.msg.recipeId).toEqual('ping')
+        expect(boxReceived.msg.stateId).toEqual(10)
         await endTest(4, m1, m2)
         break
       case 'contact-accepted' :
@@ -100,9 +100,9 @@ test('should box and unbox the message', async () => { // eslint-disable-line je
   const receiver = crypto.keyPair()
   const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
   const msgReceived1 = m2.unboxMessage(box, receiver.box.secretKey)
-  expect(msgReceived1.msg.recipe).toEqual('ping')
-  expect(msgReceived1.msg.recipeId).toEqual(10)
+  expect(msgReceived1.msg.recipeId).toEqual('ping')
+  expect(msgReceived1.msg.stateId).toEqual(10)
   const msgReceived2 = m2.unboxMessage(box, receiver.box.secretKey, sender.box.publicKey)
-  expect(msgReceived2.msg.recipe).toEqual('ping')
-  expect(msgReceived2.msg.recipeId).toEqual(10)
+  expect(msgReceived2.msg.recipeId).toEqual('ping')
+  expect(msgReceived2.msg.stateId).toEqual(10)
 })
