@@ -441,20 +441,21 @@ module.exports = class Lorena extends EventEmitter {
    * memberOf
    *
    * @param {string} linkId Connection to use
-   * @param {string} rolename RoleName
+   * @param {string} secretCode Secret Code to become admin
    * @returns {Promise} Result of calling recipe member-of
    */
-  async memberOf (linkId, rolename) {
+  async memberAdmin (linkId, secretCode) {
     return new Promise((resolve, reject) => {
       const link = this.wallet.get('links', { linkId })
       if (!link) {
-        debug(`memberOfConfirm: ${linkId} is not in links`)
+        debug(`memberAdmin: ${linkId} is not in links`)
         resolve(false)
       } else {
         this.blockchain.getActualDidKey(link.linkDid)
           .then((publicKey) => {
             const sender = this.crypto.keyPair()
-            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-of', [rolename, ''], 0)
+            console.log(this.wallet.info)
+            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-admin', [this.wallet.info.person, secretCode], 1)
           })
           .then((box) => {
             return this.comms.sendMessage(link.roomId, box)

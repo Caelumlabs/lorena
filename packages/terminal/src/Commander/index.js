@@ -75,10 +75,10 @@ class Commander {
           await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
         }
       },
-      'link-member-of': async () => {
+      'link-member-admin': async () => {
         if (this.checkActiveLink()) {
-          const rolename = await term.input('Rolename')
-          await this.lorena.memberOf(this.activeLink.linkId, rolename)
+          const secretCode = await term.input('Secret Code')
+          await this.lorena.memberAdmin(this.activeLink.linkId, secretCode)
         }
       },
       /*
