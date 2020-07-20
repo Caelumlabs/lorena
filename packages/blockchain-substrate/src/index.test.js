@@ -36,6 +36,7 @@ test('should have good format conversion', () => {
 })
 
 test('should Connect', async () => {
+  jest.setTimeout(20000)
   await blockchain.connect()
   expect(blockchain).toBeDefined()
 })
