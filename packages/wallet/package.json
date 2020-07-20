@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/wallet",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Lorena Wallet",
   "main": "src/wallet.js",
   "author": "Javi Santos",
@@ -21,7 +21,7 @@
     }
   },
   "dependencies": {
-    "@caelumlabs/crypto": "^0.1.8"
+    "@caelumlabs/crypto": "^0.1.9"
   },
   "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }
