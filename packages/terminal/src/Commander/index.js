@@ -57,10 +57,9 @@ class Commander {
         }
       },
       'link-add': async () => {
-        // const did = await term.input('DID (did:lor:labtest:12345)')
-        const did = 'bafyreihllfhd4e7qpto3erbdykng2xhppsyvillf676u4tfkbiuv7wgbjm'
-        // const alias = await term.input('ALIAS (defaultLink)')
-        const alias = 'caelum'
+        const did = await term.input('DID')
+        // const did = 'bafyreihllfhd4e7qpto3erbdykng2xhppsyvillf676u4tfkbiuv7wgbjm'
+        const alias = await term.input('ALIAS (defaultLink)')
         term.info(`Adding link ${did} with alias ${alias}`)
         const created = await this.lorena.createConnection(did, { alias })
         if (created) {
@@ -74,13 +73,12 @@ class Commander {
         if (this.checkActiveLink()) {
           console.log(this.activeLink)
           await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
-          // this.lorena.callrecipe('ping')
         }
       },
-      'link-member-of': async () => {
+      'link-member-admin': async () => {
         if (this.checkActiveLink()) {
-          const rolename = await term.input('Rolename')
-          await this.lorena.memberOf(this.activeLink.linkId, rolename)
+          const secretCode = await term.input('Secret Code')
+          await this.lorena.memberAdmin(this.activeLink.linkId, secretCode)
         }
       },
       /*

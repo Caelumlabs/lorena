@@ -29,7 +29,6 @@ test('Action: should add extra fields', () => {
 test('Action: should add a location to the action', () => {
   const action = new cred.Action('did:lor:lab:1000', 20)
   action.name('Task1')
-
   const loc = new cred.Location()
   loc.addressLocality('Mytown')
   loc.postalCode('08000')

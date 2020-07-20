@@ -21,7 +21,6 @@ test('Should register users', async () => {
   expect(await m1.available(u1)).toEqual(true)
   expect(await m1.register(u1, p1)).toEqual(u1)
   expect(await m1.available(u1)).toEqual(false)
-
   await m2.init()
   expect(await m2.register(u2, p2)).toEqual(u2)
   expect(await m2.available(u2)).toEqual(false)
@@ -101,8 +100,8 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
         break
       case 'contact-message' :
         boxReceived = m2.unboxMessage(msg.value.msg, receiver.box.secretKey)
-        expect(boxReceived.msg.recipe).toEqual('ping')
-        expect(boxReceived.msg.recipeId).toEqual(10)
+        expect(boxReceived.msg.recipeId).toEqual('ping')
+        expect(boxReceived.msg.stateId).toEqual(10)
         await endTest(4, m1, m2)
         break
       case 'contact-accepted' :
@@ -126,11 +125,11 @@ test('should box and unbox the message', async () => { // eslint-disable-line je
   const receiver = crypto.keyPair()
   const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
   const msgReceived1 = m2.unboxMessage(box, receiver.box.secretKey)
-  expect(msgReceived1.msg.recipe).toEqual('ping')
-  expect(msgReceived1.msg.recipeId).toEqual(10)
+  expect(msgReceived1.msg.recipeId).toEqual('ping')
+  expect(msgReceived1.msg.stateId).toEqual(10)
   const msgReceived2 = m2.unboxMessage(box, receiver.box.secretKey, sender.box.publicKey)
-  expect(msgReceived2.msg.recipe).toEqual('ping')
-  expect(msgReceived2.msg.recipeId).toEqual(10)
+  expect(msgReceived2.msg.recipeId).toEqual('ping')
+  expect(msgReceived2.msg.stateId).toEqual(10)
 })
 
 test('should list rooms', async () => {

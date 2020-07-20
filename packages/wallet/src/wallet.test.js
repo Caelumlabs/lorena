@@ -1,6 +1,5 @@
 const Wallet = require('./wallet.js');
 
-// run (almost) all tests for each supported storage type
 ['fs', 'mem'].forEach((storage) => {
   const w = new Wallet('testWallet', { storage })
 

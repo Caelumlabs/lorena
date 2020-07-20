@@ -194,8 +194,10 @@ module.exports = class Lorena extends EventEmitter {
                 this.onContactAdd(msg.value)
                 break
               case 'contact-message' :
-                // msgReceived = m2.decryptMessage(msg.value.msg, sender.box.publicKey, receiver.box.secretKey)
-                this.onMsgNotify(msg.value)
+                console.log(msg)
+                // const msgReceived = this.comms.unboxMessage(msg.value.msg, this.wallet.box.secretKey)
+                // console.log(msgReceived)
+                // this.onMsgNotify(msg.value)
                 break
             }
           })
@@ -370,8 +372,7 @@ module.exports = class Lorena extends EventEmitter {
       console.log('Room ID:' + link.roomId)
       console.log('DID:' + link.linkDid)
       // const  = await this.blockchain.getDidDocHash(did)
-      const pubKey = await this.blockchain.getActualDidKey(link.linkDid)
-      console.log(pubKey)
+      // const pubKey = await this.blockchain.getActualDidKey(link.linkDid)
       // await this.comms.sendMessage(link.roomId, 'm.action', sendPayload)
     } else {
       this.queue.push(action)
@@ -441,22 +442,20 @@ module.exports = class Lorena extends EventEmitter {
    * memberOf
    *
    * @param {string} linkId Connection to use
-   * @param {string} rolename RoleName
+   * @param {string} secretCode Secret Code to become admin
    * @returns {Promise} Result of calling recipe member-of
    */
-  async memberOf (linkId, rolename) {
+  async memberAdmin (linkId, secretCode) {
     return new Promise((resolve, reject) => {
       const link = this.wallet.get('links', { linkId })
       if (!link) {
-        debug(`memberOfConfirm: ${linkId} is not in links`)
+        debug(`memberAdmin: ${linkId} is not in links`)
         resolve(false)
       } else {
         this.blockchain.getActualDidKey(link.linkDid)
           .then((publicKey) => {
-            console.log('PublicKey')
-            console.log(publicKey)
             const sender = this.crypto.keyPair()
-            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-of', 'Hello this is a test message...', 10)
+            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-admin', [this.wallet.info.person, secretCode], 1, 'member-admin', 1)
           })
           .then((box) => {
             return this.comms.sendMessage(link.roomId, box)

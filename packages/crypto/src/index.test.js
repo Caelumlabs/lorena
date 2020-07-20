@@ -87,7 +87,6 @@ test('nacl encryption', () => {
   const msgEncrypted = crypto.box(message, alice.box.secretKey, receiver.box.publicKey)
   const msg = crypto.unbox(msgEncrypted, alice.box.publicKey, receiver.box.secretKey)
   expect(msg).toEqual(message)
-
   const objEncrypted = crypto.boxObj({ msg: message }, alice.box.secretKey, receiver.box.publicKey)
   const obj = crypto.unboxObj(objEncrypted, alice.box.publicKey, receiver.box.secretKey)
   expect(obj).toEqual({ msg: message })

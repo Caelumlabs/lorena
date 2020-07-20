@@ -11,7 +11,7 @@ const GENESIS_SEED_FROM = '//Alice'
 // let alice, bob, charlie
 const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 let did, tempWallet, aliceAddr
-// const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
+const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action steel giraffe oppose'
 
 test('init', async () => {
@@ -82,7 +82,6 @@ test('Should try again to register the same DID and fail', async () => {
   expect(result).toEqual(false)
 })
 
-/*
 test('Register a Did Document', async () => {
   console.log(tempWallet.address)
   blockchain.setKeyring(tempWallet.mnemonic)
@@ -101,20 +100,19 @@ test('Register a Did Document', async () => {
     expect(result).toEqual(diddocHash)
   }
 })
-*/
 
 test('Should Rotate a Key', async () => {
   jest.setTimeout(20000)
   blockchain.setKeyring(tempWallet.mnemonic)
   const newKeyPair = await crypto.keyPair()
-  const newPubKey = newKeyPair.keyPair.publicKey
+  const newPubKey = newKeyPair.box.publicKey
   await blockchain.rotateKey(did, newPubKey)
   const registeredRotateKeyEvent = await blockchain.wait4Event('KeyRotated')
   // DID Document of event should be equal to entered
   expect(registeredRotateKeyEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(newPubKey))
 
   const key = await blockchain.getActualDidKey(did)
-  expect(Utils.toUTF8Array(key)).toEqual(Utils.toUTF8Array(newPubKey))
+  expect(key).toEqual(newPubKey)
 })
 
 /*
