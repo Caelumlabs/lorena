@@ -197,8 +197,13 @@ module.exports = class Lorena extends EventEmitter {
                 case 'contact-message' :
                   // console.log('contact-message!', msg)
                   var thread = this.wallet.get('threads', { localRecipeId: 'member-admin' }) // need the type
-                  var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
-                  console.log('RECEIVED', msgReceived)
+                  if (!thread) {
+                    console.log('contact-message member-admin, maybe terminal was closed without saving next_batch. Or thread not saved.')
+                  } else {
+                    var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
+                    console.log('RECEIVED', msgReceived)
+                  }
+
                   // this.onMsgNotify(msg.value)
                   break
               }
