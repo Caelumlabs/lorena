@@ -25,7 +25,8 @@ module.exports = class Wallet {
     this.data = {
       credentials: [],
       links: [],
-      tasks: []
+      tasks: [],
+      threads: []
     }
   }
 
@@ -92,6 +93,7 @@ module.exports = class Wallet {
         this.data = dataDecrypted
         this.batch = batch
       }
+      this.data.threads = [] // debug purposes
       return true
     } catch (_e) {
       return false
