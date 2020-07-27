@@ -202,6 +202,9 @@ module.exports = class Lorena extends EventEmitter {
                   } else {
                     var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
                     console.log('RECEIVED', msgReceived.msg.payload)
+                    this.wallet.add('credentials', {
+                      ...msgReceived.msg.payload[0].signedCredential
+                    })
                   }
                   // this.onMsgNotify(msg.value)
                   break
