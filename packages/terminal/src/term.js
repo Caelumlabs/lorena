@@ -40,7 +40,7 @@ const term = {
     terminal('\n')
   },
   json: (json = '') => {
-    console.log(util.inspect(json, { colors: true }))
+    console.log(util.inspect(json, { depth: null, colors: true }))
   },
   error: (text) => { terminal.red(text + '\n') },
   lorena: (env = '') => terminal.cyan('\nlor' + env + '# '),
