@@ -93,7 +93,7 @@ module.exports = class Wallet {
         this.data = dataDecrypted
         this.batch = batch
       }
-      this.threads = []
+      this.data.threads = [] // debug purposes
       return true
     } catch (_e) {
       return false
