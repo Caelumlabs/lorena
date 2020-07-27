@@ -201,9 +201,8 @@ module.exports = class Lorena extends EventEmitter {
                     console.log('contact-message member-admin, maybe terminal was closed without saving next_batch. Or thread not saved.')
                   } else {
                     var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
-                    console.log('RECEIVED', msgReceived)
+                    console.log('RECEIVED', msgReceived.msg.payload)
                   }
-
                   // this.onMsgNotify(msg.value)
                   break
               }
