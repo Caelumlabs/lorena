@@ -38,8 +38,20 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     this.api = await ApiPromise.create({
       provider: this.provider,
       types: {
+        Credential: {
+          credential: 'Vec<u8>',
+          valid_from: 'u64',
+          valid_to: 'u64'
+        },
         PublicKey: {
           pub_key: 'Vec<u8>',
+          valid_from: 'u64',
+          valid_to: 'u64'
+        },
+
+        PublicKeyType: {
+          pub_key_type: 'u16',
+          pub_keys: 'Vec<PublicKey>',
           valid_from: 'u64',
           valid_to: 'u64'
         },
@@ -48,8 +60,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
           owner: 'AccountId',
           did_promoter: 'Vec<u8>',
           level: 'u16',
-          pub_keys: 'Vec<PublicKey>',
+          pub_keys: 'Vec<PublicKeyType>',
           did_doc: 'Vec<u8>',
+          credentials: 'Vec<Credential>',
           valid_from: 'u64',
           valid_to: 'u64'
         }
@@ -186,6 +199,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
 
   /**
    * Rotate Key : changes the current key for a DID
+   * Assumes Key Type = 0
    *
    * @param {string} did DID
    * @param {object} pubKey Public Key to be rotated (Vec<u8>)
@@ -197,7 +211,25 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call lorenaDids RotateKey function
-    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray)
+    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray, 0)
+    return await this.execTransaction(transaction)
+  }
+
+  /**
+   * Rotate Key Type: changes the current key for a specific type for a DID
+   *
+   * @param {string} did DID
+   * @param {object} pubKey Public Key to be rotated (Vec<u8>)
+   * @param {int} tip Public Key type
+   * @returns {Promise} Result of the transaction
+   */
+  async rotateKeyType (did, pubKey, tip) {
+    // Convert did string to hex
+    const hexDID = Utils.base64ToHex(did)
+    // Convert pubKey to vec[u8]
+    const keyArray = Utils.toUTF8Array(pubKey)
+    // Call lorenaDids RotateKey function
+    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray, tip)
     return await this.execTransaction(transaction)
   }
 
@@ -252,13 +284,28 @@ module.exports = class SubstrateLib extends BlockchainInterface {
 
   /**
    * Get Public Key from Did.
+   * Assumes Key Type = 0
    *
    * @param {string} did DID
    * @returns {string} Actual Key
    */
   async getActualDidKey (did) {
     const hexDid = Utils.base64ToHex(did)
-    const result = await this.api.query.lorenaDids.publicKeyFromDid(hexDid)
+    const result = await this.api.query.lorenaDids.publicKeyFromDid([hexDid, 0])
+    return bufferToU8a(result)
+    // return (result)
+  }
+
+  /**
+   * Get Public Key of specific type from Did.
+   *
+   * @param {string} did DID
+   * @param {int} tip Public Key type
+   * @returns {string} Actual Key
+   */
+  async getActualDidKeyType (did, tip) {
+    const hexDid = Utils.base64ToHex(did)
+    const result = await this.api.query.lorenaDids.publicKeyFromDid([hexDid, 0])
     return bufferToU8a(result)
     // return (result)
   }
