@@ -9,6 +9,7 @@ const u1 = m1.randomUsername()
 const u2 = m1.randomUsername()
 const p1 = 'rndPass'
 const p2 = 'rndPass'
+let roomId
 
 test('Init Crypto', async () => {
   const result = await crypto.init()
@@ -30,6 +31,30 @@ test('Should register users', async () => {
   } catch (e) {
     expect(e.message).toBe('Request failed with status code 400') // eslint-disable-line jest/no-try-expect
   }
+})
+
+test('should not connect with an invalid username and password', async () => {
+  await expect(m1.connect(u2, u2)).rejects.toEqual(new Error('Could not connect to Matrix'))
+})
+
+test('should not be able to create a room without a connection', async () => {
+  await expect(m1.createConnection(undefined, undefined)).rejects.toEqual(new Error('Could not create room'))
+})
+
+test('should not be able to a connection without a connection', async () => {
+  await expect(m1.acceptConnection(undefined)).rejects.toEqual(new Error('Could not accept invitation'))
+})
+
+test('should not be able to list rooms without a connection', async () => {
+  await expect(m1.joinedRooms()).rejects.toEqual(new Error('Could not list joined rooms'))
+})
+
+test('should not be able to leave a bogus room without a connection', async () => {
+  await expect(m1.leaveRoom(undefined)).rejects.toEqual(new Error('Could not leave room'))
+})
+
+test('should not be able to send a message without a connection', async () => {
+  await expect(m1.sendMessage(undefined, undefined)).rejects.toEqual(new Error('Could not send message'))
 })
 
 test('should use matrix as a comms interface to Lorena', async done => { // eslint-disable-line jest/no-test-callback
@@ -87,12 +112,12 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
 
   // Connect m1 and m2
   const roomName = m1.randomUsername()
-  const newRoomId = await m1.createConnection(roomName, `@${u2}:${m2.context.serverName}`)
-  expect(newRoomId).toBeDefined()
+  roomId = await m1.createConnection(roomName, `@${u2}:${m2.context.serverName}`)
+  expect(roomId).toBeDefined()
 
   // Sends a message to user2
   const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
-  await m1.sendMessage(newRoomId, box)
+  await m1.sendMessage(roomId, box)
 })
 
 test('should box and unbox the message', async () => { // eslint-disable-line jest/no-test-callback
@@ -105,4 +130,21 @@ test('should box and unbox the message', async () => { // eslint-disable-line je
   const msgReceived2 = m2.unboxMessage(box, receiver.box.secretKey, sender.box.publicKey)
   expect(msgReceived2.msg.recipeId).toEqual('ping')
   expect(msgReceived2.msg.stateId).toEqual(10)
+})
+
+test('should list rooms', async () => {
+  let result = await m1.joinedRooms()
+  expect(result[0]).toMatch(/!.*:labdev.matrix.lorena.tech/)
+  // do it a bunch of times to trigger rate limiting, as otherwise it sometimes happens, sometimes not
+  for (let i = 0; i < 25; i++) {
+    result = await m2.joinedRooms()
+    expect(result[0]).toMatch(/!.*:labdev.matrix.lorena.tech/)
+  }
+})
+
+test('should leave a room', async () => {
+  let result = await m1.leaveRoom(roomId)
+  expect(result.status).toBe(200)
+  result = await m2.leaveRoom(roomId)
+  expect(result.status).toBe(200)
 })

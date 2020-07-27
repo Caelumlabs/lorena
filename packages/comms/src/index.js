@@ -1,12 +1,31 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
 const axios = require('axios')
+const axiosRetry = require('axios-retry')
 const Crypto = require('@caelumlabs/crypto')
 const { spawn, Thread, Worker } = require('threads')
 
 // Debug
 var debug = require('debug')('did:debug:matrix')
 // var error = require('debug')('did:error:matrix')
+
+// Retry with step-back to solve rate limiting problem
+axiosRetry(axios, {
+  retries: 5,
+  retryAfterMs: 0,
+  retryDelay: () => {
+    return this.retryAfterMs
+  },
+  retryCondition: (e) => {
+    if (e.response.status === 429) {
+      debug('retrying due to rate limiting', e)
+      this.retryAfterMs = e.response.data.retry_after_ms
+      return true
+    } else {
+      return false
+    }
+  }
+})
 
 /**
  * Javascript Class to interact with Matrix.
