@@ -10,7 +10,8 @@ class Commander {
       'help', 'info',
       'link', 'link-pubkey',
       'links', 'link-add',
-      'link-ping', 'link-ping-admin',
+      'threads',
+      'link-ping', 'link-ping-admin', 'link-member-admin',
       'link-member-of', 'link-member-of-confirm', 'link-member-list', 'link-member-update', 'link-member-get',
       'link-action-issue', 'link-action-update', 'link-credential-add',
       'link-credential-get', 'link-credential-issue', 'link-credential-issued',
@@ -30,6 +31,7 @@ class Commander {
       },
       credentials: () => term.json(this.lorena.wallet.data.credentials ? this.lorena.wallet.data.credentials : {}),
       links: () => term.json(this.lorena.wallet.data.links),
+      threads: () => term.json(this.lorena.wallet.data.threads),
       link: async () => {
         const none = 'None'
         const a = this.lorena.wallet.data.links.map((d) => d.alias)

@@ -178,27 +178,36 @@ module.exports = class Lorena extends EventEmitter {
         })
         .then((loop) => {
           loop(batch, this.comms.context).subscribe(async (msg) => {
-            switch (msg.type) {
-              case 'next_batch' :
-                this.wallet.setBatch(msg.value)
-                // UPDATE batch
-                batch = msg.value
-                break
-              case 'contact-incoming' :
-                debug('Contact Incoming')
-                // By default, accept all incoming contacts.
-                this.onContactIncoming(msg.value)
-                break
-              case 'contact-accepted' :
-                // Connection has been accepted.
-                this.onContactAdd(msg.value)
-                break
-              case 'contact-message' :
-                console.log(msg)
-                // const msgReceived = this.comms.unboxMessage(msg.value.msg, this.wallet.box.secretKey)
-                // console.log(msgReceived)
-                // this.onMsgNotify(msg.value)
-                break
+            try {
+              switch (msg.type) {
+                case 'next_batch' :
+                  this.wallet.setBatch(msg.value)
+                  // UPDATE batch
+                  batch = msg.value
+                  break
+                case 'contact-incoming' :
+                  debug('Contact Incoming')
+                  // By default, accept all incoming contacts.
+                  this.onContactIncoming(msg.value)
+                  break
+                case 'contact-accepted' :
+                  // Connection has been accepted.
+                  this.onContactAdd(msg.value)
+                  break
+                case 'contact-message' :
+                  // console.log('contact-message!', msg)
+                  var thread = this.wallet.get('threads', { localRecipeId: 'member-admin' }) // need the type
+                  if (!thread) {
+                    console.log('contact-message member-admin, maybe terminal was closed without saving next_batch. Or thread not saved.')
+                  } else {
+                    var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
+                    console.log('RECEIVED', msgReceived.msg.payload)
+                  }
+                  // this.onMsgNotify(msg.value)
+                  break
+              }
+            } catch (error) {
+              console.log('SWITCH ERROR', error)
             }
           })
         })
@@ -455,7 +464,27 @@ module.exports = class Lorena extends EventEmitter {
         this.blockchain.getActualDidKey(link.linkDid)
           .then((publicKey) => {
             const sender = this.crypto.keyPair()
-            return this.comms.boxMessage(sender.box.secretKey, sender.box.publicKey, publicKey, 'member-admin', [this.wallet.info.person, secretCode], 1, 'member-admin', 1)
+            const stateId = 1
+            const recipeId = 'member-admin'
+            const localRecipeId = 'member-admin'
+            const localStateId = 1
+            this.wallet.add('threads', {
+              publicKey,
+              sender,
+              stateId,
+              recipeId,
+              localRecipeId,
+              localStateId
+            })
+            return this.comms.boxMessage(
+              sender.box.secretKey,
+              sender.box.publicKey,
+              publicKey,
+              recipeId,
+              [this.wallet.info.person, secretCode],
+              stateId,
+              localRecipeId,
+              localStateId)
           })
           .then((box) => {
             return this.comms.sendMessage(link.roomId, box)
