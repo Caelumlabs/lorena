@@ -18,7 +18,7 @@ const Wallet = require('./wallet.js');
     w.add('credentials', { name: 'test2', role: 'user' })
     w.add('credentials', { name: 'test3', role: 'user' })
     w.add('credentials', { name: 'test4', role: 'user' })
-    w.add('credentials', { name: 'test5', role: 'user' })
+    w.add('credentials', { id: '5', name: 'test5', role: 'user' })
     expect(w.data.credentials[0]).toEqual({ name: 'adminTest', role: 'admin' })
     expect(w.data.credentials[1]).toEqual({ name: 'test1', role: 'user' })
   })
@@ -26,6 +26,11 @@ const Wallet = require('./wallet.js');
   test('should get the credential ' + storage, () => {
     const cred = w.get('credentials', { name: 'adminTest' })
     expect(cred).toEqual({ name: 'adminTest', role: 'admin' })
+  })
+
+  test('should get the credential by id', () => {
+    const result = w.getCredentialById('5')
+    expect(result.name).toEqual('test5')
   })
 
   test('should update the credential ' + storage, () => {

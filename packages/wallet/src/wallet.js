@@ -216,6 +216,11 @@ module.exports = class Wallet {
     return found
   }
 
+  getCredentialById (id) {
+    const result = this.data.credentials.find((item) => item.id === id)
+    return result
+  }
+
   setBatch (batch) {
     this.changed = true
     this.data.batch = batch
