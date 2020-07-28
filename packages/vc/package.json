@@ -1,0 +1,17 @@
+{
+  "name": "@caelumlabs/vc",
+  "version": "1.0.0",
+  "description": "VCs",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "coverage": "jest --silent --coverage",
+    "lint": "eslint ./src",
+    "lint:fix": "eslint ./src --fix"
+  },
+  "author": "Javi Santos",
+  "license": "MIT",
+  "dependencies": {
+    "vc-js": "^0.6.4"
+  }
+}
