@@ -181,5 +181,6 @@
     "zu",
     "zw",
     "zz"
-  ]
+  ],
+  "standard.enable": false
 }

@@ -2,17 +2,30 @@ const VC = require('./index')
 const { Ed25519KeyPair } = require('jsonld-signatures')
 const assertionController = require('../mocks/assertionController')
 
-const Vc = new VC()
+const testLoader = async url => {
+  if (url === 'https://example.edu/issuers/565049') {
+    return {
+      contextUrl: null,
+      documentUrl: url,
+      document: assertionController
+    }
+  }
+}
 
-async function generateKeyPair (id, controller, owner) {
+const Vc = new VC()
+Vc.addLoader(testLoader)
+
+async function generateKeyPair (id, controller) {
   const keyPair = await Ed25519KeyPair.generate()
   keyPair.id = id
   keyPair.controller = controller || id
-  keyPair.owner = owner || id
-  if (id === 'did:lor:1234issuer') {
-    assertionController.assertionMethod.push(keyPair.id)
-    assertionController.authentication.push(keyPair.id)
+  if (id === 'https://example.edu/issuers/keys/1') {
+    Vc.addLoader(async (url) => {
+      if (url === 'https://example.edu/issuers/keys/1') return keyPair.publicNode()
+    })
   }
+  // keyPair.owner = owner || id
+  // console.log('NODE', keyPair.publicNode())
   return keyPair
 }
 
@@ -21,7 +34,7 @@ let alice
 let issuedCredential
 let presentation
 test('Init actors', async () => {
-  issuer = await generateKeyPair('did:lor:1234issuer')
+  issuer = await generateKeyPair('https://example.edu/issuers/keys/1', 'https://example.edu/issuers/565049')
   alice = await generateKeyPair('did:lor:567alice')
   expect(alice.id).toEqual('did:lor:567alice')
 })
@@ -30,36 +43,32 @@ test('Issue credential', async () => {
   const credential = {
     '@context': [
       'https://www.w3.org/2018/credentials/v1',
-      'https://lorena.tech/context/schema'
+      'https://schema.org'
     ],
     id: 'asdasdasd',
     type: ['VerifiableCredential'],
-    issuer: issuer.id,
+    issuer: issuer.controller,
     issuanceDate: new Date().toISOString(),
     credentialSubject: {
       id: alice.id,
-      memberOf: 'did:lor:6575746535345345'
+      memberOf: 'did:lor:989898989898'
     }
   }
   issuedCredential = await Vc.issue(credential, issuer)
-  console.log(issuedCredential)
-  expect(true).toEqual(true)
-})
-
-test('Present credential', async () => {
-  presentation = await Vc.presentation(issuedCredential, alice)
-  console.log(presentation)
   expect(true).toEqual(true)
 })
 
 test('Verify credential', async () => {
-  const verified = await Vc.verifyCredential(issuedCredential, issuer)
-  console.log('VERIFIED', verified)
-  expect(verified).toEqual(true)
+  const result = await Vc.verifyCredential(issuedCredential, issuer)
+  expect(result.verified).toEqual(true)
+})
+
+test('Present credential', async () => {
+  presentation = await Vc.presentation(issuedCredential, Buffer.alloc(16, 'random').toString(), alice, '12345', alice.id)
+  expect(presentation.id).toEqual('12345')
 })
 
 test('Verify presentation', async () => {
-  const verified = await Vc.verifyCredential(issuedCredential, issuer)
-  console.log('VERIFIED', verified)
-  expect(verified).toEqual(true)
+  const result = await Vc.verify(presentation, Buffer.alloc(16, 'random').toString(), issuer)
+  expect(result.verified).toEqual(true)
 })
