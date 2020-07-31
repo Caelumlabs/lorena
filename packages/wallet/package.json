@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/wallet",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Lorena Wallet",
   "main": "src/wallet.js",
   "author": "Javi Santos",

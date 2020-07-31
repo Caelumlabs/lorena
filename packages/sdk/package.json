@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/sdk",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Lorena SDK",
   "main": "src/index.js",
   "author": "Alex Puig",

@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/comms",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Lorena Communication Protocol",
   "main": "src/index.js",
   "author": "Alex Puig",
