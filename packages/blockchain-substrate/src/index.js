@@ -203,15 +203,16 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} did DID
    * @param {object} pubKey Public Key to be rotated (Vec<u8>)
+   * @param {number} typ Public Key type
    * @returns {Promise} Result of the transaction
    */
-  async rotateKey (did, pubKey) {
+  async rotateKey (did, pubKey, typ = 0) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call lorenaDids RotateKey function
-    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray, 0)
+    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray, typ)
     return await this.execTransaction(transaction)
   }
 
@@ -220,16 +221,16 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * @param {string} did DID
    * @param {object} pubKey Public Key to be rotated (Vec<u8>)
-   * @param {int} tip Public Key type
+   * @param {number} typ Public Key type
    * @returns {Promise} Result of the transaction
    */
-  async rotateKeyType (did, pubKey, tip) {
+  async rotateKeyType (did, pubKey, typ) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
     // Call lorenaDids RotateKey function
-    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray, tip)
+    const transaction = await this.api.tx.lorenaDids.rotateKey(hexDID, keyArray, typ)
     return await this.execTransaction(transaction)
   }
 
@@ -244,6 +245,34 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     const transaction = await this.api.tx.lorenaDids.changeDidOwner(hexDID, newOwner)
+    return await this.execTransaction(transaction)
+  }
+
+  /**
+   * Assign a Credential for a DID
+   *
+   * @param {string} did DID
+   * @param {object} credential Credential Hash (Vec<u8>)
+   * @returns {Promise} Result of the transaction
+   */
+  async assignCredential (did, credential) {
+    const hexDid = Utils.base64ToHex(did)
+    const cred = Utils.toUTF8Array(credential)
+    const transaction = await this.api.tx.lorenaDids.assignCredential(hexDid, cred)
+    return await this.execTransaction(transaction)
+  }
+
+  /**
+   * Remove a Credential for a DID
+   *
+   * @param {string} did DID
+   * @param {object} credential Credential Hash (Vec<u8>)
+   * @returns {Promise} Result of the transaction
+   */
+  async removeCredential (did, credential) {
+    const hexDid = Utils.base64ToHex(did)
+    const cred = Utils.toUTF8Array(credential)
+    const transaction = await this.api.tx.lorenaDids.removeCredential(hexDid, cred)
     return await this.execTransaction(transaction)
   }
 
@@ -287,11 +316,12 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Assumes Key Type = 0
    *
    * @param {string} did DID
+   * @param {number} typ Public Key type
    * @returns {string} Actual Key
    */
-  async getActualDidKey (did) {
+  async getActualDidKey (did, typ = 0) {
     const hexDid = Utils.base64ToHex(did)
-    const result = await this.api.query.lorenaDids.publicKeyFromDid([hexDid, 0])
+    const result = await this.api.query.lorenaDids.publicKeyFromDid([hexDid, typ])
     return bufferToU8a(result)
     // return (result)
   }
@@ -300,12 +330,12 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Get Public Key of specific type from Did.
    *
    * @param {string} did DID
-   * @param {int} tip Public Key type
+   * @param {number} typ Public Key type
    * @returns {string} Actual Key
    */
-  async getActualDidKeyType (did, tip) {
+  async getActualDidKeyType (did, typ) {
     const hexDid = Utils.base64ToHex(did)
-    const result = await this.api.query.lorenaDids.publicKeyFromDid([hexDid, 0])
+    const result = await this.api.query.lorenaDids.publicKeyFromDid([hexDid, typ])
     return bufferToU8a(result)
     // return (result)
   }

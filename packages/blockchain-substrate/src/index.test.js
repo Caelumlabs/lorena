@@ -9,9 +9,13 @@ const crypto = new Crypto(true)
 const GENESIS_SEED_FROM = '//Alice'
 
 // let alice, bob, charlie
-const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+// const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+// Uncomment for testing in local blockchain and comment out the line before
+// to restore testing on cloud
+const blockchain = new BlockchainSubstrate('ws://localhost:9944')
 let did, tempWallet, aliceAddr
 const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
+const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action steel giraffe oppose'
 
 test('init', async () => {
@@ -116,6 +120,34 @@ test('Should Rotate a Key', async () => {
   const key = await blockchain.getActualDidKey(did)
   expect(key).toEqual(newPubKey)
 })
+
+// The following tests will pass just once if the blockchain is
+// not reinitialized. That's because a credential assigned
+// iis not deleted but marked as deleted and can not
+// be reassigned
+/*
+test('Should Assign a Credential', async () => {
+  jest.setTimeout(20000)
+  blockchain.setKeyring(tempWallet.mnemonic)
+  const newKeyPair = await crypto.keyPair()
+  const newPubKey = newKeyPair.box.publicKey
+  await blockchain.assignCredential(did, credential)
+  const registeredCredentialAssignedEvent = await blockchain.wait4Event('CredentialAssigned')
+  // Credential of event should be equal to entered
+  expect(registeredCredentialAssignedEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(credential))
+})
+
+test('Should Remove a Credential', async () => {
+  jest.setTimeout(20000)
+  blockchain.setKeyring(tempWallet.mnemonic)
+  const newKeyPair = await crypto.keyPair()
+  const newPubKey = newKeyPair.box.publicKey
+  await blockchain.removeCredential(did, credential)
+  const registeredCredentialRemovedEvent = await blockchain.wait4Event('CredentialRemoved')
+  // Credential of event should be equal to entered
+  expect(registeredCredentialRemovedEvent[2].split('x')[1]).toEqual(Utils.base64ToHex(credential))
+})
+*/
 
 /*
 test('Trying to Change Owner not being the owner. Should fail', async () => {
