@@ -9,17 +9,16 @@ const crypto = new Crypto(true)
 const GENESIS_SEED_FROM = '//Alice'
 
 // let alice, bob, charlie
-// const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 // Uncomment for testing in local blockchain and comment out the line before
 // to restore testing on cloud
-const blockchain = new BlockchainSubstrate('ws://localhost:9944')
+// const blockchain = new BlockchainSubstrate('ws://localhost:9944')
 let did, tempWallet, aliceAddr
 const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action steel giraffe oppose'
 
 test('init', async () => {
-  // blockchain = new BlockchainSubstrate('ws://127.0.0.1:9944/')
   await crypto.init()
   did = crypto.random(16)
   aliceAddr = blockchain.setKeyring(GENESIS_SEED_FROM)
