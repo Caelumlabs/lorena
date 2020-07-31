@@ -15,7 +15,7 @@ const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 // const blockchain = new BlockchainSubstrate('ws://localhost:9944')
 let did, tempWallet, aliceAddr
 const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
-const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
+// const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action steel giraffe oppose'
 
 test('init', async () => {
