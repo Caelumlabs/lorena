@@ -256,14 +256,15 @@ module.exports = class Comms {
    * @param {object} senderPublicKey  to sign the message
    * @param {object} receiverPublicKey to encrypt the message
    * @param {string} recipeId to call
-   * @param {*} payload to send
+   * @param {Array} payload to send
+   * @param {Array} credentials Credentials needed for the Recipe
    * @param {number} stateId called
    * @param {number} thread of call
    * @param {number} threadId of call
    * @returns {string} Boxed message
    */
-  boxMessage (senderSecretKey, senderPublicKey, receiverPublicKey, recipeId, payload, stateId = 0, thread = '', threadId = 0) {
-    const preMessage = { recipeId, stateId, thread, threadId, payload }
+  boxMessage (senderSecretKey, senderPublicKey, receiverPublicKey, recipeId, payload, credentials, stateId = 0, thread = '', threadId = 0) {
+    const preMessage = { recipeId, stateId, thread, threadId, payload, credentials }
     const encryptedMessage = this.crypto.boxObj(preMessage, senderSecretKey, receiverPublicKey)
     const message = {
       version: 1,

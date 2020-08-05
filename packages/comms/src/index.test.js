@@ -1,3 +1,6 @@
+/* eslint-disable quote-props */
+/* eslint-disable quotes */
+/* eslint-disable key-spacing */
 const Comms = require('./index')
 const LorenaCrypto = require('@caelumlabs/crypto')
 const crypto = new LorenaCrypto()
@@ -10,6 +13,13 @@ const u2 = m1.randomUsername()
 const p1 = 'rndPass'
 const p2 = 'rndPass'
 let roomId
+const credential = {
+  "@context" : "credentials/v1",
+  "credentialSubject" : {
+    "id": "did:lor:101",
+    "reoleName": "admin"
+  }
+}
 
 test('Init Crypto', async () => {
   const result = await crypto.init()
@@ -102,6 +112,7 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
         boxReceived = m2.unboxMessage(msg.value.msg, receiver.box.secretKey)
         expect(boxReceived.msg.recipeId).toEqual('ping')
         expect(boxReceived.msg.stateId).toEqual(10)
+        expect(boxReceived.msg.credentials).toEqual(credential)
         await endTest(4, m1, m2)
         break
       case 'contact-accepted' :
@@ -116,17 +127,18 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
   expect(roomId).toBeDefined()
 
   // Sends a message to user2
-  const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
+  const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', credential, 10)
   await m1.sendMessage(roomId, box)
 })
 
 test('should box and unbox the message', async () => { // eslint-disable-line jest/no-test-callback
   const sender = crypto.keyPair()
   const receiver = crypto.keyPair()
-  const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', 10)
+  const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', credential, 10)
   const msgReceived1 = m2.unboxMessage(box, receiver.box.secretKey)
   expect(msgReceived1.msg.recipeId).toEqual('ping')
   expect(msgReceived1.msg.stateId).toEqual(10)
+  // console.log(msgReceived1.msg)
   const msgReceived2 = m2.unboxMessage(box, receiver.box.secretKey, sender.box.publicKey)
   expect(msgReceived2.msg.recipeId).toEqual('ping')
   expect(msgReceived2.msg.stateId).toEqual(10)

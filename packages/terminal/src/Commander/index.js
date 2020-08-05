@@ -73,7 +73,11 @@ class Commander {
       },
       'link-ping': async () => {
         if (this.checkActiveLink()) {
-          console.log(this.activeLink)
+          await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
+        }
+      },
+      'link-ping-admin': async () => {
+        if (this.checkActiveLink()) {
           await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
         }
       },

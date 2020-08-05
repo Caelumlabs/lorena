@@ -395,21 +395,54 @@ module.exports = class Lorena extends EventEmitter {
   /**
    * Call a recipe, using the intrinsic threadId adn get back the single message
    *
-   * @param {string} recipe name
+   * @param {string} linkId Connection to use
+   * @param {string} recipeId Recipe name
+   * @param {string} stateId Recipe state id
    * @param {*} payload to send with recipe
-   * @param {string} AnyId RoomId/LinkId Connection to use
-   * @param {number=} threadId thread ID (if not provided use intrinsic thread ID management)
+   * @param {string} localRecipeId thread ID (if not provided use intrinsic thread ID management)
+   * @param {number} localStateId local state Id
    * @returns {Promise} of message returned
    */
-  async callRecipe (recipe, payload = {}, AnyId, threadId = undefined) {
-    // use the threadId if provided, otherwise use the common one
-    if (threadId === undefined || threadId === 0) {
-      threadId = this.threadId++
-    }
-
-    const linkId = this.getLinkId(AnyId)
-    await this.sendAction(recipe, 0, recipe, threadId, payload, linkId)
-    return this.oneMsg(`message:${recipe}`)
+  async callRecipe (linkId, recipeId, stateId, payload = {}, localRecipeId, localStateId) {
+    return new Promise((resolve, reject) => {
+      const link = this.wallet.get('links', { linkId })
+      if (!link) {
+        debug(`memberAdmin: ${linkId} is not in links`)
+        resolve(false)
+      } else {
+        this.blockchain.getActualDidKey(link.linkDid)
+          .then((publicKey) => {
+            const sender = this.crypto.keyPair()
+            this.wallet.add('threads', {
+              publicKey,
+              sender,
+              stateId,
+              recipeId,
+              localRecipeId,
+              localStateId
+            })
+            return this.comms.boxMessage(
+              sender.box.secretKey,
+              sender.box.publicKey,
+              publicKey,
+              recipeId,
+              payload,
+              stateId,
+              localRecipeId,
+              localStateId)
+          })
+          .then((box) => {
+            return this.comms.sendMessage(link.roomId, box)
+          })
+          .then(() => {
+            resolve('Member-of Sent')
+          })
+          .catch((e) => {
+            console.log(e)
+            reject(new Error('BAD'))
+          })
+      }
+    })
   }
 
   /**
@@ -484,7 +517,8 @@ module.exports = class Lorena extends EventEmitter {
               sender.box.publicKey,
               publicKey,
               recipeId,
-              [this.wallet.info.person, secretCode],
+              [secretCode],
+              [this.wallet.info.person],
               stateId,
               localRecipeId,
               localStateId)
@@ -498,42 +532,6 @@ module.exports = class Lorena extends EventEmitter {
           .catch((e) => {
             console.log(e)
             reject(new Error('BAD'))
-          })
-      }
-    })
-  }
-
-  /**
-   * memberOfConfirm.
-   *
-   * @param {string} linkId Connection Identifier
-   * @param {string} secretCode secret Code
-   * @returns {Promise} of success / error message
-   */
-  async memberOfConfirm (linkId, secretCode) {
-    return new Promise((resolve, reject) => {
-      const link = this.wallet.get('links', { linkId })
-      if (!link) {
-        debug(`memberOfConfirm: ${linkId} is not in links`)
-        resolve(false)
-      } else {
-        this.sendAction('member-of-confirm', 0, 'member-of-confirm', 1, { secretCode }, linkId)
-          .then(() => {
-            return this.oneMsg('message:member-of-confirm')
-          })
-          .then(async (result) => {
-            if (result === false) throw (new Error('Timeout'))
-            if (result.payload.msg === 'member verified') {
-              this.wallet.update('links', { linkId }, { status: 'verified' })
-              this.wallet.add('credentials', result.payload.credential)
-              this.emit('change')
-              resolve(result.payload.msg)
-            } else {
-              resolve(result.payload.msg)
-            }
-          })
-          .catch((e) => {
-            reject(e)
           })
       }
     })
