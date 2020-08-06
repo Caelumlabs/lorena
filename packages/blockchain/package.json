@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/blockchain",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Lorena Blockchain Interface",
   "main": "src/index.js",
   "license": "MIT",
