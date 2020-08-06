@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/storage",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Lorena Storage",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -23,7 +23,7 @@
   "dependencies": {
     "cids": "^0.8.3",
     "debug": "^4.1.1",
-    "ipfs-http-client": "^44.3.0"
+    "ipfs-http-client": "^45.0.0"
   },
   "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
 }
