@@ -60,8 +60,6 @@ test('Organization: should add a role', () => {
   developer.fullName('John', 'Smith', 'Matrix')
   organization.member('developer', developer)
 
-  console.log(organization.subject)
-
   expect(organization.subject.member['@type']).toEqual('OrganizationRole')
   expect(organization.subject.member.roleName).toEqual('developer')
   expect(organization.subject.member.member['@type']).toEqual('Person')
