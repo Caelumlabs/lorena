@@ -3,7 +3,7 @@
 const axios = require('axios')
 const axiosRetry = require('axios-retry')
 const Crypto = require('@caelumlabs/crypto')
-const { spawn, Thread, Worker } = require('threads')
+const Loop = require('./Loop')
 
 // Debug
 var debug = require('debug')('did:debug:matrix')
@@ -42,6 +42,7 @@ module.exports = class Comms {
       matrixUser: '',
       tokenAccess: ''
     }
+    this._loop = null
   }
 
   /**
@@ -79,17 +80,22 @@ module.exports = class Comms {
     })
   }
 
-  async loop () {
-    this.loopThread = await spawn(new Worker('./loop'))
-    return this.loopThread
+  async loop (batch, context) {
+    if (this._loop) return this._loop
+    this._loop = new Loop(batch, context)
+    return this._loop
   }
 
   /**
    * Stop calling Matrix API
+   *
+   * @returns {Promise} true
    */
   async disconnect () {
-    await Thread.terminate(this.loopThread)
+    // await Thread.terminate(this.loopThread)
+    this._loop.terminate()
     this.connected = false
+    return true
   }
 
   /**
@@ -117,6 +123,7 @@ module.exports = class Comms {
         password: password
       })
         .then(async (res) => {
+          console.log('REGISTERED')
           resolve(username)
         })
         .catch((error) => {

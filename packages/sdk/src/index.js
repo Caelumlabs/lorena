@@ -174,10 +174,11 @@ module.exports = class Lorena extends EventEmitter {
     return new Promise(() => {
       this.comms.connect(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
         .then(() => {
-          return this.comms.loop()
+          return this.comms.loop(batch, this.comms.context)
         })
         .then((loop) => {
-          loop(batch, this.comms.context).subscribe(async (msg) => {
+          loop.on('message', async (msg) => {
+            console.log('MESSAGE', msg)
             try {
               switch (msg.type) {
                 case 'next_batch' :

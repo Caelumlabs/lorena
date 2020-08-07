@@ -83,8 +83,9 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
 
   // Tests with User 1
   await m1.connect(u1, p1)
-  const loopm1 = await m1.loop()
-  loopm1('', m1.context).subscribe(async (msg) => {
+
+  const loopm1 = await m1.loop('', m1.context)
+  loopm1.on('message', async (msg) => {
     switch (msg.type) {
       case 'next_batch' :
         expect(msg.value.length).toBeGreaterThan(10)
@@ -97,10 +98,11 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
   })
 
   await m2.connect(u2, p2)
-  const loopm2 = await m2.loop()
-  loopm2('', m2.context).subscribe(async (msg) => {
+  const loopm2 = await m2.loop('', m2.context)
+  loopm2.on('message', async (msg) => {
     switch (msg.type) {
       case 'next_batch' :
+        console.log("UES¬!!")
         expect(msg.value.length).toBeGreaterThan(10)
         await endTest(1, m1, m2)
         break
