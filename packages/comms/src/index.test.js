@@ -78,7 +78,9 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
       await m1.disconnect()
       await m2.disconnect()
       done()
+      return true
     }
+    return false
   }
 
   // Tests with User 1
@@ -102,7 +104,6 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
   loopm2.on('message', async (msg) => {
     switch (msg.type) {
       case 'next_batch' :
-        console.log("UES¬!!")
         expect(msg.value.length).toBeGreaterThan(10)
         await endTest(1, m1, m2)
         break

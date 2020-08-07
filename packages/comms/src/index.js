@@ -74,7 +74,6 @@ module.exports = class Comms {
           resolve()
         })
         .catch((error) => {
-          console.log(error)
           reject(new Error('Could not connect to Matrix'), error)
         })
     })
@@ -123,7 +122,6 @@ module.exports = class Comms {
         password: password
       })
         .then(async (res) => {
-          console.log('REGISTERED')
           resolve(username)
         })
         .catch((error) => {

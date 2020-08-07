@@ -40,7 +40,6 @@ function getIncomingInvitations (emitter, rooms, matrixUser) {
 
       // If it's not me sending the invitation.
       if (invitation.sender !== matrixUser) {
-        console.log('EMIT', 'contact-incoming')
         emitter.emit('message', {
           type: 'contact-incoming',
           value: {
@@ -74,7 +73,6 @@ function getUpdatedInvitations (emitter, rooms, matrixUser) {
           // Get events for type m.room.member with membership join or leave.
           if (element.type === 'm.room.member' && element.sender !== matrixUser) {
             if (element.content.membership === 'join' || element.content.membership === 'leave') {
-              console.log('EMIT', 'contact-accepted')
               emitter.emit('message', {
                 type: 'contact-accepted',
                 value: {
@@ -114,7 +112,6 @@ function getMessages (emitter, rooms, matrixUser) {
               msg: element.content.body,
               roomId: roomId
             }
-            console.log('EMIT', 'contact-message')
             emitter.emit('message', {
               type: 'contact-message',
               value: payload
@@ -127,14 +124,14 @@ function getMessages (emitter, rooms, matrixUser) {
 }
 
 /**
- * delay
+ * Delay
  *
- * @param {number} ms
- * @returns {Promise}
+ * @param {number} ms milliseconds
+ * @returns {Promise} delay promise
  */
-function delay (ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
+// function delay (ms) {
+//   return new Promise(resolve => setTimeout(resolve, ms))
+// }
 
 module.exports = class Loop extends EventEmitter {
   constructor (nextBatch = '', context) {
@@ -142,6 +139,7 @@ module.exports = class Loop extends EventEmitter {
     this.nextBatch = nextBatch
     this.context = context
     this._terminated = false
+    this.count = 0
     this.execute()
   }
 
@@ -151,7 +149,7 @@ module.exports = class Loop extends EventEmitter {
   }
 
   async execute () {
-    console.log('EXEC', this.context.accessToken)
+    // console.log('COUNT', this.count++)
     const apiCall = this.context.api + 'sync?timeout=20000' + '&access_token=' + this.context.accessToken + (this.nextBatch === '' ? '' : '&since=' + this.nextBatch)
     const res = await axios.get(apiCall)
     getIncomingInvitations(this, res.data.rooms.invite, this.context.matrixUser)
@@ -164,9 +162,12 @@ module.exports = class Loop extends EventEmitter {
     // Get Messages
     getMessages(this, res.data.rooms.join, this.context.matrixUser)
 
-    this.emit('next_batch', res.data.next_batch)
+    this.emit('message', {
+      type: 'next_batch',
+      value: res.data.next_batch
+    })
     this.nextBatch = res.data.next_batch
-    await delay(3000)
+    // await delay(3000)
 
     if (!this.terminated) { await this.execute() }
     return true
