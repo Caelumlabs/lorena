@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/blockchain-substrate",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Lorena - Blockchain Substrate Lib",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -16,12 +16,12 @@
     "lint:fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@caelumlabs/blockchain": "^0.1.15",
-    "@caelumlabs/crypto": "^0.1.15",
+    "@caelumlabs/blockchain": "^0.1.16",
+    "@caelumlabs/crypto": "^0.1.16",
     "@polkadot/api": "^1.27.1",
     "@polkadot/types": "^1.27.1"
   },
-  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea",
+  "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e",
   "devDependencies": {
     "eslint-plugin-jsdoc": "^30.2.1"
   }

@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/comms",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Lorena Communication Protocol",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -10,13 +10,13 @@
     "access": "public"
   },
   "scripts": {
-    "test": "jest --silent --testTimeout=20000",
+    "test": "jest --detectOpenHandles --testTimeout=20000",
     "coverage": "jest --silent --coverage --testTimeout=20000",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@caelumlabs/crypto": "^0.1.15",
+    "@caelumlabs/crypto": "^0.1.16",
     "axios": "^0.19.2",
     "axios-retry": "^3.1.8",
     "debug": "^4.1.1",
@@ -24,5 +24,5 @@
     "observable-fns": "^0.5.1",
     "threads": "^1.6.3"
   },
-  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
+  "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e"
 }

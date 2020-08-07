@@ -1,16 +1,14 @@
-// workers/counter.js
-const { Observable } = require('observable-fns')
-const { expose } = require('threads/worker')
+const EventEmitter = require('events')
 const axios = require('axios')
 
 /**
  * Extract Invitations from the API Call to matrix server - events
  *
- * @param {object} observer of events
+ * @param {object} emitter of events
  * @param {object} rooms Array of events related to rooms
  * @param {string} matrixUser Actual matrixUser
  */
-function getIncomingInvitations (observer, rooms, matrixUser) {
+function getIncomingInvitations (emitter, rooms, matrixUser) {
   const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
   if (!roomEmpty) {
     for (const roomId in rooms) {
@@ -42,7 +40,7 @@ function getIncomingInvitations (observer, rooms, matrixUser) {
 
       // If it's not me sending the invitation.
       if (invitation.sender !== matrixUser) {
-        observer.next({
+        emitter.emit('message', {
           type: 'contact-incoming',
           value: {
             roomId,
@@ -58,11 +56,11 @@ function getIncomingInvitations (observer, rooms, matrixUser) {
 /**
  * Extract Accepted Invitations from the API Call to matrix server - events
  *
- * @param {object} observer of events
+ * @param {object} emitter of events
  * @param {object} rooms Array of events related to rooms
  * @param {string} matrixUser Actual matrixUser
  */
-function getUpdatedInvitations (observer, rooms, matrixUser) {
+function getUpdatedInvitations (emitter, rooms, matrixUser) {
   // Check if rooms is empty
   const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
   if (!roomEmpty) {
@@ -75,7 +73,7 @@ function getUpdatedInvitations (observer, rooms, matrixUser) {
           // Get events for type m.room.member with membership join or leave.
           if (element.type === 'm.room.member' && element.sender !== matrixUser) {
             if (element.content.membership === 'join' || element.content.membership === 'leave') {
-              observer.next({
+              emitter.emit('message', {
                 type: 'contact-accepted',
                 value: {
                   roomId: roomId,
@@ -94,11 +92,11 @@ function getUpdatedInvitations (observer, rooms, matrixUser) {
 /**
  * Extract Messages from events
  *
- * @param {object} observer of events
+ * @param {object} emitter of events
  * @param {object} rooms Array of events related to rooms
  * @param {string} matrixUser Actual matrixUser
  */
-function getMessages (observer, rooms, matrixUser) {
+function getMessages (emitter, rooms, matrixUser) {
   // Check if rooms is empty
   const roomEmpty = !Object.keys(rooms).length === 0 && rooms.constructor === Object
   if (!roomEmpty) {
@@ -114,7 +112,7 @@ function getMessages (observer, rooms, matrixUser) {
               msg: element.content.body,
               roomId: roomId
             }
-            observer.next({
+            emitter.emit('message', {
               type: 'contact-message',
               value: payload
             })
@@ -126,39 +124,52 @@ function getMessages (observer, rooms, matrixUser) {
 }
 
 /**
- * Loop function
+ * Delay
  *
- * @param {string} nextBatch Batch
- * @param {object} context Context information
- * @returns {Promise} Thread promise
+ * @param {number} ms milliseconds
+ * @returns {Promise} delay promise
  */
-function loop (nextBatch = '', context) {
-  return new Observable(async (observer) => {
-    let res
-    let batch = nextBatch
-    while (true) {
-      // Sync with the server
-      const apiCall = context.api + 'sync?timeout=20000' + '&access_token=' + context.accessToken + (batch === '' ? '' : '&since=' + batch)
-      res = await axios.get(apiCall)
+// function delay (ms) {
+//   return new Promise(resolve => setTimeout(resolve, ms))
+// }
 
-      // incoming invitations.
-      getIncomingInvitations(observer, res.data.rooms.invite, context.matrixUser)
+module.exports = class Loop extends EventEmitter {
+  constructor (nextBatch = '', context) {
+    super()
+    this.nextBatch = nextBatch
+    this.context = context
+    this._terminated = false
+    this.count = 0
+    this.execute()
+  }
 
-      // Accepted invitations
-      getUpdatedInvitations(observer, res.data.rooms.join, context.matrixUser)
+  async terminate () {
+    this._terminated = true
+    return true
+  }
 
-      // Get Messages
-      getMessages(observer, res.data.rooms.join, context.matrixUser)
+  async execute () {
+    // console.log('COUNT', this.count++)
+    const apiCall = this.context.api + 'sync?timeout=20000' + '&access_token=' + this.context.accessToken + (this.nextBatch === '' ? '' : '&since=' + this.nextBatch)
+    const res = await axios.get(apiCall)
+    getIncomingInvitations(this, res.data.rooms.invite, this.context.matrixUser)
+    // incoming invitations.
+    getIncomingInvitations(this, res.data.rooms.invite, this.context.matrixUser)
 
-      // Emit next Batch.
-      batch = res.data.next_batch
-      // emitter.emit('next_batch', batch)
-      observer.next({
-        type: 'next_batch',
-        value: batch
-      })
-    }
-  })
+    // Accepted invitations
+    getUpdatedInvitations(this, res.data.rooms.join, this.context.matrixUser)
+
+    // Get Messages
+    getMessages(this, res.data.rooms.join, this.context.matrixUser)
+
+    this.emit('message', {
+      type: 'next_batch',
+      value: res.data.next_batch
+    })
+    this.nextBatch = res.data.next_batch
+    // await delay(3000)
+
+    if (!this.terminated) { await this.execute() }
+    return true
+  }
 }
-
-expose(loop)
