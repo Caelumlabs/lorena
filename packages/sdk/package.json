@@ -19,7 +19,9 @@
     "@caelumlabs/comms": "^0.1.16",
     "@caelumlabs/credentials": "^0.1.16",
     "@caelumlabs/crypto": "^0.1.16",
-    "@caelumlabs/wallet": "^0.1.16"
+    "@caelumlabs/wallet": "^0.1.16",
+    "@caelumlabs/storage": "^0.1.16",
+    "@caelumlabs/blockchain-substrate": "^0.1.16"
   },
   "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e"
 }
