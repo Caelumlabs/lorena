@@ -408,7 +408,7 @@ module.exports = class Lorena extends EventEmitter {
     return new Promise((resolve, reject) => {
       const link = this.wallet.get('links', { linkId })
       if (!link) {
-        debug(`memberAdmin: ${linkId} is not in links`)
+        debug(`callRecipe: ${linkId} is not in links`)
         resolve(false)
       } else {
         this.blockchain.getActualDidKey(link.linkDid)
@@ -518,7 +518,7 @@ module.exports = class Lorena extends EventEmitter {
               sender.box.publicKey,
               publicKey,
               recipeId,
-              [secretCode],
+              [this.wallet.info.person, secretCode],
               [this.wallet.info.person],
               stateId,
               localRecipeId,
