@@ -73,12 +73,13 @@ class Commander {
       },
       'link-ping': async () => {
         if (this.checkActiveLink()) {
-          await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
+          await this.lorena.callRecipe(this.activeLink.linkId, 'ping', 0, [{ message: 'hello' }], [], 'ping', 0)
         }
       },
       'link-ping-admin': async () => {
         if (this.checkActiveLink()) {
-          await this.lorena.sendAction('ping', 0, 'ping', 0, 'hello', this.activeLink.linkId)
+          // todo: send credential
+          await this.lorena.callRecipe(this.activeLink.linkId, 'ping-admin', 0, [{ message: 'hello' }], [], 'ping-admin', 0)
         }
       },
       'link-member-admin': async () => {

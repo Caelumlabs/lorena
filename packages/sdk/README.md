@@ -24,7 +24,7 @@ const main = async () => {
   })
 
   lorena.on('ready', async () => {
-    lorena.sendAction({
+    lorena.callRecipe({
       recipe: 'ping', // Remote recipe we are calling to
       recipeId: 0, // Remote id of the recipeId we are calling to
       threadRef: 'pong', // Local name for your process
@@ -74,28 +74,6 @@ Throws an error and emits `error` if fails.
 #### `handshake()`
 
 Establishes a connection with the IDspace, checking public-key signatures.
-
-#### `callRecipe(recipe, { payloadText: 'text', payloadETC: 'ETC'})`
-
-Calls a recipe and returns the payload. A wrapper around `sendAction`.
-
-Throws an error and emits `error` if fails.
-
-#### `sendAction(recipe, recipeId, threadRef, thReadId, payload, linkId)`
-
-Sends an action to another DID.
-
-`recipe` Remote recipe name
-
-`recipeId` Remote recipe Id
-
-`threadRef`Local Recipe name
-
-`threadId` Local recipe Id
-
-`payload` Information to send
-
-`linkId` Connection to use
 
 ### `on(message[:threadRef, :type], [function(payload)])`
 

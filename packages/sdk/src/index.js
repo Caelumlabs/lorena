@@ -196,12 +196,15 @@ module.exports = class Lorena extends EventEmitter {
                   break
                 case 'contact-message' :
                   // console.log('contact-message!', msg)
-                  var thread = this.wallet.get('threads', { localRecipeId: 'member-admin' }) // need the type
+                  var thread = this.wallet.get('threads', { roomId: msg.value.roomId }) // need the type
                   if (!thread) {
-                    console.log('contact-message member-admin, maybe terminal was closed without saving next_batch. Or thread not saved.')
-                  } else {
-                    var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
-                    console.log('RECEIVED', msgReceived.msg.payload)
+                    console.log('thread not found for room, maybe terminal was closed without saving thread.')
+                    break
+                  }
+                  var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
+                  console.log('RECEIVED', msgReceived)
+                  console.log('RECEIVED payload', msgReceived.msg.payload)
+                  if (thread.localRecipeId === 'member-admin') {
                     this.wallet.add('credentials', {
                       id: this.crypto.random(16),
                       ...msgReceived.msg.payload[0].signedCredential
@@ -360,51 +363,18 @@ module.exports = class Lorena extends EventEmitter {
   }
 
   /**
-   * Sends an action to another DID
-   *
-   * @param {string} recipe Remote recipe name
-   * @param {number} recipeId Remote recipe Id
-   * @param {string} threadRef Local Recipe name
-   * @param {number} threadId Local recipe Id
-   * @param {object} payload Information to send
-   * @param {string} linkId Connection through which to send recipe
-   * @returns {number} recipeId
-   */
-  async sendAction (recipe, recipeId, threadRef, threadId, payload, linkId) {
-    const action = {
-      recipe,
-      recipeId,
-      threadRef,
-      threadId,
-      payload
-    }
-    if (!this.processing && this.ready) { // execute just in time
-      this.processing = true
-      // const sendPayload = JSON.stringify(action)
-      const link = this.wallet.get('links', { linkId })
-      console.log('Room ID:' + link.roomId)
-      console.log('DID:' + link.linkDid)
-      // const  = await this.blockchain.getDidDocHash(did)
-      // const pubKey = await this.blockchain.getActualDidKey(link.linkDid)
-      // await this.comms.sendMessage(link.roomId, 'm.action', sendPayload)
-    } else {
-      this.queue.push(action)
-    }
-    return this.recipeId
-  }
-
-  /**
    * Call a recipe, using the intrinsic threadId adn get back the single message
    *
    * @param {string} linkId Connection to use
    * @param {string} recipeId Recipe name
    * @param {string} stateId Recipe state id
    * @param {*} payload to send with recipe
+   * @param {*} credentials to send with recipe
    * @param {string} localRecipeId thread ID (if not provided use intrinsic thread ID management)
    * @param {number} localStateId local state Id
    * @returns {Promise} of message returned
    */
-  async callRecipe (linkId, recipeId, stateId, payload = {}, localRecipeId, localStateId) {
+  async callRecipe (linkId, recipeId, stateId, payload = [], credentials = [], localRecipeId, localStateId) {
     return new Promise((resolve, reject) => {
       const link = this.wallet.get('links', { linkId })
       if (!link) {
@@ -420,7 +390,9 @@ module.exports = class Lorena extends EventEmitter {
               stateId,
               recipeId,
               localRecipeId,
-              localStateId
+              localStateId,
+              linkId,
+              roomId: link.roomId
             })
             return this.comms.boxMessage(
               sender.box.secretKey,
@@ -428,6 +400,7 @@ module.exports = class Lorena extends EventEmitter {
               publicKey,
               recipeId,
               payload,
+              credentials,
               stateId,
               localRecipeId,
               localStateId)
@@ -436,7 +409,7 @@ module.exports = class Lorena extends EventEmitter {
             return this.comms.sendMessage(link.roomId, box)
           })
           .then(() => {
-            resolve('Member-of Sent')
+            resolve('callRecipe Sent')
           })
           .catch((e) => {
             console.log(e)
@@ -492,74 +465,7 @@ module.exports = class Lorena extends EventEmitter {
    * @returns {Promise} Result of calling recipe member-of
    */
   async memberAdmin (linkId, secretCode) {
-    return new Promise((resolve, reject) => {
-      const link = this.wallet.get('links', { linkId })
-      if (!link) {
-        debug(`memberAdmin: ${linkId} is not in links`)
-        resolve(false)
-      } else {
-        this.blockchain.getActualDidKey(link.linkDid)
-          .then((publicKey) => {
-            const sender = this.crypto.keyPair()
-            const stateId = 1
-            const recipeId = 'member-admin'
-            const localRecipeId = 'member-admin'
-            const localStateId = 1
-            this.wallet.add('threads', {
-              publicKey,
-              sender,
-              stateId,
-              recipeId,
-              localRecipeId,
-              localStateId
-            })
-            return this.comms.boxMessage(
-              sender.box.secretKey,
-              sender.box.publicKey,
-              publicKey,
-              recipeId,
-              [this.wallet.info.person, secretCode],
-              [this.wallet.info.person],
-              stateId,
-              localRecipeId,
-              localStateId)
-          })
-          .then((box) => {
-            return this.comms.sendMessage(link.roomId, box)
-          })
-          .then(() => {
-            resolve('Member-of Sent')
-          })
-          .catch((e) => {
-            console.log(e)
-            reject(new Error('BAD'))
-          })
-      }
-    })
-  }
-
-  /**
-   * Ask to a link for a credential.
-   *
-   * @param {string} linkId Connection identifier
-   * @param {string} credentialType Credential we ask for.
-   * @param {number=} threadId thread ID (if not provided use intrinsic thread ID management)
-   * @returns {boolean} result
-   */
-  async askCredential (linkId, credentialType, threadId = undefined) {
-    // use the threadId if provided, otherwise use the common one
-    if (threadId === undefined) {
-      threadId = this.threadId++
-    }
-    return new Promise((resolve) => {
-      const payload = {
-        credentialType: credentialType
-      }
-      this.sendAction('credential-get', 0, 'credential-ask', threadId, payload, linkId)
-        .then(() => {
-          resolve(true)
-        })
-    })
+    return this.callRecipe(linkId, 'member-admin', 1, [this.wallet.info.person, secretCode], [this.wallet.info.person], 'member-admin', 1)
   }
 
   /**
