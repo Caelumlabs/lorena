@@ -40,6 +40,7 @@ function getIncomingInvitations (emitter, rooms, matrixUser) {
 
       // If it's not me sending the invitation.
       if (invitation.sender !== matrixUser) {
+        console.log('EMIT', 'contact-incoming')
         emitter.emit('message', {
           type: 'contact-incoming',
           value: {
@@ -73,6 +74,7 @@ function getUpdatedInvitations (emitter, rooms, matrixUser) {
           // Get events for type m.room.member with membership join or leave.
           if (element.type === 'm.room.member' && element.sender !== matrixUser) {
             if (element.content.membership === 'join' || element.content.membership === 'leave') {
+              console.log('EMIT', 'contact-accepted')
               emitter.emit('message', {
                 type: 'contact-accepted',
                 value: {
@@ -112,6 +114,7 @@ function getMessages (emitter, rooms, matrixUser) {
               msg: element.content.body,
               roomId: roomId
             }
+            console.log('EMIT', 'contact-message')
             emitter.emit('message', {
               type: 'contact-message',
               value: payload
@@ -124,7 +127,10 @@ function getMessages (emitter, rooms, matrixUser) {
 }
 
 /**
- * @param ms
+ * delay
+ *
+ * @param {number} ms
+ * @returns {Promise}
  */
 function delay (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
@@ -139,11 +145,13 @@ module.exports = class Loop extends EventEmitter {
     this.execute()
   }
 
-  terminate () {
+  async terminate () {
     this._terminated = true
+    return true
   }
 
   async execute () {
+    console.log('EXEC', this.context.accessToken)
     const apiCall = this.context.api + 'sync?timeout=20000' + '&access_token=' + this.context.accessToken + (this.nextBatch === '' ? '' : '&since=' + this.nextBatch)
     const res = await axios.get(apiCall)
     getIncomingInvitations(this, res.data.rooms.invite, this.context.matrixUser)
@@ -159,7 +167,7 @@ module.exports = class Loop extends EventEmitter {
     this.emit('next_batch', res.data.next_batch)
     this.nextBatch = res.data.next_batch
     await delay(3000)
-    console.log('EXECAGAIN')
+
     if (!this.terminated) { await this.execute() }
     return true
   }
