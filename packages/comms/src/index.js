@@ -71,6 +71,7 @@ module.exports = class Comms {
           this.connection = result.data
           this.context.matrixUser = '@' + username + ':' + this.context.serverName
           this.context.accessToken = this.connection.access_token
+          this.connected = true
           resolve()
         })
         .catch((error) => {
