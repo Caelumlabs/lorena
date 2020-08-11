@@ -26,6 +26,7 @@
     "caelumlabs",
     "cbor",
     "cids",
+    "connectionstring",
     "diddoc",
     "homeserver",
     "idspace",
