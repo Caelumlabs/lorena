@@ -21,7 +21,7 @@
     "@polkadot/api": "^1.27.1",
     "@polkadot/types": "^1.27.1"
   },
-  "gitHead": "fa712c2ff814ab035b525af456de054a90581cd5",
+  "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e",
   "devDependencies": {
     "eslint-plugin-jsdoc": "^30.2.1"
   }
