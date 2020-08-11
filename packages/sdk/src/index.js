@@ -171,7 +171,7 @@ module.exports = class Lorena extends EventEmitter {
    */
   async listen () {
     let batch = this.wallet.getBatch()
-    return new Promise(() => {
+    return new Promise((resolve) => {
       this.comms.connect(this.wallet.info.matrixUser, this.wallet.info.matrixPass)
         .then(() => {
           return this.comms.loop(batch, this.comms.context)
@@ -213,8 +213,10 @@ module.exports = class Lorena extends EventEmitter {
               }
             } catch (error) {
               console.log('SWITCH ERROR', error)
+              resolve(false)
             }
           })
+          resolve(true)
         })
     })
   }
@@ -225,6 +227,7 @@ module.exports = class Lorena extends EventEmitter {
    * @returns {boolean} success (or errors thrown)
    */
   async connect () {
+    console.log('CONNECTING?', this.wallet)
     if (this.ready === true) return true
     else if (this.wallet.info.matrixUser) {
       try {
@@ -233,7 +236,7 @@ module.exports = class Lorena extends EventEmitter {
         await this.blockchain.connect()
         // Connect to Matrix.
         this.comms = new Comms(this.wallet.info.matrixServer)
-        this.listen()
+        await this.listen()
         this.ready = true
         this.processQueue()
         this.emit('ready')
