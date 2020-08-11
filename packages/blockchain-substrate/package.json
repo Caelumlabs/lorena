@@ -18,8 +18,8 @@
   "dependencies": {
     "@caelumlabs/blockchain": "^0.1.19",
     "@caelumlabs/crypto": "^0.1.19",
-    "@polkadot/api": "^1.27.1",
-    "@polkadot/types": "^1.27.1"
+    "@polkadot/api": "^1.28.1",
+    "@polkadot/types": "^1.28.1"
   },
   "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e",
   "devDependencies": {
