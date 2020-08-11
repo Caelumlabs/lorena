@@ -17,3 +17,25 @@ Javascript SDK for interacting with Lorena identities
 |[![NPM Status](https://img.shields.io/npm/v/@caelumlabs/storage.svg?style=flat)](https://www.npmjs.com/package/@caelumlabs/storage)|[storage](packages/storage/README.md)|Wallet storage interface|
 |[![NPM Status](https://img.shields.io/npm/v/@caelumlabs/terminal.svg?style=flat)](https://www.npmjs.com/package/@caelumlabs/terminal)|[terminal](packages/terminal/README.md)|Interactive Terminal interface|
 |[![NPM Status](https://img.shields.io/npm/v/@caelumlabs/wallet.svg?style=flat)](https://www.npmjs.com/package/@caelumlabs/wallet)|[wallet](packages/storage/README.md)|Wallet interface and implementation|
+
+# Install
+`yarn install`
+
+# Upgrade package dependencies
+`yarn ncu`
+
+# Lint
+`yarn lint`
+or
+`yarn lint:fix`
+
+# Test
+`yarn test`
+
+# Coverage
+`yarn coverage`
+
+# Publishing
+From the `master` branch:
+`yarn publish:all`
+and follow the instructions.
