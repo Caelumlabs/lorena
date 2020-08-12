@@ -85,6 +85,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Disconnect from Blockchain.
    */
   disconnect () {
+    this.provider.unsubscribe()
     this.provider.disconnect()
   }
 
