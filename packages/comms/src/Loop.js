@@ -145,6 +145,7 @@ module.exports = class Loop extends EventEmitter {
 
   async terminate () {
     this._terminated = true
+    this.removeAllListeners()
     return true
   }
 
