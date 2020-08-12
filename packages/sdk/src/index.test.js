@@ -92,6 +92,7 @@ test('should init wallet for a valid network', async () => {
 })
 
 test('should connect', async () => {
+  jest.setTimeout(15000)
   const result = await lorena.connect()
   expect(result).toBe(true)
 })

@@ -1,4 +1,6 @@
 'use strict'
+// eslint-disable-next-line no-unused-vars
+const Request = require('request')
 const IpfsClient = require('ipfs-http-client')
 const CID = require('cids')
 

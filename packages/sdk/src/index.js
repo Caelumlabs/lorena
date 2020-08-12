@@ -263,6 +263,9 @@ module.exports = class Lorena extends EventEmitter {
     if (this.comms) {
       this.comms.disconnect()
     }
+    if (this.blockchain) {
+      this.blockchain.disconnect()
+    }
   }
 
   onContactIncoming (element) {
