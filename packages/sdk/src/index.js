@@ -211,6 +211,8 @@ module.exports = class Lorena extends EventEmitter {
                       ...msgReceived.msg.payload[0].signedCredential
                     })
                   }
+                  this.emit(`message:${msgReceived.msg.recipeId}`, msgReceived.msg)
+                  this.emit('contact-message', msgReceived)
                   // this.onMsgNotify(msg.value)
                   break
               }
