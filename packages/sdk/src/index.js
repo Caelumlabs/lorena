@@ -178,7 +178,6 @@ module.exports = class Lorena extends EventEmitter {
         })
         .then((loop) => {
           loop.on('message', async (msg) => {
-            console.log('MESSAGE', msg)
             try {
               switch (msg.type) {
                 case 'next_batch' :
@@ -203,17 +202,15 @@ module.exports = class Lorena extends EventEmitter {
                     break
                   }
                   var msgReceived = this.comms.unboxMessage(msg.value.msg, thread.sender.box.secretKey, thread.publicKey)
-                  console.log('RECEIVED', msgReceived)
-                  console.log('RECEIVED payload', msgReceived.msg.payload)
                   if (thread.localRecipeId === 'member-admin') {
                     this.wallet.add('credentials', {
                       id: this.crypto.random(16),
                       ...msgReceived.msg.payload[0].signedCredential
                     })
+                    this.emit('change')
                   }
                   this.emit(`message:${msgReceived.msg.recipeId}`, msgReceived.msg)
                   this.emit('contact-message', msgReceived)
-                  // this.onMsgNotify(msg.value)
                   break
               }
             } catch (error) {
