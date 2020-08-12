@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/sdk",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "Lorena SDK",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -16,12 +16,12 @@
     "lint:fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@caelumlabs/blockchain-substrate": "^0.1.22",
-    "@caelumlabs/comms": "^0.1.22",
-    "@caelumlabs/credentials": "^0.1.22",
-    "@caelumlabs/crypto": "^0.1.22",
-    "@caelumlabs/storage": "^0.1.22",
-    "@caelumlabs/wallet": "^0.1.22"
+    "@caelumlabs/blockchain-substrate": "^0.1.23",
+    "@caelumlabs/comms": "^0.1.23",
+    "@caelumlabs/credentials": "^0.1.23",
+    "@caelumlabs/crypto": "^0.1.23",
+    "@caelumlabs/storage": "^0.1.23",
+    "@caelumlabs/wallet": "^0.1.23"
   },
   "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e"
 }
