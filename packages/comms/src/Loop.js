@@ -169,7 +169,7 @@ module.exports = class Loop extends EventEmitter {
     this.nextBatch = res.data.next_batch
     // await delay(3000)
 
-    if (!this.terminated) { await this.execute() }
+    if (!this._terminated) { await this.execute() }
     return true
   }
 }

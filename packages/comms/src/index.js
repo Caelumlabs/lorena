@@ -92,7 +92,6 @@ module.exports = class Comms {
    * @returns {Promise} true
    */
   async disconnect () {
-    // await Thread.terminate(this.loopThread)
     this._loop.terminate()
     this.connected = false
     return true
