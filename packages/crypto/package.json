@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/crypto",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "Crypto package for Lorena",
   "main": "src/index.js",
   "author": "Alex Puig",
