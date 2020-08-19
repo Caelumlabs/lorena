@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/blockchain",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Lorena Blockchain Interface",
   "main": "src/index.js",
   "license": "MIT",
@@ -19,5 +19,5 @@
       "pre-commit": "yarn lint"
     }
   },
-  "gitHead": "a3fab8540038bea968fdd00628ce390d7f95a2ea"
+  "gitHead": "e4088e2d15b359150c262069d1a34819a45365a3"
 }

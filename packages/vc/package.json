@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/vc",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "VCs",
   "main": "index.js",
   "scripts": {
@@ -13,5 +13,6 @@
   "license": "MIT",
   "dependencies": {
     "vc-js": "^0.6.4"
-  }
+  },
+  "gitHead": "e4088e2d15b359150c262069d1a34819a45365a3"
 }
