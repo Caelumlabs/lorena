@@ -369,6 +369,47 @@ module.exports = class Lorena extends EventEmitter {
   }
 
   /**
+   * Open Connection with another user.
+   *
+   * @param {string} did DID
+   * @param {string} threadId Thread ID
+   * @returns {Promise} linkId created, or false
+   */
+  async claimRecipe (did, threadId) {
+    console.log('claimRecipe')
+    const didDocHash = await this.blockchain.getDidDocHash(did)
+    console.log(didDocHash)
+    const didDoc = await this.storage.get(didDocHash)
+    console.log(didDoc)
+    const matrixUserID = didDoc.value.service[0].serviceEndpoint
+    console.log(matrixUserID)
+    // TODO: Create new Keypair
+    const link = {
+      linkId: uuid(),
+      did: did,
+      roomId: '',
+      roomName: threadId,
+      keyPair: false,
+      matrixUser: matrixUserID,
+      status: 'invited',
+      alias: ''
+    }
+    return new Promise((resolve, reject) => {
+      this.comms.createConnection(link.roomName, matrixUserID)
+        .then((roomId) => {
+          link.roomId = roomId
+          this.wallet.add('links', link)
+          this.emit('change')
+          resolve(link.linkId)
+        })
+        .catch((e) => {
+          debug(`createConnection ${e}`)
+          resolve(false)
+        })
+    })
+  }
+
+  /**
    * Call a recipe, using the intrinsic threadId adn get back the single message
    *
    * @param {string} linkId Connection to use

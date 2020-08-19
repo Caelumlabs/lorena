@@ -35,6 +35,11 @@ function getIncomingInvitations (emitter, rooms, matrixUser) {
               event_id: element.event_id
             }
           }
+        } else if (element.type === 'm.room.name') {
+          invitation = {
+            ...invitation,
+            name: element.content.name
+          }
         }
       })
 
@@ -45,6 +50,7 @@ function getIncomingInvitations (emitter, rooms, matrixUser) {
           value: {
             roomId,
             sender: invitation.sender,
+            roomName: invitation.name,
             payload: ''
           }
         })

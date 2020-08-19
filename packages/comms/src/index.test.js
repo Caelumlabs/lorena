@@ -141,7 +141,6 @@ test('should box and unbox the message', async () => { // eslint-disable-line je
   const msgReceived1 = m2.unboxMessage(box, receiver.box.secretKey)
   expect(msgReceived1.msg.recipeId).toEqual('ping')
   expect(msgReceived1.msg.stateId).toEqual(10)
-  // console.log(msgReceived1.msg)
   const msgReceived2 = m2.unboxMessage(box, receiver.box.secretKey, sender.box.publicKey)
   expect(msgReceived2.msg.recipeId).toEqual('ping')
   expect(msgReceived2.msg.stateId).toEqual(10)

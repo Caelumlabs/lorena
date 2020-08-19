@@ -349,6 +349,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getDidDocHash (did) {
     const hexDID = Utils.base64ToHex(did)
+    console.log('hexDID ' + hexDID)
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
     return Utils.hexToBase64(doc)

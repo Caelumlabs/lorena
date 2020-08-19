@@ -88,6 +88,11 @@ class Commander {
           await this.lorena.memberAdmin(this.activeLink.linkId, secretCode)
         }
       },
+      'claim-recipe': async () => {
+        const did = await term.input('DID')
+        const secretCode = await term.input('threadID')
+        await this.lorena.claimRecipe(did, secretCode)
+      },
       /*
       'link-member-of-confirm': async () => {
         if (this.checkActiveLink()) {
