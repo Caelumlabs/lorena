@@ -25,6 +25,12 @@ test('KeyPair generation', async () => {
   expect(alice.box.secretKey).toBeDefined()
 })
 
+test('Base58 Encode/decode', async () => {
+  const pubKey = crypto.u8aToBase58(alice.box.publicKey)
+  expect(pubKey).toBeDefined()
+  expect(alice.box.publicKey).toEqual(crypto.base58ToU8a(pubKey))
+})
+
 test('KeyPair generation from mnemonic', async () => {
   const alice2 = crypto.keyPair(alice.mnemonic)
   expect(alice.mnemonic).toBeDefined()
