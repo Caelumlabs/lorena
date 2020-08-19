@@ -45,16 +45,20 @@ test('Issue credential', async () => {
       'https://www.w3.org/2018/credentials/v1',
       'https://schema.org'
     ],
-    id: 'asdasdasd',
     type: ['VerifiableCredential'],
     issuer: issuer.controller,
     issuanceDate: new Date().toISOString(),
     credentialSubject: {
-      id: alice.id,
-      memberOf: 'did:lor:989898989898'
+      id: alice.publicKeyBase58,
+      memberOf: 'did:lor:989898989898',
+      procedure: 'hire',
+      scope: 'HR',
+      threshold: 10000
     }
   }
   issuedCredential = await Vc.issue(credential, issuer)
+  console.log(alice)
+  console.log(issuedCredential)
   expect(true).toEqual(true)
 })
 
@@ -65,6 +69,7 @@ test('Verify credential', async () => {
 
 test('Present credential', async () => {
   presentation = await Vc.presentation(issuedCredential, Buffer.alloc(16, 'random').toString(), alice, '12345', alice.id)
+  // console.log(presentation)
   expect(presentation.id).toEqual('12345')
 })
 
