@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/crypto",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Crypto package for Lorena",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -27,5 +27,5 @@
       "pre-commit": "yarn lint"
     }
   },
-  "gitHead": "e4088e2d15b359150c262069d1a34819a45365a3"
+  "gitHead": "a3c560388564830d1de82a6f4cdb8728686e0f09"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/terminal",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Lorena terminal",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -10,8 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@caelumlabs/sdk": "^0.1.12",
-    "@caelumlabs/wallet": "^0.1.12",
+    "@caelumlabs/sdk": "^0.1.13",
+    "@caelumlabs/wallet": "^0.1.13",
     "debug": "^4.1.1",
     "figlet": "^1.4.0",
     "terminal-kit": "^1.35.13"
@@ -22,5 +22,5 @@
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
-  "gitHead": "e4088e2d15b359150c262069d1a34819a45365a3"
+  "gitHead": "a3c560388564830d1de82a6f4cdb8728686e0f09"
 }
