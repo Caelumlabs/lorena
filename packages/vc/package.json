@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/vc",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "VCs",
   "main": "index.js",
   "scripts": {
