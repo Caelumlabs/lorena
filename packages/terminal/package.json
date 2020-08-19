@@ -22,5 +22,5 @@
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
-  "gitHead": "a3c560388564830d1de82a6f4cdb8728686e0f09"
+  "gitHead": "6ecb4a52dce1fe0c37a17be1f79a30b0a82b16ee"
 }
