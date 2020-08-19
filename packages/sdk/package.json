@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/sdk",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Lorena SDK",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -16,11 +16,11 @@
     "lint:fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@caelumlabs/comms": "^0.1.13",
-    "@caelumlabs/credentials": "^0.1.13",
-    "@caelumlabs/crypto": "^0.1.13",
+    "@caelumlabs/comms": "^0.1.14",
+    "@caelumlabs/credentials": "^0.1.14",
+    "@caelumlabs/crypto": "^0.1.14",
     "@caelumlabs/resolver": "^0.1.5",
-    "@caelumlabs/wallet": "^0.1.13"
+    "@caelumlabs/wallet": "^0.1.14"
   },
   "gitHead": "a3c560388564830d1de82a6f4cdb8728686e0f09"
 }
