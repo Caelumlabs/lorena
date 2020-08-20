@@ -159,7 +159,6 @@ module.exports = class Loop extends EventEmitter {
     // console.log('COUNT', this.count++)
     const apiCall = this.context.api + 'sync?timeout=20000' + '&access_token=' + this.context.accessToken + (this.nextBatch === '' ? '' : '&since=' + this.nextBatch)
     const res = await axios.get(apiCall)
-    getIncomingInvitations(this, res.data.rooms.invite, this.context.matrixUser)
     // incoming invitations.
     getIncomingInvitations(this, res.data.rooms.invite, this.context.matrixUser)
 
