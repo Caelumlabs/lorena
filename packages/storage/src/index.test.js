@@ -9,21 +9,10 @@ test('Init Storage', async () => {
   expect(storage).toBeDefined()
 })
 
-test('Storage put undefined', async () => {
-  const result = await storage.put(undefined)
-  expect(result).toEqual(undefinedCid)
-})
-
 test('Storage put new uuid', async () => {
   newUuid = uuid()
   newUuidCid = await storage.put(newUuid)
   expect(newUuidCid).toBeDefined()
-})
-
-test('Storage cid', () => {
-  const result = storage.cid(newUuidCid)
-  expect(result.string).toEqual(newUuidCid)
-  expect(result.codec).toBeDefined()
 })
 
 test('Storage get undefined: ', async () => {

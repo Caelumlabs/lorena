@@ -29,20 +29,14 @@ module.exports = class Storage {
     return new Promise((resolve) => {
       this.ipfs.dag.put(data, { format: 'dag-cbor', hashAlg: 'sha2-256' })
         .then((cid) => {
-          const cids = new CID(1, 'dag-cbor', cid.multihash)
-          debug('CID = ' + cids.toBaseEncodedString())
-          resolve(cids.toBaseEncodedString())
+          debug('CID = ' + cid.toBaseEncodedString())
+          resolve(cid.toBaseEncodedString())
         })
         .catch((e) => {
           error(e)
           resolve(false)
         })
     })
-  }
-
-  cid (hash) {
-    const cids = new CID(hash)
-    return cids
   }
 
   /**
