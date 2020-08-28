@@ -96,31 +96,76 @@ module.exports = class LorenaCrypto {
    *
    * @param {string} password Password to encrypt the message
    * @param {string} message Message to be encrypted
-   * @returns {Promise} Return a promise with the execution of the encryption.
+   * @returns {*} encrypted message
    */
   encrypt (password, message) {
-    let secret = stringToU8a(password)
-    secret = u8aConcat(secret, new Uint8Array(32 - secret.length))
-    const messagePreEncryption = stringToU8a(message)
-    const noncePreEncryption = randomAsU8a(24)
+    return this.encryptArray(password, stringToU8a(message))
+  }
 
-    // Encrypt the message
-    const result = naclEncrypt(messagePreEncryption, secret, noncePreEncryption)
+  /**
+   * Encrypts (symmetric) an array with a keypair.
+   *
+   * @param {string} password Password to encrypt the message
+   * @param {Buffer} buffer content to be encrypted
+   * @returns {*} encrypted message
+   */
+  encryptBuffer (password, buffer) {
+    const array = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint8Array.BYTES_PER_ELEMENT)
+    const result = this.encryptArray(password, array)
     return (result)
   }
 
   /**
-   * Encrypts (symmetric) a message with a keypair.
+   * Encrypts (symmetric) an array with a keypair.
+   *
+   * @param {string} password Password to encrypt the message
+   * @param {Uint8Array} array content to be encrypted
+   * @returns {*} encrypted message
+   */
+  encryptArray (password, array) {
+    let secret = stringToU8a(password)
+    secret = u8aConcat(secret, new Uint8Array(32 - secret.length))
+    const noncePreEncryption = randomAsU8a(24)
+
+    // Encrypt the message
+    const result = naclEncrypt(array, secret, noncePreEncryption)
+    return (result)
+  }
+
+  /**
+   * Decrypts (symmetric) a message with a keypair.
    *
    * @param {string} password Password to decrypt the message
    * @param {string} msgEncrypted Message to be decrypted
-   * @returns {Promise} Return a promise with the execution of the encryption.
+   * @returns {string} decrypted message
    */
   decrypt (password, msgEncrypted) {
+    return hexToString(u8aToHex(this.decryptArray(password, msgEncrypted)))
+  }
+
+  /**
+   * Decrypts (symmetric) an array with a keypair.
+   *
+   * @param {string} password Password to decrypt the message
+   * @param {string} msgEncrypted Message to be decrypted
+   * @returns {Buffer} decrypted buffer
+   */
+  decryptBuffer (password, msgEncrypted) {
+    return Buffer.from(this.decryptArray(password, msgEncrypted))
+  }
+
+  /**
+   * Decrypts (symmetric) an array with a keypair.
+   *
+   * @param {string} password Password to decrypt the message
+   * @param {string} msgEncrypted Message to be decrypted
+   * @returns {Uint8Array} decrypted array
+   */
+  decryptArray (password, msgEncrypted) {
     let secret = stringToU8a(password)
     secret = u8aConcat(secret, new Uint8Array(32 - secret.length))
     const messageDecrypted = naclDecrypt(msgEncrypted.encrypted, msgEncrypted.nonce, secret)
-    return (hexToString(u8aToHex(messageDecrypted)))
+    return messageDecrypted
   }
 
   /**
