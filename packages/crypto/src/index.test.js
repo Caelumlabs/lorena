@@ -1,3 +1,5 @@
+const fs = require('fs')
+const path = require('path')
 const LorenaCrypto = require('./index')
 const crypto = new LorenaCrypto()
 
@@ -74,6 +76,16 @@ test('Should encrypt & decrypt a message', () => {
   expect(msgEncrypted.nonce).toBeDefined()
   const msg = crypto.decrypt(password, msgEncrypted)
   expect(msg).toEqual(message)
+})
+
+// Encryption.
+test('Should encrypt & decrypt a buffer', () => {
+  const buffer = fs.readFileSync(path.resolve(__dirname, '../Dramatic-Prairie-Dog.gif'))
+  const msgEncrypted = crypto.encryptBuffer(password, buffer)
+  expect(msgEncrypted.encrypted).toBeDefined()
+  expect(msgEncrypted.nonce).toBeDefined()
+  const msg = crypto.decryptBuffer(password, msgEncrypted)
+  expect(msg).toEqual(buffer)
 })
 
 // Encryption.
