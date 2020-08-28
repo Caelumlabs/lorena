@@ -21,7 +21,6 @@
     }
   },
   "dependencies": {
-    "cids": "^1.0.0",
     "debug": "^4.1.1",
     "ipfs-http-client": "^46.0.1"
   },

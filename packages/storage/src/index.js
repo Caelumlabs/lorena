@@ -1,6 +1,5 @@
 'use strict'
 const IpfsClient = require('ipfs-http-client')
-const CID = require('cids')
 
 // Debug
 var debug = require('debug')('did:debug:ipfs')
