@@ -1,6 +1,8 @@
 /* eslint-disable quote-props */
 /* eslint-disable quotes */
 /* eslint-disable key-spacing */
+const fs = require('fs')
+const path = require('path')
 const Comms = require('./index')
 const LorenaCrypto = require('@caelumlabs/crypto')
 const crypto = new LorenaCrypto()
@@ -9,7 +11,7 @@ const testMatrixServer = 'https://labdev.matrix.lorena.tech'
 const m1 = new Comms(testMatrixServer)
 const m2 = new Comms(testMatrixServer)
 const u1 = m1.randomUsername()
-const u2 = m1.randomUsername()
+const u2 = m2.randomUsername()
 const p1 = 'rndPass'
 const p2 = 'rndPass'
 let roomId
@@ -112,7 +114,7 @@ test('should use matrix as a comms interface to Lorena', async done => { // esli
         await m2.acceptConnection(msg.value.roomId)
         break
       case 'contact-message' :
-        boxReceived = m2.unboxMessage(msg.value.msg, receiver.box.secretKey)
+        boxReceived = m2.unboxMessage(msg.value.msg, receiver.box.secretKey, sender.box.publicKey)
         expect(boxReceived.msg.recipeId).toEqual('ping')
         expect(boxReceived.msg.stateId).toEqual(10)
         expect(boxReceived.msg.credentials).toEqual(credential)
@@ -138,9 +140,11 @@ test('should box and unbox the message', async () => { // eslint-disable-line je
   const sender = crypto.keyPair()
   const receiver = crypto.keyPair()
   const box = await m1.boxMessage(sender.box.secretKey, sender.box.publicKey, receiver.box.publicKey, 'ping', 'Hello this is a test message...', credential, 10)
+  // test unboxing without public key of sender
   const msgReceived1 = m2.unboxMessage(box, receiver.box.secretKey)
   expect(msgReceived1.msg.recipeId).toEqual('ping')
   expect(msgReceived1.msg.stateId).toEqual(10)
+  // test unboxing with public key of sender
   const msgReceived2 = m2.unboxMessage(box, receiver.box.secretKey, sender.box.publicKey)
   expect(msgReceived2.msg.recipeId).toEqual('ping')
   expect(msgReceived2.msg.stateId).toEqual(10)
@@ -161,4 +165,41 @@ test('should leave a room', async () => {
   expect(result.status).toBe(200)
   result = await m2.leaveRoom(roomId)
   expect(result.status).toBe(200)
+})
+
+let contentUri, prairieDogFilename, prairieDogFile
+
+test('should upload a file to matrix', async () => {
+  const type = 'image/gif'
+  prairieDogFilename = 'Dramatic-Prairie-Dog.gif'
+  prairieDogFile = fs.readFileSync(path.resolve(__dirname, `../../crypto/${prairieDogFilename}`))
+
+  const response = await m1.uploadFile(prairieDogFile, prairieDogFilename, type)
+  expect(response.status).toBe(200)
+  contentUri = response.data.content_uri
+  expect(contentUri).toBeDefined()
+})
+
+test('should download a file from matrix', async () => {
+  // Example of uploaded files:
+  // `mxc://${matrixServer}/FCVtZVLJbpPMKjBzWusvkHyP`
+  const filename = m1.randomUsername() + '.gif'
+  const mediaId = m1.mediaIdFromURI(contentUri)
+  const result = await m1.downloadFile(mediaId, filename)
+  expect(prairieDogFile).toEqual(result)
+})
+
+test('should fail to download a nonexistent file from matrix', async () => {
+  expect.assertions(1)
+  return m1.downloadFile('d3aDbeEfPiE4SaLe', 'simple').catch(e =>
+    // Not found
+    expect(e.response.status).toEqual(404))
+})
+
+test('should fail to upload file if not connected', () => {
+  expect.assertions(1)
+  const m3 = new Comms(testMatrixServer)
+  return m3.uploadFile('file').catch(e =>
+    // Unauthorized
+    expect(e.response.status).toBe(401))
 })
