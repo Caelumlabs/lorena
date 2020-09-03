@@ -38,6 +38,14 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     this.api = await ApiPromise.create({
       provider: this.provider,
       types: {
+        CID: {
+          cid: 'Vec<u8>',
+          owner: 'AccountId',
+          did_owner: 'Vec<u8>',
+          date_created: 'u64',
+          valid_from: 'u64',
+          valid_to: 'u64'
+        },
         Credential: {
           credential: 'Vec<u8>',
           valid_from: 'u64',
@@ -313,6 +321,16 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
+   * Get DID from Owner Account.
+   *
+   * @param {string} owner DID
+   * @returns {string} DID
+   */
+  async getDidFromOwner (owner) {
+    return await this.api.query.lorenaDids.didFromOwner(owner)
+  }
+
+  /**
    * Get Public Key from Did.
    * Assumes Key Type = 0
    *
@@ -353,6 +371,121 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
     return Utils.hexToBase64(doc)
+  }
+
+  /**
+   * Adds a CID.
+   * DID to assign the CID. By default is Null and the CID
+   * will be assigned to the DID of the sender transaction account
+   *
+   * @param {string} cid CID
+   * @param {string} did DID to assign the new CID (Must exists)
+   * @returns {Promise} of transaction
+   */
+  async addCid (cid, did = null) {
+    // Convert cid string to hex
+    const hexCID = Utils.base64ToHex(cid)
+    // Convert did string to hex
+    let hexDID = Buffer.from([0])
+    if (did != null) {
+      hexDID = Utils.base64ToHex(did)
+    } 
+    const transaction = await this.api.tx.lorenaDids.addCid(hexCID, hexDID)
+    return await this.execTransaction(transaction)
+  }
+
+  /**
+   * Removes a CID.
+   * DID of the CIDs owner. By default is Null and the CID
+   * must be assigned to the DID of the sender transaction account
+   *
+   * @param {string} cid CID
+   * @param {string} did DID of the CIDs owner if providede
+   * @returns {Promise} of transaction
+   */
+  async deleteCid (cid, did = null) {
+    // Convert cid string to hex
+    const hexCID = Utils.base64ToHex(cid)
+    // Convert did string to hex
+    let hexDID = Buffer.from([0])
+    if (did != null) {
+      hexDID = Utils.base64ToHex(did)
+    } 
+    const transaction = await this.api.tx.lorenaDids.deleteCid(hexCID, hexDID)
+    return await this.execTransaction(transaction)
+  }
+
+  /**
+   * Get all CIDs.
+   * Get the whole CIDs collection, including deleted.
+   * @returns {Array} array of CIDs
+   */
+  async getCIDs () {
+    const CIDs = await this.api.query.lorenaDids.cids()
+    return CIDs.map((cid) => { return JSON.parse(cid) })
+  }
+
+  /**
+   * Get all valid CIDs.
+   * Get all CIDs that are not deleted.
+   * @returns {Array} array of CIDs
+   */
+  async getValidCIDs () {
+    const CIDs = await this.api.query.lorenaDids.cids()
+    return CIDs.map((cid) => {
+      const c = JSON.parse(cid)
+      if (c.valid_to === 0) {
+        return c
+      }
+    })
+  }
+
+  /**
+   * Get CID by key.
+   * Get CID data is key exists, else return null.
+   * Because is an ordered array, we use a binary search
+   * @param {string} cid CID
+   * @returns {CID} CID struct or null
+   */
+  async getCIDByKey (cid) {
+    const CIDs = await this.api.query.lorenaDids.cids()
+    let first = 0
+    let last = CIDs.length - 1
+    let middle = Math.floor((last + first)/2)
+
+    let parsedCID = JSON.parse(CIDs[middle])
+    while (parsedCID.cid != cid && first < last) {
+      if (cid < parsedCID.cid) {
+        last = middle - 1
+      } else if (cid > parsedCID.cid) {
+        first = middle + 1
+      }
+      middle = Math.floor((last + first)/2)
+      parsedCID = JSON.parse(CIDS[middle])
+    }
+
+    return (parsedCID.cid != cid) ? null : parsedCID
+  }
+
+  /**
+   * Get all valid CIDs that belongs to a DID.
+   * Get a collections of CID data that belongs to a DID.
+   * (Can be empty)
+   *
+   * @param {string} did DID to search
+   * @returns {object} CID array
+   */
+  async getCIDsByDID (did) {
+    const CIDs = await this.api.query.lorenaDids.cids()
+    // Convert did string to hex
+    const hexDID = Utils.base64ToHex(did)
+    const didCollection = []
+    for (let i = 0; i < CIDs.length; i ++) {
+      const parsedCID = JSON.parse(CIDs[i])
+      if (parsedCID.did === hexDID && parsedCID.valid_to === 0) {
+        didCollection[didCollection.lenght] = parsedCID
+      }
+    }
   }
 
   /**

@@ -14,6 +14,7 @@ const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 // to restore testing on cloud
 // const blockchain = new BlockchainSubstrate('ws://localhost:9944')
 let did, tempWallet, aliceAddr
+let cid1, cid2, cid3
 const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 // const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action steel giraffe oppose'
@@ -21,6 +22,9 @@ const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action s
 test('init', async () => {
   await crypto.init()
   did = crypto.random(16)
+  cid1 = crypto.random(16)
+  cid2 = crypto.random(16)
+  cid3 = crypto.random(16)
   aliceAddr = blockchain.setKeyring(GENESIS_SEED_FROM)
   blockchain.getAddress('//Alice')
   expect(aliceAddr).toEqual('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY')
@@ -118,6 +122,48 @@ test('Should Rotate a Key', async () => {
 
   const key = await blockchain.getActualDidKey(did)
   expect(key).toEqual(newPubKey)
+})
+
+test('Should add a CID to Blockchain', async () => {
+  jest.setTimeout(20000)
+  // Result should equal to true => No errors
+  const cid = crypto.random(16)
+  const result = await blockchain.addCid(cid)
+  expect(result).toEqual(true)
+
+  // Promoter Account from even data should be address of tempwallet
+  const registeredCidEvent = await blockchain.wait4Event('CIDCreated')
+  expect(registeredCidEvent[1]).toEqual(tempWallet.address)
+
+  // DID must be DID of the Owner
+  const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
+  expect(registeredCidEvent[2]).toEqual(didPromoter.toString())
+})
+
+test('Should add three new CIDs to Blockchain', async () => {
+  jest.setTimeout(20000)
+  // Result should equal to true => No errors
+  const result1 = await blockchain.addCid(cid1)
+  const result2 = await blockchain.addCid(cid2)
+  const result3 = await blockchain.addCid(cid3)
+  expect(result1).toEqual(true)
+  expect(result2).toEqual(true)
+  expect(result3).toEqual(true)
+})
+
+test('Should delete a CID into Blockchain', async () => {
+  jest.setTimeout(20000)
+  // Result should equal to true => No errors
+  const result = await blockchain.deleteCid(cid3)
+  expect(result).toEqual(true)
+
+  // Promoter Account from even data should be address of tempwallet
+  const registeredCidEvent = await blockchain.wait4Event('CIDDeleted')
+  expect(registeredCidEvent[1]).toEqual(tempWallet.address)
+
+  // DID must be DID of the Owner
+  const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
+  expect(registeredCidEvent[2]).toEqual(didPromoter.toString())
 })
 
 // The following tests will pass just once if the blockchain is
