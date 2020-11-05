@@ -367,7 +367,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getDidDocHash (did) {
     const hexDID = Utils.base64ToHex(did)
-    console.log('hexDID ' + hexDID)
+    // console.log('hexDID ' + hexDID)
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
     return Utils.hexToBase64(doc)
@@ -389,7 +389,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     let hexDID = Buffer.from([0])
     if (did != null) {
       hexDID = Utils.base64ToHex(did)
-    } 
+    }
     const transaction = await this.api.tx.lorenaDids.addCid(hexCID, hexDID)
     return await this.execTransaction(transaction)
   }
@@ -454,7 +454,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     let middle = Math.floor((last + first)/2)
 
     let parsedCID = JSON.parse(CIDs[middle])
-    while (parsedCID.cid != cid && first < last) {
+    while (parsedCID.cid !== cid && first < last) {
       if (cid < parsedCID.cid) {
         last = middle - 1
       } else if (cid > parsedCID.cid) {
@@ -464,7 +464,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
       parsedCID = JSON.parse(CIDS[middle])
     }
 
-    return (parsedCID.cid != cid) ? null : parsedCID
+    return (parsedCID.cid !== cid) ? null : parsedCID
   }
 
   /**
@@ -480,7 +480,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     const didCollection = []
-    for (let i = 0; i < CIDs.length; i ++) {
+    for (let i = 0; i < CIDs.length; i++) {
       const parsedCID = JSON.parse(CIDs[i])
       if (parsedCID.did === hexDID && parsedCID.valid_to === 0) {
         didCollection[didCollection.lenght] = parsedCID
@@ -525,7 +525,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async execTransaction (transaction) {
     return new Promise(async (resolve) => {
       let result = true
-      console.log(this.keypair.address)
+      // console.log(this.keypair.address)
       await transaction.signAndSend(this.keypair, ({ status, events }) => {
         if (status.isInBlock || status.isFinalized) {
           const errors = events.filter(({ event: { method, section } }) =>
