@@ -89,6 +89,6 @@ module.exports = class Action {
    * @returns {object} Signed credential
    */
   sign (signer, issuer) {
-    return signCredential(this.subject, issuer, signer)
+    return signCredential(this.subject, signer, issuer)
   }
 }
