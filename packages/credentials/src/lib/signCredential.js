@@ -1,4 +1,7 @@
 'use strict'
+const Crypto = require('@caelumlabs/crypto')
+const crypto = new Crypto(true)
+// const dagCBOR = require('ipld-dag-cbor')
 const baseCredential = require('../credentials/credential.json')
 
 /**
@@ -10,18 +13,36 @@ const baseCredential = require('../credentials/credential.json')
  * @param {string} type Encryption Type
  * @returns {*} signedCredential
  */
-const signCredential = (credential, signature, issuer, type) => {
+const signCredential = (credentialSubject, signer, issuer, type = '') => {
   const signedCredential = baseCredential
-  signedCredential.type = ['VerifiableCredential', credential.subject['@type']]
-  signedCredential.credentialSubject = credential.subject
-
+  signedCredential.type = ['VerifiableCredential', credentialSubject['@type']]
+  signedCredential.credentialSubject = credentialSubject
+  const signature = crypto.signMessage(JSON.stringify(credentialSubject), signer.keyPair)
   const date = new Date()
   signedCredential.issuer = issuer
   signedCredential.issuanceDate = date.toISOString()
-  signedCredential.proof.type = type
-  signedCredential.proof.verificationMethod = ''
-  signedCredential.proof.signature = signature
+  signedCredential.proof.type = 'ed25519'
+  signedCredential.proof.signature = crypto.u8aToHex(signature)
+  // const serialized = dagCBOR.util.serialize(signedCredential)
   return signedCredential
 }
 
-module.exports = signCredential
+/**
+ * Desserializes a Verifiable credential
+ *
+ * @param {string} serialized Serialized Credential
+ * @returns {*} signedCredential
+ */
+const verifyCredential = (serialized, address) => {
+  // const certificate = dagCBOR.util.deserialize(serialized)
+  const credential = serialized
+  const signature = crypto.hexToU8a(credential.proof.signature)
+  const check = crypto.checkSignature(JSON.stringify(credential.credentialSubject), signature, address)
+  return { check, credential }
+}
+
+const keyPair = () => {
+  return crypto.keyPair()
+}
+
+module.exports = { signCredential, verifyCredential, keyPair }
