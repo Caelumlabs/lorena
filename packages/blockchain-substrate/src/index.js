@@ -46,11 +46,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
           valid_from: 'u64',
           valid_to: 'u64'
         },
-        Credential: {
-          credential: 'Vec<u8>',
-          valid_from: 'u64',
-          valid_to: 'u64'
-        },
         PublicKey: {
           pub_key: 'Vec<u8>',
           valid_from: 'u64',
@@ -63,7 +58,11 @@ module.exports = class SubstrateLib extends BlockchainInterface {
           valid_from: 'u64',
           valid_to: 'u64'
         },
-
+        Credential: {
+          credential: 'Vec<u8>',
+          valid_from: 'u64',
+          valid_to: 'u64'
+        },
         DIDData: {
           owner: 'AccountId',
           did_promoter: 'Vec<u8>',
@@ -165,6 +164,29 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
+   * Transfer Tokens
+   *
+   * @param {string} addrTo Address to send tokens to
+   * @param {*} amount Amount of tokens
+   * @returns {Promise} of sending tokens
+   */
+  async transferTokensNoFees (addrTo, amount) {
+    return new Promise(async (resolve) => {
+      const unsub = await this.api.tx.balances
+        .transferNoFees(addrTo, amount)
+        .signAndSend(this.keypair, (result) => {
+          if (result.status.isInBlock) {
+            debug(`Transaction included at blockHash ${result.status.asInBlock}`)
+          } else if (result.status.isFinalized) {
+            debug(`Transaction finalized at blockHash ${result.status.asFinalized}`)
+            resolve(true)
+            unsub()
+          }
+        })
+    })
+  }
+
+  /**
    * Transfer All Tokens
    *
    * @param {string} addrTo Address to send tokens to
@@ -174,7 +196,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const current = await this.addrState()
     const amount = current.balance.free
     const info = await this.api.tx.balances.transfer(addrTo, amount).paymentInfo(this.keypair)
-    return this.transferTokens(addrTo, amount.sub(info.partialFee))
+    return this.transferTokens(addrTo, info.partialFee.sub(amount))
   }
 
   /**
@@ -418,6 +440,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Get all CIDs.
    * Get the whole CIDs collection, including deleted.
+   *
    * @returns {Array} array of CIDs
    */
   async getCIDs () {
@@ -428,6 +451,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Get all valid CIDs.
    * Get all CIDs that are not deleted.
+   *
    * @returns {Array} array of CIDs
    */
   async getValidCIDs () {
@@ -444,14 +468,15 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Get CID by key.
    * Get CID data is key exists, else return null.
    * Because is an ordered array, we use a binary search
+   *
    * @param {string} cid CID
-   * @returns {CID} CID struct or null
+   * @returns {string} CID struct or null
    */
   async getCIDByKey (cid) {
     const CIDs = await this.api.query.lorenaDids.cids()
     let first = 0
     let last = CIDs.length - 1
-    let middle = Math.floor((last + first)/2)
+    let middle = Math.floor((last + first) / 2)
 
     let parsedCID = JSON.parse(CIDs[middle])
     while (parsedCID.cid !== cid && first < last) {
@@ -460,8 +485,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
       } else if (cid > parsedCID.cid) {
         first = middle + 1
       }
-      middle = Math.floor((last + first)/2)
-      parsedCID = JSON.parse(CIDS[middle])
+      middle = Math.floor((last + first) / 2)
+      parsedCID = JSON.parse(CIDs[middle])
     }
 
     return (parsedCID.cid !== cid) ? null : parsedCID

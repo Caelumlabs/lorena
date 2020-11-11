@@ -64,6 +64,14 @@ test('Should send Tokens from Alice to Zelda', async () => {
   expect(amount1).not.toEqual(amount2)
 })
 
+test('Should send Tokens from Alice to tempWallet without paying fee', async () => {
+  jest.setTimeout(20000)
+  const amount1 = await blockchain.addrState(aliceAddr)
+  await blockchain.transferTokensNoFees(tempWallet.address, 3000)
+  const amount2 = await blockchain.addrState(aliceAddr)
+  expect(amount1).not.toEqual(amount2)
+})
+
 test('Should Save a DID to Blockchain', async () => {
   jest.setTimeout(20000)
   // Result should equal to true => No errors
@@ -239,7 +247,7 @@ test('Should sweep tokens from Zelda to Alice', async () => {
   const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
   await blockchain.transferAllTokens(blockchain.getAddress('//Alice'))
   const zeldaBalance2 = await blockchain.addrState(zeldaAddress)
-  expect(zeldaBalance2.balance.free.toHuman()).toEqual('0')
+  expect(zeldaBalance2.balance.free.toHuman()).toBeLessThan('3.5000 mUnit')
   expect(zeldaBalance2).not.toEqual(zeldaBalance1)
 })
 
