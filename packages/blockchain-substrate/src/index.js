@@ -444,7 +444,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {Array} array of CIDs
    */
   async getCIDs () {
-    const CIDs = await this.api.query.lorenaDids.cids()
+    const CIDs = await this.api.query.lorenaDids.cIDs()
     return CIDs.map((cid) => { return JSON.parse(cid) })
   }
 
@@ -455,7 +455,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {Array} array of CIDs
    */
   async getValidCIDs () {
-    const CIDs = await this.api.query.lorenaDids.cids()
+    const CIDs = await this.api.query.lorenaDids.cIDs()
     return CIDs.map((cid) => {
       const c = JSON.parse(cid)
       if (c.valid_to === 0) {
@@ -473,7 +473,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} CID struct or null
    */
   async getCIDByKey (cid) {
-    const CIDs = await this.api.query.lorenaDids.cids()
+    const CIDs = await this.api.query.lorenaDids.cIDs()
     let first = 0
     let last = CIDs.length - 1
     let middle = Math.floor((last + first) / 2)
@@ -501,7 +501,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {object} CID array
    */
   async getCIDsByDID (did) {
-    const CIDs = await this.api.query.lorenaDids.cids()
+    const CIDs = await this.api.query.lorenaDids.cIDs()
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     const didCollection = []
