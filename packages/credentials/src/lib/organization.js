@@ -1,4 +1,5 @@
 'use strict'
+const { signCredential } = require('./signCredential')
 
 /**
  * Schema.org: Organization.
@@ -68,11 +69,13 @@ module.exports = class Organization {
    *
    * @param {string} roleName role name
    * @param {*} persona Persona Object
+   * @param {*} capacity Cpacity
    */
-  member (roleName, persona) {
+  member (roleName, persona, capacity) {
     this.subject.member = {
       '@type': 'OrganizationRole',
       roleName: roleName,
+      capacity: capacity,
       member: persona.subject
     }
   }
@@ -98,5 +101,16 @@ module.exports = class Organization {
    */
   location (location) {
     this.subject.location = location.subject
+  }
+
+  /**
+   * Return a signe credential for Action
+   *
+   * @param {string} issuer DID of the signer
+   * @param {object} signer Key Pair
+   * @returns {object} Signed credential
+   */
+  sign (signer, issuer) {
+    return signCredential(this.subject, signer, issuer)
   }
 }

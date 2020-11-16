@@ -1,4 +1,6 @@
 const cred = require('../index')
+const Crypto = require('@caelumlabs/crypto')
+const crypto = new Crypto(true)
 
 test('Organization: should add a name', () => {
   const organization = new cred.Organization('did:lor:lab:1000')
@@ -66,4 +68,29 @@ test('Organization: should add a role', () => {
   expect(organization.subject.member.member.givenName).toEqual('John')
   expect(organization.subject.member.member.familyName).toEqual('Smith')
   expect(organization.subject.member.member.additionalName).toEqual('Matrix')
+})
+
+test('Sign a MemberOf credential', async () => {
+  const issuer = 'did:caelum:10000'
+  await crypto.init()
+  const signer = crypto.keyPair()
+
+  const organization = new cred.Organization(issuer)
+  organization.name('Caelum Labs')
+  const developer = new cred.Person()
+  developer.fullName('John', 'Smith', 'Matrix')
+  organization.member('member', developer, {
+    name: 'Member',
+    location: 'Barcelona',
+    department: 'Technology',
+    document: '',
+    threshold: 0
+  })
+  const serializedCredential = await organization.sign(signer, issuer)
+  const result = cred.verifyCredential(serializedCredential, signer.address)
+  expect(result.check).toEqual(true)
+  expect(result.credential.issuer).toEqual(issuer)
+  expect(result.credential.issuanceDate).toBeDefined()
+  expect(result.credential.issuanceDate).toBeDefined()
+  expect(result.credential.proof.signature).toBeDefined()
 })
