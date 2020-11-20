@@ -389,7 +389,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getDidDocHash (did) {
     const hexDID = Utils.base64ToHex(did)
-    // console.log('hexDID ' + hexDID)
     const didDoc = await this.api.query.lorenaDids.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
     return Utils.hexToBase64(doc)
@@ -507,10 +506,21 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const didCollection = []
     for (let i = 0; i < CIDs.length; i++) {
       const parsedCID = JSON.parse(CIDs[i])
-      if (parsedCID.did === hexDID && parsedCID.valid_to === 0) {
-        didCollection[didCollection.lenght] = parsedCID
+      if (parsedCID.did_owner.toString().split('x')[1] === hexDID && parsedCID.valid_to === 0) {
+        didCollection.push(parsedCID)
       }
     }
+    return didCollection
+  }
+
+  /**
+   * Get Metadata.
+   * Get the State Metadata.
+   *
+   * @returns {Array} array of CIDs
+   */
+  async getMetadata () {
+    return await this.api.rpc.state.getMetadata()
   }
 
   /**

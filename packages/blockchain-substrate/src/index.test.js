@@ -159,6 +159,14 @@ test('Should add three new CIDs to Blockchain', async () => {
   expect(result3).toEqual(true)
 })
 
+test('Should read all CIDs of a DID', async () => {
+  jest.setTimeout(20000)
+  const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
+  const result = await blockchain.getCIDsByDID(didPromoter)
+  console.log('CIDs -> %O', result)
+  expect(tempWallet.address).toBeDefined()
+})
+
 test('Should delete a CID into Blockchain', async () => {
   jest.setTimeout(20000)
   // Result should equal to true => No errors
