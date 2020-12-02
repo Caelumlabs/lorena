@@ -1,26 +1,19 @@
 const LorenaStorage = require('./index')
-const uuid = require('uuid/v4')
-
-const undefinedCid = 'bafyreifqwkmiw256ojf2zws6tzjeonw6bpd5vza4i22ccpcq4hjv2ts7cm'
-let storage, newUuid, newUuidCid
+let storage, cid
+const didDoc = { id: 1, name: 'test' }
 
 test('Init Storage', async () => {
-  storage = new LorenaStorage({ host: 'labdev.ipfs.lorena.tech', port: '5001' })
+  storage = new LorenaStorage()
   expect(storage).toBeDefined()
 })
 
-test('Storage put new uuid', async () => {
-  newUuid = uuid()
-  newUuidCid = await storage.put(newUuid)
-  expect(newUuidCid).toBeDefined()
+test('Storage add a file to IPFS', async () => {
+  cid = await storage.add('did', didDoc)
+  expect(cid).toBeDefined()
 })
 
 test('Storage get undefined: ', async () => {
-  const result = await storage.get(undefinedCid)
-  expect(result.value).toBeNull()
-})
-
-test('Storage get new uuid: ', async () => {
-  const result = await storage.get(newUuidCid)
-  expect(result.value).toEqual(newUuid)
+  const result = await storage.get(cid)
+  expect(result).toBeDefined()
+  expect(result).toEqual(didDoc)
 })

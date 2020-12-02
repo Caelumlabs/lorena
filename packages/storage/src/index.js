@@ -1,10 +1,6 @@
 'use strict'
 const IpfsClient = require('ipfs-http-client')
 
-// Debug
-var debug = require('debug')('did:debug:ipfs')
-var error = require('debug')('did:error:ipfs')
-
 /**
  * Javascript Class to interact with Zenroom.
  */
@@ -12,28 +8,31 @@ module.exports = class Storage {
   /**
    * Constructor
    *
-   * @param {*} opts connection information
+   * @param {string} host connection information
    */
-  constructor (opts = { host: 'labdev.ipfs.lorena.tech', port: '5001' }) {
-    this.ipfs = new IpfsClient(opts)
+  constructor (host = { host: 'localhost', port: 5001 }) {
+    this.params = host
+    this.ipfs = IpfsClient(host)
   }
 
   /**
    * Puts data (DAG) to IPFS.
    *
+   * @param {srting} name File name
    * @param {object} data Data object
    * @returns {Promise} CID or false
    */
-  async put (data) {
+  async add (name, data) {
     return new Promise((resolve) => {
-      this.ipfs.dag.put(data, { format: 'dag-cbor', hashAlg: 'sha2-256' })
-        .then((cid) => {
-          debug('CID = ' + cid.toBaseEncodedString())
-          resolve(cid.toBaseEncodedString())
+      const str = JSON.stringify(data)
+      const file = { path: name + '.json', content: Buffer.from(str) }
+      // this.ipfs.add(Buffer.from(JSON.stringify(data)))
+      this.ipfs.add(file)
+        .then(result => {
+          resolve(result.cid.toBaseEncodedString())
         })
-        .catch((e) => {
-          error(e)
-          resolve(false)
+        .catch(e => {
+          console.log(e)
         })
     })
   }
@@ -45,15 +44,11 @@ module.exports = class Storage {
    * @returns {Promise} data or false
    */
   async get (cid) {
-    return new Promise((resolve) => {
-      this.ipfs.dag.get(cid)
-        .then((data) => {
-          resolve(data)
-        })
-        .catch((e) => {
-          error(e)
-          resolve(false)
-        })
-    })
+    let json = {}
+    const result = await this.ipfs.cat(cid)
+    for await (const item of result) {
+      json = JSON.parse(item.toString())
+    }
+    return json
   }
 }
