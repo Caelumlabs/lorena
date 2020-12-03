@@ -21,6 +21,7 @@
     }
   },
   "dependencies": {
+    "@fleekhq/fleek-storage-js": "^1.0.4",
     "debug": "^4.3.1",
     "ipfs-http-client": "^48.1.2"
   },
