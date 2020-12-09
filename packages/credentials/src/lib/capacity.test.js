@@ -10,11 +10,13 @@ test('Achievement: should add a Capacity', async () => {
   capacity.capacity('Admin')
   capacity.department('Technology')
   capacity.location('Barcelona')
+  capacity.sphere('Professional')
 
   expect(capacity.subject['@type']).toEqual('Capacity')
   expect(capacity.subject.id).toEqual(1)
   expect(capacity.subject.department).toEqual('Technology')
   expect(capacity.subject.location).toEqual('Barcelona')
+  expect(capacity.subject.sphere).toEqual('Professional')
 
   await crypto.init()
   const issuer = 'did:caelum:10000'

@@ -33,6 +33,13 @@ module.exports = class Storage {
     })
     return uploadedFile
   }
+
+  async del (cid) {
+    const uploadedFile = await fleekStorage.getFileFromHash({
+      hash: cid
+    })
+    return uploadedFile
+  }
 }
 
 /**

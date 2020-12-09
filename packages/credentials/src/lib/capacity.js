@@ -57,6 +57,15 @@ module.exports = class Capacity {
   }
 
   /**
+   * Set the Sphere: personal or profesisonal
+   *
+   * @param {string} sphere of the credential (personal/professional)
+   */
+  sphere (sphere) {
+    this.subject.sphere = sphere
+  }
+
+  /**
    * Return a signe credential for Action
    *
    * @param {object} signer Key Pair
