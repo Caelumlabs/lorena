@@ -1,6 +1,6 @@
 {
   "name": "@caelumlabs/terminal",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "description": "Lorena terminal",
   "main": "src/index.js",
   "author": "Alex Puig",
@@ -10,8 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@caelumlabs/sdk": "^0.2.12",
-    "@caelumlabs/wallet": "^0.2.12",
+    "@caelumlabs/sdk": "^0.2.13",
+    "@caelumlabs/wallet": "^0.2.13",
     "debug": "^4.2.0",
     "figlet": "^1.5.0",
     "terminal-kit": "^1.44.0"
