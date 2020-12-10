@@ -262,4 +262,15 @@ module.exports = class LorenaCrypto {
   blake2 (source) {
     return (blake2AsHex(source))
   }
+
+  /**
+   * Create a Hash
+   *
+   * @param {string} source to be hashed
+   * @returns {string} Hashed source
+   */
+  hash (source) {
+    const toHash = (typeof source === 'object') ? JSON.stringify(source) : source
+    return (blake2AsHex(toHash))
+  }
 }

@@ -42,6 +42,18 @@ test('KeyPair generation from mnemonic', async () => {
 test('Should hash a String: ', () => {
   const result = crypto.blake2('Hello world')
   expect(result).toBeDefined()
+
+  const result1 = crypto.hash('Hello world')
+  expect(result1).toBeDefined()
+  expect(result1).toEqual('0xa21cf4b3604cf4b2bc53e6f88f6a4d75ef5ff4ab415f3e99aea6b61c8249c4d0')
+
+  const result2 = crypto.hash({ test: 'Hello world' })
+  expect(result2).toBeDefined()
+  expect(result2).toEqual('0x9ebc09154518985254db0d83558368bbf6144e7caf8c1c05bbae250a44342573')
+
+  const result3 = crypto.hash({ test: 'Hello world', id: 2 })
+  expect(result3).toBeDefined()
+  console.log(result3)
 })
 
 test('Should create a random String', () => {

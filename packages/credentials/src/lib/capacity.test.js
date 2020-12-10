@@ -22,6 +22,7 @@ test('Achievement: should add a Capacity', async () => {
   const issuer = 'did:caelum:10000'
   const signer = crypto.keyPair()
   const signedCredential = await capacity.sign(signer, issuer)
+
   const result = cred.verifyCredential(signedCredential, signer.address)
   expect(result.check).toEqual(true)
   expect(result.credential.issuer).toEqual(issuer)
