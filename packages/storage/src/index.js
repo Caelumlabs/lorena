@@ -1,6 +1,6 @@
 'use strict'
-// const IpfsClient = require('ipfs-http-client')
-const fleekStorage = require('@fleekhq/fleek-storage-js')
+global.fetch = require('node-fetch')
+const IpfsClient = require('ipfs-http-client')
 
 /**
  * Javascript Class to interact with Zenroom.
@@ -9,63 +9,20 @@ module.exports = class Storage {
   /**
    * Constructor
    *
-   * @param {string} apiKey Fleek API KEY
-   * @param {string} apiSecret Fleek API SECRET
+   * @param {string} host connection information
    */
-  constructor (apiKey, apiSecret) {
-    this.apiKey = apiKey
-    this.apiSecret = apiSecret
+  constructor (host) {
+    this.params = host
+    this.ipfs = IpfsClient(host)
   }
 
-  async add (name, data) {
-    const uploadedFile = await fleekStorage.upload({
-      apiKey: this.apiKey,
-      apiSecret: this.apiSecret,
-      key: name,
-      data: JSON.stringify(data)
-    })
-    return uploadedFile.hash
-  }
-
-  async get (cid) {
-    const uploadedFile = await fleekStorage.getFileFromHash({
-      hash: cid
-    })
-    return uploadedFile
-  }
-
-  async del (cid) {
-    const uploadedFile = await fleekStorage.getFileFromHash({
-      hash: cid
-    })
-    return uploadedFile
-  }
-}
-
-/**
- * Gets data (DAG) from IPFS.
- *
- * @param {string} cid ContentID
- * @returns {Promise} data or false
- */
-/*
-  async get (cid) {
-    let json = {}
-    const result = await this.ipfs.cat(cid)
-    for await (const item of result) {
-      json = JSON.parse(item.toString())
-    }
-    return json
-  }
-  */
-/**
- * Puts data (DAG) to IPFS.
- *
- * @param {string} name File name
- * @param {object} data Data object
- * @returns {Promise} CID or false
- */
-/*
+  /**
+   * Puts data (DAG) to IPFS.
+   *
+   * @param {srting} name File name
+   * @param {object} data Data object
+   * @returns {Promise} CID or false
+   */
   async add (name, data) {
     return new Promise((resolve) => {
       const str = JSON.stringify(data)
@@ -80,4 +37,19 @@ module.exports = class Storage {
         })
     })
   }
-  */
+
+  /**
+   * Gets data (DAG) from IPFS.
+   *
+   * @param {string} cid ContentID
+   * @returns {Promise} data or false
+   */
+  async get (cid) {
+    let json = {}
+    const result = await this.ipfs.cat(cid)
+    for await (const item of result) {
+      json = JSON.parse(item.toString())
+    }
+    return json
+  }
+}
