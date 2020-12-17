@@ -38,32 +38,60 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     this.api = await ApiPromise.create({
       provider: this.provider,
       types: {
+        Accumulator: {
+          infinity: 'Vec<u8>',
+          g: 'Vec<u8>',
+          n: 'Vec<u8>',
+          h: 'Vec<u8>',
+          c: 'Vec<u8>',
+          z: 'Vec<u8>',
+          q: 'Vec<u8>',
+          i: 'u32'
+        },
+        Releases: {
+          maior: 'u8',
+          minor: 'u8',
+          patch: 'u8'
+        },
         CID: {
+          release: 'Releases',
           cid: 'Vec<u8>',
           owner: 'AccountId',
           did_owner: 'Vec<u8>',
           date_created: 'u64',
           valid_from: 'u64',
-          valid_to: 'u64'
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
         },
         PublicKey: {
+          release: 'Releases',
           pub_key: 'Vec<u8>',
           valid_from: 'u64',
-          valid_to: 'u64'
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
         },
-
         PublicKeyType: {
+          release: 'Releases',
           pub_key_type: 'u16',
           pub_keys: 'Vec<PublicKey>',
           valid_from: 'u64',
-          valid_to: 'u64'
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
         },
         Credential: {
+          release: 'Releases',
           credential: 'Vec<u8>',
+          accumulator: 'Accumulator',
           valid_from: 'u64',
-          valid_to: 'u64'
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
         },
         DIDData: {
+          release: 'Releases',
           owner: 'AccountId',
           did_promoter: 'Vec<u8>',
           level: 'u16',
@@ -71,7 +99,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
           did_doc: 'Vec<u8>',
           credentials: 'Vec<Credential>',
           valid_from: 'u64',
-          valid_to: 'u64'
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
         }
       }
     })
@@ -196,7 +226,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const current = await this.addrState()
     const amount = current.balance.free
     const info = await this.api.tx.balances.transfer(addrTo, amount).paymentInfo(this.keypair)
-    return this.transferTokens(addrTo, info.partialFee.sub(amount))
+    if (info.partialFee.sub(amount) > 0) {
+      return this.transferTokens(addrTo, info.partialFee.sub(amount))
+    } 
+    return this.transferTokens(addrTo, amount.sub(info.partialFee))
   }
 
   /**
@@ -329,6 +362,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async getDidData (did) {
     const hexDid = Utils.base64ToHex(did)
     const didData = await this.api.query.lorenaDids.didData(hexDid)
+    console.log('DIDDATA -> %O ', didData)
     return JSON.parse(didData)
   }
 
@@ -431,7 +465,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     let hexDID = Buffer.from([0])
     if (did != null) {
       hexDID = Utils.base64ToHex(did)
-    } 
+    }
     const transaction = await this.api.tx.lorenaDids.deleteCid(hexCID, hexDID)
     return await this.execTransaction(transaction)
   }

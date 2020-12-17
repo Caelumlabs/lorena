@@ -248,7 +248,7 @@ test('Should Remove DID', async () => {
 })
 */
 
-test('Should sweep tokens from Zelda to Alice', async () => {
+test.skip('Should sweep tokens from Zelda to Alice', async () => {
   jest.setTimeout(20000)
   const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
   blockchain.setKeyring(zeldaMnemonic)
