@@ -68,8 +68,8 @@ module.exports = class Organization {
    * Sets the member of this organization for the credential.
    *
    * @param {string} roleName role name
-   * @param {*} persona Persona Object
-   * @param {*} capacity Cpacity
+   * @param {object} persona Persona Object
+   * @param {string} capacity Cpacity
    */
   member (roleName, persona, capacity) {
     this.subject.member = {
@@ -85,12 +85,14 @@ module.exports = class Organization {
    *
    * @param {string} name of the the organization
    * @param {string} url of the organization
+   * @param {string} didIssuer DID of the Issuer
    */
-  memberOf (name, url) {
+  memberOf (name, url, didIssuer) {
     this.subject.memberOf = {
       '@type': 'Organization',
       name: name,
-      url: url
+      url: url,
+      issuer: didIssuer || ''
     }
   }
 

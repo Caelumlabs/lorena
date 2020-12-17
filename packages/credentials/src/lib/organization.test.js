@@ -16,6 +16,7 @@ test('Organization: should have full info', () => {
   organization.taxID('B67101519')
   organization.url('https://caelumlabs.com')
   organization.foundingDate('2018-05-12')
+  organization.memberOf('lorena', 'https://caelumapp.com/network/lorena', '3000')
 
   expect(organization.subject['@type']).toEqual('Organization')
   expect(organization.subject.name).toEqual('Caelum Labs')
@@ -23,6 +24,10 @@ test('Organization: should have full info', () => {
   expect(organization.subject.taxID).toEqual('B67101519')
   expect(organization.subject.url).toEqual('https://caelumlabs.com')
   expect(organization.subject.foundingDate).toEqual('2018-05-12')
+  expect(organization.subject.memberOf['@type']).toEqual('Organization')
+  expect(organization.subject.memberOf.name).toEqual('lorena')
+  expect(organization.subject.memberOf.url).toEqual('https://caelumapp.com/network/lorena')
+  expect(organization.subject.memberOf.issuer).toEqual('3000')
 
   const location = new cred.Location()
   location.streetAddress('Reina Cristina 9, principal')
