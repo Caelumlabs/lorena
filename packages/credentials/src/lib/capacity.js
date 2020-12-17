@@ -59,10 +59,12 @@ module.exports = class Capacity {
   /**
    * Set the Sphere: personal or profesisonal
    *
-   * @param {string} sphere of the credential (personal/professional)
+   * @param {string} did of the credential
+   * @param {string} name of the credential
    */
-  sphere (sphere) {
-    this.subject.sphere = sphere
+  certificate (did, name) {
+    this.subject.did = did
+    this.subject.name = name
   }
 
   /**
@@ -73,6 +75,7 @@ module.exports = class Capacity {
    * @returns {object} Signed credential
    */
   sign (signer, issuer) {
+    this.subject.sphere = (this.subject.capacity === 'Over18') ? 'Personal' : 'Professional'
     return signCredential(this.subject, signer, issuer)
   }
 }
