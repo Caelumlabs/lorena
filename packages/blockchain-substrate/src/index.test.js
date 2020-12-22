@@ -75,7 +75,7 @@ test('Should send Tokens from Alice to tempWallet without paying fee', async () 
 test('Should Save a DID to Blockchain', async () => {
   jest.setTimeout(20000)
   // Result should equal to true => No errors
-  const result = await blockchain.registerDid(did, tempWallet.address, 2)
+  const result = await blockchain.registerDid(did, tempWallet.address, 2000)
   expect(result).toEqual(true)
 
   // Promoter Account from even data should be address Alice
@@ -93,7 +93,7 @@ test('Should Save a DID to Blockchain', async () => {
 
 test('Should try again to register the same DID and fail', async () => {
   jest.setTimeout(20000)
-  const result = await blockchain.registerDid(did, tempWallet.address, 2)
+  const result = await blockchain.registerDid(did, tempWallet.address, 2000)
   expect(result).toEqual(false)
 })
 
