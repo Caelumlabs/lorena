@@ -1,4 +1,6 @@
 'use strict'
+const { signCredential } = require('./signCredential')
+
 /**
  * Schema.org: Action.
  */
@@ -112,5 +114,16 @@ module.exports = class Achievement {
     this.subject.course = {
       id: course
     }
+  }
+
+  /**
+   * Return a signe credential for Action
+   *
+   * @param {string} issuer DID of the signer
+   * @param {object} signer Key Pair
+   * @returns {object} Signed credential
+   */
+  sign (signer, issuer) {
+    return signCredential(this.subject, signer, issuer)
   }
 }
