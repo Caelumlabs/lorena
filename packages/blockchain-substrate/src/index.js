@@ -367,7 +367,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async getDidData (did) {
     const hexDid = Utils.base64ToHex(did)
     const didData = await this.api.query.caelumApp.didData(hexDid)
-    console.log('DIDDATA -> %O ', didData)
     return JSON.parse(didData)
   }
 
