@@ -13,7 +13,8 @@ const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
 // Uncomment for testing in local blockchain and comment out the line before
 // to restore testing on cloud
 // const blockchain = new BlockchainSubstrate('ws://localhost:9944')
-let did, tempWallet, aliceAddr
+let did, did2, did3
+let aliceAddr, tempWallet, tempWallet2, tempWallet3
 let cid1, cid2, cid3
 const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
 // const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
@@ -22,6 +23,8 @@ const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action s
 test('init', async () => {
   await crypto.init()
   did = crypto.random(16)
+  did2 = crypto.random(16)
+  did3 = crypto.random(16)
   cid1 = crypto.random(16)
   cid2 = crypto.random(16)
   cid3 = crypto.random(16)
@@ -31,6 +34,8 @@ test('init', async () => {
   const zeldaKey = blockchain.getKeyring(zeldaMnemonic)
   expect(zeldaKey).toBeDefined()
   tempWallet = crypto.keyPair()
+  tempWallet2 = crypto.keyPair()
+  tempWallet3 = crypto.keyPair()
 })
 
 test('should have good format conversion', () => {
@@ -72,6 +77,22 @@ test('Should send Tokens from Alice to tempWallet without paying fee', async () 
   expect(amount1).not.toEqual(amount2)
 })
 
+test('Should send Tokens from Alice to tempWallet2 without paying fee', async () => {
+  jest.setTimeout(20000)
+  const amount1 = await blockchain.addrState(aliceAddr)
+  await blockchain.transferTokensNoFees(tempWallet2.address, 3000000000000000)
+  const amount2 = await blockchain.addrState(aliceAddr)
+  expect(amount1).not.toEqual(amount2)
+})
+
+test('Should send Tokens from Alice to tempWallet3 without paying fee', async () => {
+  jest.setTimeout(20000)
+  const amount1 = await blockchain.addrState(aliceAddr)
+  await blockchain.transferTokensNoFees(tempWallet3.address, 3000)
+  const amount2 = await blockchain.addrState(aliceAddr)
+  expect(amount1).not.toEqual(amount2)
+})
+
 test('Should Save a DID to Blockchain', async () => {
   jest.setTimeout(20000)
   // Result should equal to true => No errors
@@ -97,10 +118,48 @@ test('Should try again to register the same DID and fail', async () => {
   expect(result).toEqual(false)
 })
 
+test('Should Save a DID to Blockchain with level 11 (1-1999) Organization account', async () => {
+  jest.setTimeout(20000)
+  // Result should equal to true => No errors
+  const result = await blockchain.registerDid(did2, tempWallet2.address, 11)
+  expect(result).toEqual(true)
+
+  // Promoter Account from even data should be address Alice
+  const registeredDidEvent = await blockchain.wait4Event('DidRegistered')
+  expect(registeredDidEvent[1]).toEqual(aliceAddr)
+
+  // DID Owner should be the address of tempWallet
+  const didDataJson = await blockchain.getDidData(did2)
+  expect(didDataJson.owner).toEqual(tempWallet2.address)
+
+  // DID promoter should belong to Alice
+  const promoter = await blockchain.getOwnerFromDid(didDataJson.did_promoter)
+  expect(promoter.toString()).toEqual(aliceAddr)
+})
+
+test('Shoudl save a DID to the Blockchain with level 5000 (2000 ->) using Organization account', async () => {
+  jest.setTimeout(20000)
+  blockchain.setKeyring(tempWallet2.mnemonic)
+  // Result should equal to true => No errors
+  const result = await blockchain.registerDid(did3, tempWallet3.address, 5000)
+  expect(result).toEqual(true)
+
+  // Promoter Account from even data should be address tempWallet2
+  const registeredDidEvent = await blockchain.wait4Event('DidRegistered')
+  expect(registeredDidEvent[1]).toEqual(tempWallet2.address)
+
+  // DID Owner should be the address of tempWallet3
+  const didDataJson = await blockchain.getDidData(did3)
+  expect(didDataJson.owner).toEqual(tempWallet3.address)
+
+  // DID promoter should belong to tempWallet2
+  const promoter = await blockchain.getOwnerFromDid(didDataJson.did_promoter)
+  expect(promoter.toString()).toEqual(tempWallet2.address)
+})
+
 // Disabled: substrate library now enforces uniqueness of diddocHash
 test.skip('Register a Did Document', async () => {
   jest.setTimeout(20000)
-  console.log(tempWallet.address)
   blockchain.setKeyring(tempWallet.mnemonic)
   let result = await blockchain.registerDidDocument(did, diddocHash)
   expect(result).toEqual(true)
