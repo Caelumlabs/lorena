@@ -52,7 +52,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
           _enum: [
             'V1_0_0',
             'V2_0_0'
-          ]        
+          ]
         },
         CID: {
           release: 'Releases',
@@ -248,7 +248,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async registerDid (did, accountTo, level) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
-    const transaction = await this.api.tx.caelumApp.registerDid(hexDID, accountTo, level)
+    const transaction = await this.api.tx.idSpace.registerDid(hexDID, accountTo, level)
     return await this.execTransaction(transaction)
   }
 
@@ -262,7 +262,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async registerDidDocument (did, diddocHash) {
     const hexDid = Utils.base64ToHex(did)
     const docHash = Utils.toUTF8Array(diddocHash)
-    const transaction = await this.api.tx.caelumApp.registerDidDocument(hexDid, docHash)
+    const transaction = await this.api.tx.idSpace.registerDidDocument(hexDid, docHash)
     return await this.execTransaction(transaction)
   }
 
@@ -280,8 +280,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
-    // Call caelumApp RotateKey function
-    const transaction = await this.api.tx.caelumApp.rotateKey(hexDID, keyArray, typ)
+    // Call idSpace RotateKey function
+    const transaction = await this.api.tx.idSpace.rotateKey(hexDID, keyArray, typ)
     return await this.execTransaction(transaction)
   }
 
@@ -298,8 +298,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
     const keyArray = Utils.toUTF8Array(pubKey)
-    // Call caelumApp RotateKey function
-    const transaction = await this.api.tx.caelumApp.rotateKey(hexDID, keyArray, typ)
+    // Call idSpace RotateKey function
+    const transaction = await this.api.tx.idSpace.rotateKey(hexDID, keyArray, typ)
     return await this.execTransaction(transaction)
   }
 
@@ -313,7 +313,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async changeOwner (did, newOwner) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
-    const transaction = await this.api.tx.caelumApp.changeDidOwner(hexDID, newOwner)
+    const transaction = await this.api.tx.idSpace.changeDidOwner(hexDID, newOwner)
     return await this.execTransaction(transaction)
   }
 
@@ -327,7 +327,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async assignCredential (did, credential) {
     const hexDid = Utils.base64ToHex(did)
     const cred = Utils.toUTF8Array(credential)
-    const transaction = await this.api.tx.caelumApp.assignCredential(hexDid, cred)
+    const transaction = await this.api.tx.idSpace.assignCredential(hexDid, cred)
     return await this.execTransaction(transaction)
   }
 
@@ -341,7 +341,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async removeCredential (did, credential) {
     const hexDid = Utils.base64ToHex(did)
     const cred = Utils.toUTF8Array(credential)
-    const transaction = await this.api.tx.caelumApp.removeCredential(hexDid, cred)
+    const transaction = await this.api.tx.idSpace.removeCredential(hexDid, cred)
     return await this.execTransaction(transaction)
   }
 
@@ -354,7 +354,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   async removeDid (did) {
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
-    const transaction = await this.api.tx.caelumApp.removeDid(hexDID)
+    const transaction = await this.api.tx.idSpace.removeDid(hexDID)
     return await this.execTransaction(transaction)
   }
 
@@ -366,7 +366,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getDidData (did) {
     const hexDid = Utils.base64ToHex(did)
-    const didData = await this.api.query.caelumApp.didData(hexDid)
+    const didData = await this.api.query.idSpace.didData(hexDid)
     return JSON.parse(didData)
   }
 
@@ -377,7 +377,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} public key in hex format
    */
   async getOwnerFromDid (did) {
-    return await this.api.query.caelumApp.ownerFromDid(did)
+    return await this.api.query.idSpace.ownerFromDid(did)
   }
 
   /**
@@ -387,7 +387,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} DID
    */
   async getDidFromOwner (owner) {
-    return await this.api.query.caelumApp.didFromOwner(owner)
+    return await this.api.query.idSpace.didFromOwner(owner)
   }
 
   /**
@@ -400,7 +400,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getActualDidKey (did, typ = 0) {
     const hexDid = Utils.base64ToHex(did)
-    const result = await this.api.query.caelumApp.publicKeyFromDid([hexDid, typ])
+    const result = await this.api.query.idSpace.publicKeyFromDid([hexDid, typ])
     return bufferToU8a(result)
     // return (result)
   }
@@ -414,7 +414,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getActualDidKeyType (did, typ) {
     const hexDid = Utils.base64ToHex(did)
-    const result = await this.api.query.caelumApp.publicKeyFromDid([hexDid, typ])
+    const result = await this.api.query.idSpace.publicKeyFromDid([hexDid, typ])
     return bufferToU8a(result)
     // return (result)
   }
@@ -427,7 +427,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getDidDocHash (did) {
     const hexDID = Utils.base64ToHex(did)
-    const didDoc = await this.api.query.caelumApp.didDocumentFromDid(hexDID)
+    const didDoc = await this.api.query.idSpace.didDocumentFromDid(hexDID)
     const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
     return Utils.hexToBase64(doc)
   }
@@ -449,7 +449,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     if (did != null) {
       hexDID = Utils.base64ToHex(did)
     }
-    const transaction = await this.api.tx.caelumApp.addCid(hexCID, hexDID, max_hids)
+    const transaction = await this.api.tx.idSpace.addCid(hexCID, hexDID, max_hids)
     return await this.execTransaction(transaction)
   }
 
@@ -470,7 +470,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     if (did != null) {
       hexDID = Utils.base64ToHex(did)
     }
-    const transaction = await this.api.tx.caelumApp.deleteCid(hexCID, hexDID)
+    const transaction = await this.api.tx.idSpace.deleteCid(hexCID, hexDID)
     return await this.execTransaction(transaction)
   }
 
@@ -481,7 +481,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {Array} array of CIDs
    */
   async getCIDs () {
-    const CIDs = await this.api.query.caelumApp.cIDs()
+    const CIDs = await this.api.query.idSpace.cIDs()
     return CIDs.map((cid) => { return JSON.parse(cid) })
   }
 
@@ -492,7 +492,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {Array} array of CIDs
    */
   async getValidCIDs () {
-    const CIDs = await this.api.query.caelumApp.cIDs()
+    const CIDs = await this.api.query.idSpace.cIDs()
     return CIDs.map((cid) => {
       const c = JSON.parse(cid)
       if (c.valid_to === 0) {
@@ -510,7 +510,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} CID struct or null
    */
   async getCIDByKey (cid) {
-    const CIDs = await this.api.query.caelumApp.cIDs()
+    const CIDs = await this.api.query.idSpace.cIDs()
     let first = 0
     let last = CIDs.length - 1
     let middle = Math.floor((last + first) / 2)
@@ -538,7 +538,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {object} CID array
    */
   async getCIDsByDID (did) {
-    const CIDs = await this.api.query.caelumApp.cIDs()
+    const CIDs = await this.api.query.idSpace.cIDs()
     // Convert did string to hex
     const hexDID = Utils.base64ToHex(did)
     const didCollection = []
@@ -575,7 +575,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
           // extract the phase, event and the event types
           const { event } = record
           const types = event.typeDef
-          if (event.section === 'caelumApp' && event.method === eventMethod) {
+          if (event.section === 'idSpace' && event.method === eventMethod) {
             for (let i = 0; i < event.data.length; i++) {
               // All events have a a type 'AccountId'
               if (types[i].type === 'AccountId') {
