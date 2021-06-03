@@ -1,5 +1,5 @@
 const { Keyring } = require('@polkadot/keyring')
-const { cryptoWaitReady, randomAsU8a, blake2AsHex } = require('@polkadot/util-crypto')
+const { cryptoWaitReady, randomAsU8a, blake2AsHex, decodeAddress, signatureVerify } = require('@polkadot/util-crypto')
 const { base58Encode, base58Decode, naclKeypairFromString, naclBoxKeypairFromSecret, naclSeal, naclOpen } = require('@polkadot/util-crypto')
 const { mnemonicGenerate, mnemonicValidate, naclDecrypt, naclEncrypt } = require('@polkadot/util-crypto')
 const { stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString, stringToHex } = require('@polkadot/util')
@@ -227,8 +227,9 @@ module.exports = class LorenaCrypto {
     const verifier = new Keyring({ type: 'sr25519' })
     const pair = verifier.addFromAddress(publicKey)
     const keyPair = verifier.getPair(pair.address)
-    const isValid = keyPair.verify(message, signature)
-    return isValid
+    // const isValid = keyPair.verify(stringToU8a(message), signature)
+    const isValid = signatureVerify(message, signature, keyPair.publicKey)
+    return isValid.isValid
   }
 
   /**

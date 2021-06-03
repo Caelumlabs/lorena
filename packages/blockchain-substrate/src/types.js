@@ -1,0 +1,114 @@
+/**
+ * Types definition.
+ */
+module.exports = {
+      types: {
+        Accumulator: {
+          infinity: 'Vec<u8>',
+          g: 'Vec<u8>',
+          n: 'Vec<u8>',
+          h: 'Vec<u8>',
+          c: 'Vec<u8>',
+          z: 'Vec<u8>',
+          q: 'Vec<u8>',
+          i: 'u32'
+        },
+        IdSpaceReleases: {
+          _enum: [
+            'V1_0_0',
+            'V2_0_0'
+          ]
+        },
+        CID: {
+        	// Release of this CID template.
+          release: 'IdSpaceReleases',
+        	// Hash of the CID template.
+          cid: 'Vec<u8>',
+        	// Owner account the creates this CID.
+          owner: 'AccountId',
+        	// Owner's DID.
+          did_owner: 'Vec<u8>',
+        	// Maximum HIDs allow to issue based on this CID.
+          max_hids_issue: 'u64',
+        	// Total HIDs issued so far.
+          total_hids_issued: 'u64',          
+        	// Date when the template CID was created.
+          date_created: 'u64',
+        	// Data since this template CID is valid (can be different from the creation date).
+          valid_from: 'u64',
+        	// Block when this template CID ws created.
+          block_valid_from: 'BlockNumber',
+        	// Data when this template CID was invalidated. (0 means that it still valid).
+          valid_to: 'u64',
+        	// Block when this template CID was invalidated. (0 means that it still valid).
+          block_valid_to: 'BlockNumber'
+        },
+        PublicKey: {
+          release: 'IdSpaceReleases',
+          pub_key: 'Vec<u8>',
+          valid_from: 'u64',
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
+        },
+        PublicKeyType: {
+          release: 'IdSpaceReleases',
+          pub_key_type: 'u16',
+          pub_keys: 'Vec<PublicKey>',
+          valid_from: 'u64',
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
+        },
+        Credential: {
+          release: 'IdSpaceReleases',
+          credential: 'Vec<u8>',
+          accumulator: 'Accumulator',
+          valid_from: 'u64',
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
+        },
+        DIDData: {
+          release: 'IdSpaceReleases',
+          owner: 'AccountId',
+          did_promoter: 'Vec<u8>',
+          level: 'u16',
+          pub_keys: 'Vec<PublicKeyType>',
+          did_doc: 'Vec<u8>',
+          max_cids_issue: 'u64',
+          total_cids_issued: 'u64',          
+          credentials: 'Vec<Credential>',
+          valid_from: 'u64',
+          block_valid_from: 'BlockNumber',
+          valid_to: 'u64',
+          block_valid_to: 'BlockNumber'
+        },
+        NodeType: {
+          _enum: [
+            'Process',
+            'SubProcess',
+            'Step',
+            'Document',
+            'Attachment',
+            'None'
+          ]
+        },
+        ProcessNode: {
+          did: 'Vec<u8>',
+          account: 'AccountId',
+          node_type: 'NodeType',
+          parent: 'Option<Vec<u8>>',
+          children: 'Option<Vec<Vec<u8>>>',
+          created_block: 'BlockNumber',
+          valid_until: 'BlockNumber'
+        },
+        SuspensionJudgement: {
+          _enum: [
+            'Rebid',
+            'Reject',
+            'Approve'
+          ]
+        }
+      }
+    }

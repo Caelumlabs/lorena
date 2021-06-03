@@ -19,7 +19,7 @@
     "lint:fix": "lerna run lint:fix",
     "ncu": "lerna exec --concurrency 0 -- \"yarn ncu -u -s\"",
     "publish:all": "lerna publish --force-publish",
-    "test": "lerna run test"
+    "test": "jest"
   },
   "devDependencies": {
     "coveralls": "^3.1.0",

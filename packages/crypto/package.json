@@ -1,7 +1,7 @@
 {
   "name": "@caelumlabs/crypto",
-  "version": "0.2.20",
-  "description": "Crypto package for Lorena",
+  "version": "0.3.1",
+  "description": "Crypto package for CaelumLabs Apps",
   "main": "src/index.js",
   "author": "Alex Puig",
   "license": "MIT",
@@ -10,14 +10,32 @@
     "access": "public"
   },
   "dependencies": {
-    "@polkadot/keyring": "^6.4.1",
-    "@polkadot/util": "^6.4.1",
-    "@polkadot/util-crypto": "^6.4.1",
+    "@polkadot/keyring": "^6.5.1",
+    "@polkadot/util": "^6.5.1",
+    "@polkadot/util-crypto": "^6.5.1",
     "@polkadot/wasm": "^0.2.1",
     "@polkadot/wasm-crypto": "^4.0.2"
   },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^7.27.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-chai-friendly": "^0.7.1",
+    "eslint-plugin-import": "^2.23.3",
+    "eslint-plugin-jsdoc": "^35.0.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "husky": "^6.0.0",
+    "mocha": "^8.4.0",
+    "mocha-lcov-reporter": "^1.3.0",
+    "nixt": "^0.5.1",
+    "nyc": "^15.1.0",
+    "shelljs": "^0.8.4"
+  },
   "scripts": {
-    "test": "jest --silent",
+    "mocha": "mocha test --exit --timeout 50000",
+    "test": "npm run mocha",
     "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
