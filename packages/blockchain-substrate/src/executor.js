@@ -108,10 +108,12 @@ module.exports = class Executor {
     return new Promise(async (resolve) => {
       let result = true
       await transaction.signAndSend(keypair, ({ status, events }) => {
+        debug('Status -> ', this.getStatus(status))
+        events.forEach(({ event: { method, section } }) => debug('Section ', section, 'Method ', method ))
         if (status.isInBlock || status.isFinalized) {
-          const errors = events.filter(({ event: { method, section } }) => {
+          const errors = events.filter(({ event: { method, section } }) =>
             section === 'system' && method === 'ExtrinsicFailed'
-          })
+          )
           if (errors.length > 0) {
             errors.forEach(({ event: { data: [error, info] } }) => {
               if (error.isModule) {
@@ -154,26 +156,29 @@ module.exports = class Executor {
   return 'Other'
   }
 
-  /**
-   * Execute transaction not waiting for errors
-   *
-   * @param {object} exec Executor class.
-   * @param {object} keypair Account's keypair
-   * @param {*} amount Amount of tokens
-   * @returns {Promise} of sending tokens
-   */
-  async executeTransactionWithoutErrors (keypair, transaction) {
-    return new Promise(async (resolve) => {
-      const unsub = await transaction
-        .signAndSend(keypair, (result) => {
-          if (result.status.isInBlock) {
-            debug(`Transaction included at blockHash ${result.status.asInBlock}`)
-          } else if (result.status.isFinalized) {
-            debug(`Transaction finalized at blockHash ${result.status.asFinalized}`)
-            resolve(true)
-            unsub()
-          }
+  async executeTransaction (keypair, transaction) {
+      return new Promise(async (resolve) => {
+        await transaction
+              .signAndSend(keypair, ({ status, events, dispatchError }) => {
+              // status would still be set, but in the case of error we can shortcut
+              // to just check it (so an error would indicate InBlock or Finalized)
+              if (dispatchError) {
+                console.log('DispatchError')
+                if (dispatchError.isModule) {
+                  // for module errors, we have the section indexed, lookup
+                  const decoded = this.api.registry.findMetaError(dispatchError.asModule);
+                  const { documentation, name, section } = decoded;
+
+                  console.log(`${section}.${name}: ${documentation.join(' ')}`);
+                } else {
+                  // Other, CannotLookup, BadOrigin, no extra info
+                  console.log(dispatchError.toString());
+                }
+                resolve(false)
+              }
+              console.log('No dispatch error')
+              resolve(true)
         })
-    })
+      })
   }
 }

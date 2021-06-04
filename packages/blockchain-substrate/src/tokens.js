@@ -30,9 +30,25 @@ module.exports = class Token {
    * @param {number} minBalance The minimum balance.
    * @returns {Promise} of transaction
    */
-  async createNewToken (exec, keypair, id, admin, minBalance) {
-    const transaction = await exec.api.tx.assets.createNewToken(id, admin, minBalance)
+  // async createNewToken (exec, keypair, id, admin, minBalance) {
+  //   console.log(id, ' - ', admin, ' - ', minBalance)
+  //   const transaction = await exec.api.tx.assets.createNewToken(id, minBalance)
+  //   return await exec.execTransaction(keypair, transaction)
+  // }
+
+  async createToken (exec, keypair, id, admin, minBalance) {
+    const transaction = await exec.api.tx.assets.create(id, admin, minBalance, true)
     return await exec.execTransaction(keypair, transaction)
+  }
+
+  async createNewToken (exec, keypair, id, admin, minBalance) {
+    const transaction = await exec.api.tx.assets.create(id, admin, minBalance)
+    const result = await exec.execTransaction(keypair, transaction)
+    if (result == true) {
+      const trx = await exec.api.tx.assets.forceAssetStatus(id, admin, admin, admin, admin, minBalance, true, false)
+      return await exec.execTransaction(keypair, trx)
+    }
+    return false
   }
 
   /**
@@ -525,4 +541,41 @@ module.exports = class Token {
     const transaction = await exec.api.tx.assets.transferApproved(id, owner, destination, amount)
     return await exec.execTransaction(keypair, transaction)
   } 
+ 
+  /**
+   * Get Token details data.
+   *
+   * @param {object} exec Executor class.
+   * @param {string} id TokeId
+   * @returns {Promise} of Transaction
+   */
+  async getTokenDetails (exec, id) {
+    const tokenDetails = await exec.api.query.assets.asset(id)
+    return JSON.parse(tokenDetails)
+  }
+ 
+  /**
+   * Get Token metadata.
+   *
+   * @param {object} exec Executor class.
+   * @param {string} id TokeId
+   * @returns {Promise} of Transaction
+   */
+  async getTokenMetadata (exec, id) {
+    const metadata = await exec.api.query.assets.metadata(id)
+    return JSON.parse(metadata)
+  }
+ 
+  /**
+   * Get Account Token data.
+   *
+   * @param {object} exec Executor class.
+   * @param {string} id TokeId
+   * @param {string} who Account
+   * @returns {Promise} of Transaction
+   */
+  async getAccountTokenData (exec, id, who) {
+    const accountData = await exec.api.query.assets.account(id, who)
+    return JSON.parse(accountData)
+  }
 }

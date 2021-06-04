@@ -10,8 +10,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@caelumlabs/sdk": "^0.2.20",
-    "@caelumlabs/wallet": "^0.2.20",
+    "@caelumlabs/sdk": "file:../sdk",
+    "@caelumlabs/wallet": "file:../wallet",
     "debug": "^4.3.1",
     "figlet": "^1.5.0",
     "terminal-kit": "^2.1.2"

@@ -89,9 +89,40 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
   it('Should send Tokens from Alice to tempWallet3 without paying fee', async () => {
     const amount1 = await blockchain.addrState(aliceAddr)
-    await blockchain.transferTokensNoFees(tempWallet3.address, 3000)
+    await blockchain.transferTokensNoFees(tempWallet3.address, 30000000)
     const amount2 = await blockchain.addrState(aliceAddr)
     expect(amount1).not.to.equal(amount2)
+  })
+
+  it('Should Create a new token, mint and transfer', async () => {
+    // set account keyring
+    const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
+    // Create token. Set Alice as Admin 
+    // Token name is a trick for demo. Can be any number u32
+    let id = 0
+    'Caelum'.split('').forEach(val => id += parseInt(val.charCodeAt()))
+    // Create a new token
+    let result = await blockchain.createToken(id, alice, 100)
+    expect(result).to.equal(true)
+    // Get the token details so far
+    let tokenDetails = await blockchain.getTokenDetails(id)
+    expect(tokenDetails.owner).to.eql(alice)
+    // Set Token metadata that identifies it
+    result = await blockchain.setTokenMetadata (id, 'Caelum', 'Caeli', 0)
+    expect(result).to.equal(true)
+    // Get the token metadata
+    const tokenMetadata = await blockchain.getTokenMetadata (id)
+    // Mint 1MM tokens to Alice account
+    result = await blockchain.mintToken (id, aliceAddr, 1000000)
+    expect(result).to.equal(true)
+    tokenDetails = await blockchain.getTokenDetails(id)
+    expect(tokenDetails.supply).to.eql(1000000)
+    // Transfer 1000 from Alice to tempWallet
+    result = await blockchain.transferToken (id, tempWallet3.address, 1000)
+    expect(result).to.equal(true)
+    // Get the account token data
+    const tokenAccountData = await blockchain.getAccountTokenData(id, tempWallet3.address)
+    expect(tokenAccountData.balance).to.eql(1000)
   })
 
   it('Should Save a DID to Blockchain', async () => {
@@ -135,7 +166,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(promoter.toString()).to.equal(aliceAddr)
   })
 
-  it('Shoudl save a DID to the Blockchain with level 5000 (2000 ->) using Organization account', async () => {
+  it('Should save a DID to the Blockchain with level 5000 (2000 ->) using Organization account', async () => {
     blockchain.setKeyring(tempWallet2.mnemonic)
     // Result should equal to true => No errors
     const result = await blockchain.registerDid(did3, tempWallet3.address, 5000)
@@ -406,19 +437,6 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // Obtain the full process tree
     const fullProcessTree = await blockchain.getFullProcessTree(secondStepDocumentHash)
     console.log(util.inspect(fullProcessTree, {showHidden: false, depth: null}))
-  })
-
-  it.skip('Should Create a new token, mint and transfer', async () => {
-    // set account keyring
-    const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
-    // Create token. Set Alice as Admin 
-    let id = 0
-    'Caelum'.split('').forEach(val => id += parseInt(val.charCodeAt()))
-    // 
-    const result = await blockchain.createNewToken(id, alice, 100)
-    // Mint 1MM tokens to Alice account
-//    await blockchain.mintToken (id, aliceAddr, 1000000)
-// zeldaAddress
   })
 
   it('should clean up after itself', () => {

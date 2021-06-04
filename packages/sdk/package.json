@@ -16,12 +16,12 @@
     "lint:fix": "eslint ./src --fix"
   },
   "dependencies": {
-    "@caelumlabs/blockchain-substrate": "^0.2.20",
-    "@caelumlabs/comms": "^0.2.20",
-    "@caelumlabs/credentials": "^0.2.20",
-    "@caelumlabs/crypto": "^0.2.20",
-    "@caelumlabs/storage": "^0.2.20",
-    "@caelumlabs/wallet": "^0.2.20"
+    "@caelumlabs/blockchain-substrate": "file:../blockchain-substrate",
+    "@caelumlabs/comms": "file:../comms",
+    "@caelumlabs/credentials": "file:../credentials",
+    "@caelumlabs/crypto": "file:../crypto",
+    "@caelumlabs/storage": "file:../storage",
+    "@caelumlabs/wallet": "file:../wallet"
   },
   "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e"
 }

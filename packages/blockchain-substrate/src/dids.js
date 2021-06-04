@@ -251,6 +251,7 @@ module.exports = class DIDs {
    * @param {object} keypair Account's keypair
    * @param {string} cid CID
    * @param {string} did DID to assign the new CID (Must exists)
+   * @param {number} max_hids DID to assign the new CID (Must exists)
    * @returns {Promise} of transaction
    */
   async addCid (exec, keypair, cid, did, max_hids) {
