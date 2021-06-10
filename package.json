@@ -41,10 +41,5 @@
   },
   "dependencies": {
     "esm": "^3.2.25"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn run lint"
-    }
   }
 }

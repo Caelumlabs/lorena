@@ -12,7 +12,7 @@
   "scripts": {
     "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
-    "mocha": "mocha test --exit --timeout 50000",
+    "mocha": "mocha test --exit --timeout 70000",
     "lint:fix": "eslint ./src ./test --fix",
     "test": "npm run mocha"
   },
@@ -39,10 +39,5 @@
     "nyc": "^15.1.0",
     "shelljs": "^0.8.4"
   },
-  "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e",
-  "husky": {
-    "hooks": {
-      "pre-commit": "npm run lint"
-    }
-  }
+  "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e"
 }

@@ -15,11 +15,6 @@
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint"
-    }
-  },
   "dependencies": {
     "@caelumlabs/crypto": "file:../crypto"
   },

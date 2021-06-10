@@ -123,6 +123,39 @@ module.exports = class Process {
   }
 
   /**
+   * Set the Token ID and cost for processes.
+   *
+   * @param {object} exec Executor class.
+   * @param {object} keypair Account's keypair
+   * @param {number} tokenid Token's Id
+   * @param {number} cost Cost to be burned by process node
+   * @returns {Promise} of transaction
+   */
+  async setTokenAndCostForProcess (exec, keypair, tokenid, cost) {
+    const transaction = await exec.api.tx.idSpace.setTokenAndCostForProcess(tokenid, cost)
+    return await exec.execTransaction(keypair, transaction)
+  }
+
+  /**
+   * Revokes a node and all its process subtree.
+   * A Step This must be the first call when a recipe o process is being executed
+   * all other execution subprocesses, steps or documents depends on it
+   * DID is the DID of the executor of the process
+   * Hash is the hash of the process or subprocess parent
+   *
+   * @param {object} exec Executor class.
+   * @param {object} keypair Account's keypair
+   * @param {string} hash Process node hash
+   * @returns {Promise} of transaction
+   */
+  async revoke (exec, keypair, hash) {
+    // Convert hash string to hex
+    const hexHash = Utils.base64ToHex(hash)
+    const transaction = await exec.api.tx.idSpace.revoke(hexHash)
+    return await exec.execTransaction(keypair, transaction)
+  }
+
+  /**
    * Resolve the full path from root to the provided node hash
    *
    * @param {object} exec Executor class.
@@ -171,5 +204,15 @@ module.exports = class Process {
     // Convert hash string to hex
     const hexHash = Utils.base64ToHex(hash)
     return await exec.api.query.idSpace.processTree(hexHash)
+  }
+
+  /**
+   * Get the Token id and cost of process data
+   *
+   * @param {object} exec Executor class.
+   * @returns {Promise} of transaction
+   */
+  async getTokenIdAndCostProcessData (exec) {
+    return await exec.api.query.idSpace.tokenAndCostForProcess()
   }
 }

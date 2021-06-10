@@ -15,11 +15,6 @@
     "lint": "eslint ./src",
     "lint:fix": "eslint ./src --fix"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn lint"
-    }
-  },
   "dependencies": {
     "debug": "^4.3.1",
     "ipfs-http-client": "^50.0.0",
