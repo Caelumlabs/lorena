@@ -117,7 +117,8 @@ module.exports = class Executor {
           if (errors.length > 0) {
             errors.forEach(({ event: { data: [error, info] } }) => {
               if (error.isModule) {
-                console.log(`Module error: ${Uint8Array.of(error.asModule.index, error.asModule.error)}`)
+                const { documentation, method, section } = this.api.registry.findMetaError(error.asModule)
+                console.log(`${section}.${method}: ${documentation.join(' ')}`)
               } else {
                 console.log('System error found ' + error.toString())
               }

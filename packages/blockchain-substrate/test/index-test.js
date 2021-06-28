@@ -1,6 +1,8 @@
+/* eslint-disable jest/no-disabled-tests */
 'use strict'
 const chai = require('chai')
 const util = require('util')
+const { bufferToU8a, stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString, stringToHex } = require('@polkadot/util')
 
 // Configure chai
 // chai.should()
@@ -15,17 +17,17 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   const GENESIS_SEED_FROM = '//Alice'
 
   // let alice, bob, charlie
-  const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  // const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
   // Uncomment for testing in local blockchain and comment out the line before
   // to restore testing on cloud
-  // const blockchain = new BlockchainSubstrate('ws://localhost:9944')
+  const blockchain = new BlockchainSubstrate('ws://localhost:9944')
   let did, did2, did3
-  let aliceAddr, tempWallet, tempWallet2, tempWallet3
+  let aliceAddr, tempWallet, tempWallet2, tempWallet3, tempWallet4
   let cid1, cid2, cid3
   let tokenid
   const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
   const storageAddress = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
-  // const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
+  const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
   const zeldaMnemonic = 'gallery trim cycle bird green garbage city cable action steel giraffe oppose'
 
   before(async () => {
@@ -44,6 +46,8 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tempWallet = crypto.keyPair()
     tempWallet2 = crypto.keyPair()
     tempWallet3 = crypto.keyPair()
+    tempWallet4 = crypto.keyPair()
+
     tokenid = 0
   })
 
@@ -58,7 +62,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
   it('should Connect', async () => {
     await blockchain.connect()
-    expect(blockchain).to.not.be.undefined;
+    expect(blockchain).not.be.undefined;
   })
 
   it('Should send Tokens from Alice to tempWallet', async () => {
@@ -89,11 +93,14 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(amount1).not.equal(amount2)
   })
 
-  it('Should send Tokens from Alice to tempWallet3 without paying fee', async () => {
+  it('Should send Tokens from Alice to tempWallet3 and tempWallet4 without paying fee', async () => {
     const amount1 = await blockchain.addrState(aliceAddr)
     await blockchain.transferTokensNoFees(tempWallet3.address, 30000000)
     const amount2 = await blockchain.addrState(aliceAddr)
     expect(amount1).not.equal(amount2)
+    await blockchain.transferTokensNoFees(tempWallet4.address, 3000000000000000)
+    const amount3 = await blockchain.addrState(aliceAddr)
+    expect(amount2).not.equal(amount3)
   })
 
   it('Should Create a new token, mint and transfer', async () => {
@@ -128,7 +135,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
   it('Should Save a DID to Blockchain', async () => {
     // Result should equal to true => No errors
-    const result = await blockchain.registerDid(did, tempWallet.address, 2000)
+    const result = await blockchain.registerDid(tempWallet.address, 2000, 2, 'Legal Name', 'Tax Id')
     expect(result).equal(true)
 
     // Promoter Account from even data should be address Alice
@@ -136,7 +143,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredDidEvent[1]).equal(aliceAddr)
 
     // DID Owner should be the address of tempWallet
-    const didDataJson = await blockchain.getDidData(did)
+    const didDataJson = await blockchain.getDidData(registeredDidEvent[0])
     expect(didDataJson.owner).equal(tempWallet.address)
 
     // DID promoter should belong to Alice
@@ -145,13 +152,13 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   })
 
   it('Should try again to register the same DID and fail', async () => {
-    const result = await blockchain.registerDid(did, tempWallet.address, 2000)
+    const result = await blockchain.registerDid(tempWallet.address, 2000, 2, 'Legal Name', 'Tax Id')
     expect(result).equal(false)
   })
 
   it('Should Save a DID to Blockchain with level 11 (1-1999) Organization account', async () => {
     // Result should equal to true => No errors
-    const result = await blockchain.registerDid(did2, tempWallet2.address, 11)
+    const result = await blockchain.registerDid(tempWallet2.address, 11, 1, 'Legal name 2', 'Tax Id 2')
     expect(result).equal(true)
 
     // Promoter Account from even data should be address Alice
@@ -159,7 +166,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredDidEvent[1]).equal(aliceAddr)
 
     // DID Owner should be the address of tempWallet
-    const didDataJson = await blockchain.getDidData(did2)
+    const didDataJson = await blockchain.getDidData(registeredDidEvent[0])
     expect(didDataJson.owner).equal(tempWallet2.address)
 
     // DID promoter should belong to Alice
@@ -170,7 +177,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   it('Should save a DID to the Blockchain with level 5000 (2000 ->) using Organization account', async () => {
     blockchain.setKeyring(tempWallet2.mnemonic)
     // Result should equal to true => No errors
-    const result = await blockchain.registerDid(did3, tempWallet3.address, 5000)
+    const result = await blockchain.registerDid(tempWallet3.address, 5000, 3, 'Legal name 3', 'Tax id 3')
     expect(result).equal(true)
 
     // Promoter Account from even data should be address tempWallet2
@@ -178,7 +185,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredDidEvent[1]).equal(tempWallet2.address)
 
     // DID Owner should be the address of tempWallet3
-    const didDataJson = await blockchain.getDidData(did3)
+    const didDataJson = await blockchain.getDidData(registeredDidEvent[0])
     expect(didDataJson.owner).equal(tempWallet3.address)
 
     // DID promoter should belong to tempWallet2
@@ -186,40 +193,79 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(promoter.toString()).equal(tempWallet2.address)
   })
 
+  it('Should change Legal Name and Tax Id', async () => {
+    blockchain.setKeyring(tempWallet2.mnemonic)
+    // Get the DID for tempWallet3
+    const tempWalletDid3 = await blockchain.getDidFromOwner(tempWallet3.address)
+
+    // Change only Legal Name
+    let result = await blockchain.changeLegalNameOrTaxId(tempWalletDid3, 'New Legal Name for DID3', null)
+    expect(result).equal(true)
+    let didData = await blockchain.getDidData(tempWalletDid3)
+    expect(hexToString(didData.legal_name)).equal('New Legal Name for DID3')
+    // Change only tax id
+    result = await blockchain.changeLegalNameOrTaxId(tempWalletDid3, null, 'New Tax ID for DID3')
+    expect(result).equal(true)
+    didData = await blockchain.getDidData(tempWalletDid3)
+    expect(hexToString(didData.tax_id)).equal('New Tax ID for DID3')
+    // Change both 
+    result = await blockchain.changeLegalNameOrTaxId(tempWalletDid3, 'New change of Legal Name for DID3', 'New change of Tax ID for DID3')
+    expect(result).equal(true)
+    didData = await blockchain.getDidData(tempWalletDid3)
+    expect(hexToString(didData.legal_name)).equal('New change of Legal Name for DID3')
+    expect(hexToString(didData.tax_id)).equal('New change of Tax ID for DID3')
+  })
+
+  it('Should change Info data', async () => {
+    blockchain.setKeyring(tempWallet2.mnemonic)
+    // Get the DID for tempWallet3
+    const tempWalletDid2 = await blockchain.getDidFromOwner(tempWallet2.address)
+
+    // Change only Name
+    let result = await blockchain.changeInfo(tempWalletDid2, 'New Name', null, null, null, null, null, null, null)
+    expect(result).equal(true)
+    let didData = await blockchain.getDidData(tempWalletDid2)
+    expect(hexToString(didData.info.name)).equal('New Name')
+  })
+
   // Disabled: substrate library now enforces uniqueness of diddocHash
   it.skip('Register a Did Document', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
-    let result = await blockchain.registerDidDocument(did, diddocHash)
+    // Get the DID for tempWallet
+    const tempWalletDid = await blockchain.getDidFromOwner()
+    let result = await blockchain.registerDidDocument(tempWalletDid, diddocHash)
     expect(result).equal(true)
-    const didData = await blockchain.getDidData(did)
-    expect(didData.did_doc.toString().split('x')[1]).eql(Utils.base64ToHex(diddocHash))
+    const didData = await blockchain.getDidData(tempWalletDid)
+    expect(didData.did_doc).eql(u8aToHex(diddocHash))
     const registeredDocumentEvent = await blockchain.wait4Event('DidDocumentRegistered')
-    // Result should equal to true => No errors
-    expect(result).equal(true)
     // DID Document of event should be equal to entered
-    expect(registeredDocumentEvent[2].split('x')[1]).eql(Utils.base64ToHex(diddocHash))
+    expect(registeredDocumentEvent[2]).eql(u8aToHex(diddocHash))
     // DID Document of DIDData record should be equal to entered
-    result = await blockchain.getDidDocHash(did)
+    result = u8aToHex(await blockchain.getDidDocHash(tempWalletDid))
     if (result !== '') {
-      expect(result).eql(diddocHash)
+      expect(result).eql(u8aToHex(diddocHash))
+    } else {
+      console.log('Did Document empty')
     }
   })
 
   it('Register a Storage Address', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
-    let result = await blockchain.setStorageAddress(did, storageAddress)
+    // Get the DID for tempWallet
+    const tempWalletDid = await blockchain.getDidFromOwner()
+    let result = await blockchain.setStorageAddress(tempWalletDid, storageAddress)
     expect(result).equal(true)
-    const didData = await blockchain.getDidData(did)
-    expect(didData.did_doc.toString().split('x')[1]).eql(Utils.base64ToHex(storageAddress))
+    const didData = await blockchain.getDidData(tempWalletDid)
+    expect(didData.did_doc).eql(u8aToHex(storageAddress))
     const registeredStorageAddress = await blockchain.wait4Event('DidDocumentRegistered')
-    // Result should equal to true => No errors
-    expect(result).equal(true)
     // DID Document of event should be equal to entered
-    expect(registeredStorageAddress[2].split('x')[1]).eql(Utils.base64ToHex(storageAddress))
+    expect(registeredStorageAddress[2]).eql(u8aToHex(storageAddress))
     // DID Document of DIDData record should be equal to entered
-    result = await blockchain.getDidDocHash(did)
+    result = u8aToHex(await blockchain.getDidDocHash(tempWalletDid))
     if (result !== '') {
-      expect(result).eql(storageAddress)
+      expect(result).eql(u8aToHex(storageAddress))
+    } else {
+      console.log('Did Document empty')
     }
   })
 
@@ -227,35 +273,39 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     blockchain.setKeyring(tempWallet.mnemonic)
     const newKeyPair = await crypto.keyPair()
     const newPubKey = newKeyPair.box.publicKey
-    await blockchain.rotateKey(did, newPubKey)
+    // Get the DID for tempWallet
+    const tempWalletDid = await blockchain.getDidFromOwner()
+    await blockchain.rotateKey(tempWalletDid, newPubKey)
     const registeredRotateKeyEvent = await blockchain.wait4Event('KeyRotated')
     // DID Document of event should be equal to entered
     expect(registeredRotateKeyEvent[2].split('x')[1]).equal(Utils.base64ToHex(newPubKey))
 
-    const key = await blockchain.getActualDidKey(did)
+    const key = await blockchain.getActualDidKey(tempWalletDid)
     expect(key).eql(newPubKey)
   })
 
   it('Should add a CID to Blockchain', async () => {
     // Result should equal to true => No errors
     const cid = crypto.random(16)
-    const result = await blockchain.addCid(cid)
+    // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
+    const result = await blockchain.addCid(stringToHex(cid))
     expect(result).equal(true)
 
     // Promoter Account from even data should be address of tempwallet
     const registeredCidEvent = await blockchain.wait4Event('CIDCreated')
     expect(registeredCidEvent[1]).equal(tempWallet.address)
 
-    // DID must be DID of the Owner
+    // DID must be DID of the Owner because has not been provided
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
     expect(registeredCidEvent[2]).equal(didPromoter.toString())
   })
 
   it('Should add three new CIDs to Blockchain', async () => {
     // Result should equal to true => No errors
-    const result1 = await blockchain.addCid(cid1)
-    const result2 = await blockchain.addCid(cid2)
-    const result3 = await blockchain.addCid(cid3)
+    // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
+    const result1 = await blockchain.addCid(stringToHex(cid1))
+    const result2 = await blockchain.addCid(stringToHex(cid2))
+    const result3 = await blockchain.addCid(stringToHex(cid3))
     expect(result1).equal(true)
     expect(result2).equal(true)
     expect(result3).equal(true)
@@ -269,7 +319,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
   it('Should delete a CID into Blockchain', async () => {
     // Result should equal to true => No errors
-    const result = await blockchain.deleteCid(cid3)
+    const result = await blockchain.deleteCid(stringToHex(cid3))
     expect(result).equal(true)
 
     // Promoter Account from even data should be address of tempwallet
@@ -279,62 +329,69 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // DID must be DID of the Owner
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
     expect(registeredCidEvent[2]).equal(didPromoter.toString())
+    // See result
+    const res = await blockchain.getCIDsByDID(didPromoter)
   })
 
   // The following tests will pass just once if the blockchain is
   // not reinitialized. That's because a credential assigned
-  // iis not deleted but marked as deleted and can not
+  // is not deleted but marked as deleted and can not
   // be reassigned
-  /*
-  it('Should Assign a Credential', async () => {
+  it.skip('Should Assign a Credential', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
-    const newKeyPair = await crypto.keyPair()
-    const newPubKey = newKeyPair.box.publicKey
-    await blockchain.assignCredential(did, credential)
+    // Get the DID for tempWallet
+    const tempWalletDid = await blockchain.getDidFromOwner()
+    await blockchain.assignCredential(tempWalletDid, credential)
     const registeredCredentialAssignedEvent = await blockchain.wait4Event('CredentialAssigned')
     // Credential of event should be equal to entered
-    expect(registeredCredentialAssignedEvent[2].split('x')[1]).equal(Utils.base64ToHex(credential))
+    expect(registeredCredentialAssignedEvent[2]).equal(stringToHex(credential))
   })
 
-  it('Should Remove a Credential', async () => {
+  it.skip('Should Remove a Credential', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
-    const newKeyPair = await crypto.keyPair()
-    const newPubKey = newKeyPair.box.publicKey
-    await blockchain.removeCredential(did, credential)
+    // Get the DID for tempWallet
+    const tempWalletDid = await blockchain.getDidFromOwner()
+    await blockchain.removeCredential(tempWalletDid, credential)
     const registeredCredentialRemovedEvent = await blockchain.wait4Event('CredentialRemoved')
     // Credential of event should be equal to entered
-    expect(registeredCredentialRemovedEvent[2].split('x')[1]).equal(Utils.base64ToHex(credential))
+    expect(registeredCredentialRemovedEvent[2]).equal(stringToHex(credential))
   })
-  */
 
-  /*
-  it('Trying to Change Owner not being the owner. Should fail', async () => {
-    blockchain.setKeyring('//Alice')
-    const result = await blockchain.changeDidOwner(did, charlie)
+  it.skip('Trying to Change Owner not being the owner. Should fail', async () => {
+    // Create a new accopunt without DID assigned
+    const tempWallet4 = crypto.keyPair()
+    blockchain.setKeyring(tempWallet2.mnemonic)
+    // Get the DID for tempWallet
+    const tempWalletDid = await blockchain.getDidFromOwner(tempWallet.address)
+    const result = await blockchain.changeOwner(tempWalletDid, tempWallet4.address)
     // Result should equal to false => error
     expect(result).equal(false)
   })
 
-  it('Should Change Owner', async () => {
-    blockchain.setKeyring('//Bob')
-    await blockchain.changeDidOwner(did, charlie)
-    const subs = await blockchain.wait4Event('NewOwner')
-    const registeredNewOwnerEvent = JSON.parse(subs)
-
+  it.skip('Should Change Owner', async () => {
+    blockchain.setKeyring(tempWallet.mnemonic)
+    // Get the DID for tempWallet
+    const tempWalletDid = await blockchain.getDidFromOwner()
+    await blockchain.changeOwner(tempWalletDid, tempWallet4.address)
+    const registeredNewOwnerEvent = await blockchain.wait4Event('NewOwner')
     // New owner of event should be equal to entered
-    expect(registeredNewOwnerEvent[2]).equal(charlie)
+    expect(registeredNewOwnerEvent[2]).equal(tempWallet4.address)
   })
 
-  it('Try to remove DID not being the owner. Should fail', async () => {
-    blockchain.setKeyring('//Bob')
-    const result = await blockchain.removeDid(did, charlie)
+  it.skip('Try to remove DID not being the owner. Should fail', async () => {
+    blockchain.setKeyring(tempWallet3.mnemonic)
+    // Get the DID for tempWallet4
+    const tempWallet4Did = await blockchain.getDidFromOwner(tempWallet4.address)
+    const result = await blockchain.removeDid(tempWallet4Did)
     // Result should equal to false => error
     expect(result).equal(false)
   })
 
-  it('Should Remove DID', async () => {
-    blockchain.setKeyring('//Charlie')
-    await blockchain.removeDid(did)
+  it.skip('Should Remove DID', async () => {
+    blockchain.setKeyring(tempWallet.mnemonic)
+    // Get the DID for tempWallet4
+    const tempWalletDid = await blockchain.getDidFromOwner(tempWallet.address)
+    await blockchain.removeDid(tempWalletDid)
     const subs = await blockchain.wait4Event('DidRemoved')
     const didRemovedEvent = JSON.parse(subs)
     console.log('SUBS -> %O', subs)
@@ -342,7 +399,6 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // New owner of event should be equal to entered
     expect(Utils.hexToBase64(didRemovedEvent[1].split('x')[1])).equal(Utils.base64ToHex(did))
   })
-  */
 
   it.skip('Should sweep tokens from Zelda to Alice', async () => {
     const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
@@ -353,7 +409,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(zeldaBalance2).not.equal(zeldaBalance1)
   })
 
-  it('Creates a new process and get some paths', async () => {
+  it.skip('Creates a new process and get some paths', async () => {
     // Sets the keyring (so account address)
     const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
     // Get DID for this account
@@ -373,7 +429,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startProcess(did, processHash)
     // Assert data is correctly written
     const processData = await blockchain.getProcessNode(processHash)
-    expect(processData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(processData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -387,7 +443,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startSubprocess(did, subProcessHash, processHash)
     // Assert data is correctly written
     const subProcessData = await blockchain.getProcessNode(subProcessHash)
-    expect(subProcessData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(subProcessData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -401,7 +457,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startStep(did, firstStepHash, subProcessHash)
     // Assert data is correctly written
     const firstStepData = await blockchain.getProcessNode(firstStepHash)
-    expect(firstStepData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(firstStepData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -415,7 +471,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startStep(did, secondStepHash, subProcessHash)
     // Assert data is correctly written
     const secondStepData = await blockchain.getProcessNode(secondStepHash)
-    expect(secondStepData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(secondStepData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -429,7 +485,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, processDocumentHash, processHash)
     // Assert data is correctly written
     const processDocumentData = await blockchain.getProcessNode(processDocumentHash)
-    expect(processDocumentData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(processDocumentData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -443,7 +499,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, subProcessDocumentHash, subProcessHash)
     // Assert data is correctly written
     const subProcessDocumentData = await blockchain.getProcessNode(subProcessDocumentHash)
-    expect(subProcessDocumentData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(subProcessDocumentData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -457,7 +513,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, firstStepDocumentHash, firstStepHash)
     // Assert data is correctly written
     const firstStepDocumentData = await blockchain.getProcessNode(firstStepDocumentHash)
-    expect(firstStepDocumentData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(firstStepDocumentData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -471,7 +527,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, secondStepDocumentHash, secondStepHash)
     // Assert data is correctly written
     const secondStepDocumentData = await blockchain.getProcessNode(secondStepDocumentHash)
-    expect(secondStepDocumentData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(secondStepDocumentData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -485,7 +541,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addAttachment(did, attachmentToSecondStepDocumentHash, secondStepDocumentHash)
     // Assert data is correctly written
     const attachmentToSecondStepDocumentData = await blockchain.getProcessNode(attachmentToSecondStepDocumentHash)
-    expect(attachmentToSecondStepDocumentData.did.toString().split('x')[1]).eql(Utils.base64ToHex(did))
+    expect(u8aToHex(attachmentToSecondStepDocumentData.did)).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -525,6 +581,21 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // And obtain again the full process tree to check for revoked
     fullProcessTree = await blockchain.getFullProcessTree(processHash)
     console.log(util.inspect(fullProcessTree, {showHidden: false, depth: null}))
+  })
+
+  it.skip('Creates some NFTs classes and instances and transfer ownership', async () => {
+    // Sets the keyring (so account address)
+    const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
+    // Get DID for this account
+    const did = await blockchain.getDidFromOwner(alice)
+    // Create random number for a class
+    const classid = crypto.random(16)
+    console.log('classid ', classid)
+    // Creates an NFT Class 
+    await blockchain.createNFTClass (classid, alice)
+    // Obtains result data
+    const nftClassDetails = await blockchain.getNFTClassDetails()
+    console.log('nftClassDetails ', nftClassDetails)
   })
 
   it('should clean up after itself', () => {

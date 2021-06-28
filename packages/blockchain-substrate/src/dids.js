@@ -1,7 +1,7 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
 const Utils = require('./utils')
-const { bufferToU8a } = require('@polkadot/util')
+const { bufferToU8a, stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString, stringToHex } = require('@polkadot/util')
 
 // Debug
 var debug = require('debug')('did:debug:sub')
@@ -14,15 +14,15 @@ module.exports = class DIDs {
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair
-   * @param {string} did DID
    * @param {string} accountTo Account to assign DID
    * @param {number} level Level to assign
+   * @param {number} didType DID type
+   * @param {string} legalName Organization's legal name
+   * @param {string} taxId Organization's tax id
    * @returns {Promise} of transaction
    */
-  async registerDid (exec, keypair, did, accountTo, level) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
-    const transaction = await exec.api.tx.idSpace.registerDid(hexDID, accountTo, level)
+  async registerDid (exec, keypair, accountTo, level, didType, legalName, taxId) {
+    const transaction = await exec.api.tx.idSpace.registerDid(accountTo, level, didType, legalName, taxId)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -36,9 +36,8 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async setStorageAddress (exec, keypair, did, storageAddress) {
-    const hexDid = Utils.base64ToHex(did)
-    const docHash = Utils.toUTF8Array(storageAddress)
-    const transaction = await exec.api.tx.idSpace.setStorageAddress(hexDid, docHash)
+    const storageAddr = u8aToHex(storageAddress)
+    const transaction = await exec.api.tx.idSpace.setStorageAddress(did, storageAddr)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -52,9 +51,8 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async registerDidDocument (exec, keypair, did, diddocHash) {
-    const hexDid = Utils.base64ToHex(did)
-    const docHash = Utils.toUTF8Array(diddocHash)
-    const transaction = await exec.api.tx.idSpace.registerDidDocument(hexDid, docHash)
+    const docHash = u8aToHex(diddocHash)
+    const transaction = await exec.api.tx.idSpace.registerDidDocument(did, docHash)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -70,12 +68,10 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async rotateKey (exec, keypair, did, pubKey, typ) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
-    const keyArray = Utils.toUTF8Array(pubKey)
+    const keyArray = u8aToHex(Utils.toUTF8Array(pubKey))
     // Call idSpace RotateKey function
-    const transaction = await exec.api.tx.idSpace.rotateKey(hexDID, keyArray, typ)
+    const transaction = await exec.api.tx.idSpace.rotateKey(did, keyArray, typ)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -90,12 +86,10 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async rotateKeyType (exec, keypair, did, pubKey, typ) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
     // Convert pubKey to vec[u8]
-    const keyArray = Utils.toUTF8Array(pubKey)
+    const keyArray = u8aToHex(Utils.toUTF8Array(pubKey))
     // Call idSpace RotateKey function
-    const transaction = await exec.api.tx.idSpace.rotateKey(hexDID, keyArray, typ)
+    const transaction = await exec.api.tx.idSpace.rotateKey(did, keyArray, typ)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -109,9 +103,11 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async changeOwner (exec, keypair, did, newOwner) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
-    const transaction = await exec.api.tx.idSpace.changeDidOwner(hexDID, newOwner)
+    // Check if DID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
+    const transaction = await exec.api.tx.idSpace.changeDidOwner(did, newOwner)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -125,9 +121,55 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async assignCredential (exec, keypair, did, credential) {
-    const hexDid = Utils.base64ToHex(did)
-    const cred = Utils.toUTF8Array(credential)
-    const transaction = await exec.api.tx.idSpace.assignCredential(hexDid, cred)
+    const transaction = await exec.api.tx.idSpace.assignCredential(did, credential)
+    return await exec.execTransaction(keypair, transaction)
+  }
+
+  /**
+   * Change Legal Name or Tax ID
+   * Only the promoter account is allowed to do it
+   *
+   * @param {object} exec Executor class.
+   * @param {object} keypair Account's keypair
+   * @param {string} did DID
+   * @param {object} legalName New Legal Name (if null will not be changed)
+   * @param {object} taxId New Tax Id (if null will not be changed)
+   * @returns {Promise} Result of the transaction
+   */
+  async changeLegalNameOrTaxId (exec, keypair, did, legalName, taxId) {
+    if (legalName === null) { legalName = '0x00' }
+    if (taxId === null) { taxId = '0x00' }
+    const transaction = await exec.api.tx.idSpace.changeLegalNameOrTaxId(did, legalName, taxId)
+    return await exec.execTransaction(keypair, transaction)
+  }
+
+  /**
+   * Change DID Info
+   * Only the owner account is allowed to do it
+   *
+   * @param {object} exec Executor class.
+   * @param {object} keypair Account's keypair
+   * @param {string} did DID
+   * @param {object} name New Name (if null will not be changed)
+   * @param {object} address New address Id (if null will not be changed)
+   * @param {object} postalCode New postal code (if null will not be changed)
+   * @param {object} city New city (if null will not be changed)
+   * @param {object} countryCode New country code (if null will not be changed)
+   * @param {object} phoneNumber New phone number (if null will not be changed)
+   * @param {object} website New website (if null will not be changed)
+   * @param {object} endpoint New endpoint (if null will not be changed)
+   * @returns {Promise} Result of the transaction
+   */
+  async changeInfo (exec, keypair, did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint) {
+    if (name === null) { name = '0x00' }
+    if (address === null) { address = '0x00' }
+    if (postalCode === null) { postalCode = '0x00' }
+    if (city === null) { city = '0x00' }
+    if (countryCode === null) { countryCode = '0x00' }
+    if (phoneNumber === null) { phoneNumber = '0x00' }
+    if (website === null) { website = '0x00' }
+    if (endpoint === null) { endpoint = '0x00' }
+    const transaction = await exec.api.tx.idSpace.changeInfo(did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -141,9 +183,7 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async removeCredential (exec, keypair, did, credential) {
-    const hexDid = Utils.base64ToHex(did)
-    const cred = Utils.toUTF8Array(credential)
-    const transaction = await exec.api.tx.idSpace.removeCredential(hexDid, cred)
+    const transaction = await exec.api.tx.idSpace.removeCredential(did, credential)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -156,9 +196,11 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async removeDid (exec, keypair, did) {
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
-    const transaction = await exec.api.tx.idSpace.removeDid(hexDID)
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
+    const transaction = await exec.api.tx.idSpace.removeDid(did)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -170,8 +212,12 @@ module.exports = class DIDs {
    * @returns {Promise} of public key
    */
   async getDidData (exec, did) {
-    const hexDid = Utils.base64ToHex(did)
-    const didData = await exec.api.query.idSpace.didData(hexDid)
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
+    const { internalDid } = this.structDid(did)
+    const didData = await exec.api.query.idSpace.didData(internalDid)
     return JSON.parse(didData)
   }
 
@@ -183,7 +229,12 @@ module.exports = class DIDs {
    * @returns {string} public key in hex format
    */
   async getOwnerFromDid (exec, did) {
-    return await exec.api.query.idSpace.ownerFromDid(did)
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
+    const { internalDid } = this.structDid(did)
+    return await exec.api.query.idSpace.ownerFromDid(internalDid)
   }
 
   /**
@@ -194,7 +245,8 @@ module.exports = class DIDs {
    * @returns {string} DID
    */
   async getDidFromOwner (exec, owner) {
-    return await exec.api.query.idSpace.didFromOwner(owner)
+    const did = await exec.api.query.idSpace.didFromOwner(owner)
+    return u8aToHex(did)
   }
 
   /**
@@ -207,10 +259,13 @@ module.exports = class DIDs {
    * @returns {string} Actual Key
    */
   async getActualDidKey (exec, did, typ) {
-    const hexDid = Utils.base64ToHex(did)
-    const result = await exec.api.query.idSpace.publicKeyFromDid([hexDid, typ])
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
+    const { internalDid } = this.structDid(did)
+    const result = await exec.api.query.idSpace.publicKeyFromDid([internalDid, typ])
     return bufferToU8a(result)
-    // return (result)
   }
 
   /**
@@ -222,10 +277,13 @@ module.exports = class DIDs {
    * @returns {string} Actual Key
    */
   async getActualDidKeyType (exec, did, typ) {
-    const hexDid = Utils.base64ToHex(did)
-    const result = await exec.api.query.idSpace.publicKeyFromDid([hexDid, typ])
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
+    const { internalDid } = this.structDid(did)
+    const result = await exec.api.query.idSpace.publicKeyFromDid([internalDid, typ])
     return bufferToU8a(result)
-    // return (result)
   }
 
   /**
@@ -236,10 +294,12 @@ module.exports = class DIDs {
    * @returns {string} hash in Base64 format
    */
   async getDidDocHash (exec, did) {
-    const hexDID = Utils.base64ToHex(did)
-    const didDoc = await exec.api.query.idSpace.didDocumentFromDid(hexDID)
-    const doc = didDoc.toString().split('x')[1].replace(/0+$/g, '')
-    return Utils.hexToBase64(doc)
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
+    const { internalDid } = this.structDid(did)
+    return await exec.api.query.idSpace.didDocumentFromDid(internalDid)
   }
 
   /**
@@ -251,18 +311,11 @@ module.exports = class DIDs {
    * @param {object} keypair Account's keypair
    * @param {string} cid CID
    * @param {string} did DID to assign the new CID (Must exists)
-   * @param {number} max_hids DID to assign the new CID (Must exists)
+   * @param {number} maxHids DID to assign the new CID (Must exists)
    * @returns {Promise} of transaction
    */
-  async addCid (exec, keypair, cid, did, max_hids) {
-    // Convert cid string to hex
-    const hexCID = Utils.base64ToHex(cid)
-    // Convert did string to hex
-    let hexDID = Buffer.from([0])
-    if (did != null) {
-      hexDID = Utils.base64ToHex(did)
-    }
-    const transaction = await exec.api.tx.idSpace.addCid(hexCID, hexDID, max_hids)
+  async addCid (exec, keypair, cid, did, maxHids) {
+    const transaction = await exec.api.tx.idSpace.addCid(cid, did, maxHids)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -278,14 +331,7 @@ module.exports = class DIDs {
    * @returns {Promise} of transaction
    */
   async deleteCid (exec, keypair, cid, did) {
-    // Convert cid string to hex
-    const hexCID = Utils.base64ToHex(cid)
-    // Convert did string to hex
-    let hexDID = Buffer.from([0])
-    if (did != null) {
-      hexDID = Utils.base64ToHex(did)
-    }
-    const transaction = await exec.api.tx.idSpace.deleteCid(hexCID, hexDID)
+    const transaction = await exec.api.tx.idSpace.deleteCid(cid, did)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -328,6 +374,10 @@ module.exports = class DIDs {
    * @returns {string} CID struct or null
    */
   async getCIDByKey (exec, cid) {
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(cid) === false) {
+      return false
+    }
     const CIDs = await exec.api.query.idSpace.cIDs()
     let first = 0
     let last = CIDs.length - 1
@@ -357,16 +407,33 @@ module.exports = class DIDs {
    * @returns {object} CID array
    */
   async getCIDsByDID (exec, did) {
+    // Check if CID is wellformed
+    if (Utils.verifyHexString(did) === false) {
+      return false
+    }
     const CIDs = await exec.api.query.idSpace.cIDs()
-    // Convert did string to hex
-    const hexDID = Utils.base64ToHex(did)
     const didCollection = []
     for (let i = 0; i < CIDs.length; i++) {
       const parsedCID = JSON.parse(CIDs[i])
-      if (parsedCID.did_owner.toString().split('x')[1] === hexDID && parsedCID.valid_to === 0) {
+      if (parsedCID.did_owner === did && parsedCID.valid_to === 0) {
         didCollection.push(parsedCID)
       }
     }
     return didCollection
+  }
+
+  /**
+   * Destructure DID into its components as version.
+   *
+   * @param {string} did DID to search
+   * @returns {object} CID array
+   */
+  structDid (did) {
+    return {
+      version: did.slice(2, 4),
+      network: did.slice(4, 8),
+      didType: did.slice(8, 10),
+      internalDid: did.slice(0, 2).concat(did.slice(10))
+    }
   }
 }

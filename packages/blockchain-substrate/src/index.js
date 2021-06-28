@@ -1,18 +1,17 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
 const BlockchainInterface = require('@caelumlabs/blockchain')
-const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api')
-const Utils = require('./utils')
-const { bufferToU8a } = require('@polkadot/util')
-const SubstrateBlockchainTypes = require('./types')
+const { Keyring } = require('@polkadot/api')
 const Executor = require('./executor')
 const DID = require('./dids')
 const Balance = require('./balance')
 const Process = require('./process')
-const Tokens = require('./tokens')
+const Tokens = require('./fungibles')
+const ClassNFTs = require('./classnfts')
 
 // Debug
 var debug = require('debug')('did:debug:sub')
+
 /**
  * Javascript Class to interact with the Blockchain.
  */
@@ -30,6 +29,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     this.balance = new Balance()
     this.process = new Process()
     this.tokens = new Tokens()
+    this.classNFTs = new ClassNFTs()
     this.keypair = {}
   }
 
@@ -159,14 +159,17 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Registers Did in Substrate.
    *
-   * @param {string} did DID
    * @param {string} accountTo Account to assign DID
    * @param {number} level Level to assign
+   * @param {number} didType DID type
+   * @param {string} legalName Organization Legal Name
+   * @param {string} taxId Organization tax id
    * @returns {Promise} of transaction
    */
-  async registerDid (did, accountTo, level) {
-    return this.dids.registerDid(this.exec, this.keypair, did, accountTo, level)
+  async registerDid (accountTo, level, didType, legalName, taxId) {
+    return this.dids.registerDid(this.exec, this.keypair, accountTo, level, didType, legalName, taxId)
   }
+
   /**
    * Registers aa Arweave storage Address (Vec<u8>)for a DID
    *
@@ -234,6 +237,38 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async assignCredential (did, credential) {
     return this.dids.assignCredential(this.exec, this.keypair, did, credential)
+  }
+
+  /**
+   * Change Legal Name or Tax Id of a DID
+   * Only the promoter account can do this operation
+   *
+   * @param {string} did DID
+   * @param {object} legalName New Legal Name (if null will not be changed)
+   * @param {object} taxId New Tax Id (if null will not be changed)
+   * @returns {Promise} Result of the transaction
+   */
+  async changeLegalNameOrTaxId (did, legalName, taxId) {
+    return this.dids.changeLegalNameOrTaxId(this.exec, this.keypair, did, legalName, taxId)
+  }
+
+  /**
+   * Change DID Info
+   * Only the owner account is allowed to do it
+   *
+   * @param {string} did DID
+   * @param {object} name New Name (if null will not be changed)
+   * @param {object} address New address Id (if null will not be changed)
+   * @param {object} postalCode New postal code (if null will not be changed)
+   * @param {object} city New city (if null will not be changed)
+   * @param {object} countryCode New country code (if null will not be changed)
+   * @param {object} phoneNumber New phone number (if null will not be changed)
+   * @param {object} website New website (if null will not be changed)
+   * @param {object} endpoint New endpoint (if null will not be changed)
+   * @returns {Promise} Result of the transaction
+   */
+  async changeInfo (did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint) {
+    return this.dids.changeInfo(this.exec, this.keypair, did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint)
   }
 
   /**
@@ -327,7 +362,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * will be assigned to the DID of the sender transaction account
    *
    * @param {string} cid CID
-   * @param {string} did DID to assign the new CID (Must exists)
+   * @param {string} did DID to assign the new CID (Either null or Must exists)
    * @param {number} max_hids DID to assign the new CID (Must exists)
    * @returns {Promise} of transaction
    */
@@ -508,7 +543,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Obtain the process node data
    *
-   * @param {object} exec Executor class.
    * @param {string} hash Process node hash
    * @returns {Promise} of transaction
    */
@@ -556,11 +590,11 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Parameters:
    * - `id`: The identifier of the new token. This must not be currently in use to identify an existing token.
    * - `admin`: The admin of this class of tokens. The admin is the initial address of each member of the token class's admin team.
-   * - `minBalance`: The minimum balance of this new token that any single account must have. 
+   * - `minBalance`: The minimum balance of this new token that any single account must have.
    *    If an account's balance is reduced below this, then it collapses to zero.
    *
-   * @param {number} id The identifier of the new token. 
-   * @param {object} admin The admin of this class of tokens. 
+   * @param {number} id The identifier of the new token.
+   * @param {object} admin The admin of this class of tokens.
    * @param {number} minBalance The minimum balance.
    * @returns {Promise} of transaction
    */
@@ -579,15 +613,15 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Unlike `create`, no funds are reserved.
    *
    * - `id`: The identifier of the new token. This must not be currently in use to identify an existing token.
-   * - `owner`: The owner of this class of tokens. The owner has full superuser permissions over this token, 
+   * - `owner`: The owner of this class of tokens. The owner has full superuser permissions over this token,
    *    but may later change and configure the permissions using `transfer_ownership`and `set_team`.
    * - `isSufficient`: Controls that the account should have sufficient tokens free.
-   * - `minBalance`: The minimum balance of this new token that any single account must have. 
+   * - `minBalance`: The minimum balance of this new token that any single account must have.
    *    If an account's balance is reduced below this, then it collapses to zero.
    *
-   * @param {number} id The identifier of the new token. 
-   * @param {object} owner The owner of this class of tokens. 
-   * @param {bool} isSufficient Controls that the account should have sufficient tokens free. 
+   * @param {number} id The identifier of the new token.
+   * @param {object} owner The owner of this class of tokens.
+   * @param {bool} isSufficient Controls that the account should have sufficient tokens free.
    * @param {number} minBalance The minimum balance.
    * @returns {Promise} of transaction
    */
@@ -604,8 +638,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *   Emits `Destroyed` event when successful.
    * - `witness`: The identifier of the token to be destroyed. This must identify an existing token.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} witness The identifier of the token to be destroyed.. 
+   * @param {number} id The identifier of the token.
+   * @param {object} witness The identifier of the token to be destroyed.
    * @returns {Promise} of transaction
    */
   async destroyToken (id, witness) {
@@ -619,9 +653,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `beneficiary`: The account to be credited with the minted tokens.
    * - `amount`: The amount of the token to be minted.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} beneficiary The account to be credited with the minted tokenss. 
-   * @param {number} amount The amount of the token to be minted. 
+   * @param {number} id The identifier of the token.
+   * @param {object} beneficiary The account to be credited with the minted tokenss.
+   * @param {number} amount The amount of the token to be minted.
    * @returns {Promise} of transaction
    */
   async mintToken (id, beneficiary, amount) {
@@ -639,9 +673,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    *    Modes: Post-existence of `who`; Pre & post Zombie-status of `who`.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} who The account to be debited from. 
-   * @param {number} amount The maximum amount by which `who`'s balance should be reduced. 
+   * @param {number} id The identifier of the token.
+   * @param {object} who The account to be debited from.
+   * @param {number} amount The maximum amount by which `who`'s balance should be reduced.
    * @returns {Promise} of transaction
    */
   async burnToken (id, who, amount) {
@@ -661,9 +695,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Modes: Pre-existence of `target`; Post-existence of sender; Prior & post zombie-status
    * of sender; Account pre-existence of `target`.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} target The account to be credited. 
-   * @param {number} amount The amount by which the sender's balance of tokens should be reduced. 
+   * @param {number} id The identifier of the token.
+   * @param {object} target The account to be credited.
+   * @param {number} amount The amount by which the sender's balance of tokens should be reduced.
    * @returns {Promise} of transaction
    */
   async transferToken (id, target, amount) {
@@ -675,16 +709,16 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * - `id`: The identifier of the token to have some amount transferred.
    * - `target`: The account to be credited.
-   * - `amount`: The amount by which the sender's balance of tokens should be reduced 
+   * - `amount`: The amount by which the sender's balance of tokens should be reduced
    * - `target`'s balance increased. The amount actually transferred may be slightly greater in
    *    the case that the transfer would otherwise take the sender balance above zero but below
    *    the minimum balance. Must be greater than zero.
    * Modes: Pre-existence of `target`; Post-existence of sender; Prior & post zombie-status
    * of sender; Account pre-existence of `target`.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} target The amount actually transferred may be slightly greater. 
-   * @param {number} amount The amount actually transferred. 
+   * @param {number} id The identifier of the token.
+   * @param {object} target The amount actually transferred may be slightly greater.
+   * @param {number} amount The amount actually transferred.
    * @returns {Promise} of transaction
    */
   async transferTokenKeepAlive (id, target, amount) {
@@ -705,10 +739,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Modes: Pre-existence of `dest`; Post-existence of `source`; Prior & post zombie-status
    * of `source`; Account pre-existence of `dest`.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} source The account to be debited. 
-   * @param {object} dest The account to be credited. 
-   * @param {number} amount The amount by which the `source`'s balance of tokens should be reduced. 
+   * @param {number} id The identifier of the token.
+   * @param {object} source The account to be debited.
+   * @param {object} dest The account to be credited.
+   * @param {number} amount The amount by which the `source`'s balance of tokens should be reduced.
    * @returns {Promise} of transaction
    */
   async forceTransferToken (id, source, dest, amount) {
@@ -722,8 +756,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `id`: The identifier of the token to be frozen.
    * - `who`: The account to be frozen.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {string} who The account to be frozen. 
+   * @param {number} id The identifier of the token.
+   * @param {string} who The account to be frozen.
    * @returns {Promise} of transaction
    */
   async freezeAccountForToken (id, who) {
@@ -737,8 +771,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `id`: The identifier of the token to be frozen.
    * - `who`: The account to be unfrozen.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} who The account to be unfrozen. 
+   * @param {number} id The identifier of the token.
+   * @param {object} who The account to be unfrozen.
    * @returns {Promise} of transaction
    */
   async unfrozenAccountForToken (id, who) {
@@ -751,7 +785,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * - `id`: The identifier of the token to be frozen.
    *
-   * @param {number} id The identifier of the token. 
+   * @param {number} id The identifier of the token.
    * @returns {Promise} of transaction
    */
   async freezeToken (id) {
@@ -764,7 +798,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * - `id`: The identifier of the token to be frozen.
    *
-   * @param {number} id The identifier of the token. 
+   * @param {number} id The identifier of the token.
    * @returns {Promise} of transaction
    */
   async unfrozenToken (id) {
@@ -778,8 +812,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `id`: The identifier of the token.
    * - `owner`: The new Owner of this token.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} owner The new Owner of this token. 
+   * @param {number} id The identifier of the token.
+   * @param {object} owner The new Owner of this token.
    * @returns {Promise} of transaction
    */
   async transferTokenOwnership (id, owner) {
@@ -795,10 +829,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `admin`: The new Admin of this token.
    * - `freezer`: The new Freezer of this token.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} issuer The new Issuer of this token. 
-   * @param {object} admin The new Admin of this token. 
-   * @param {object} freezer The new Freezer of this toke. 
+   * @param {number} id The identifier of the token.
+   * @param {object} issuer The new Issuer of this token.
+   * @param {object} admin The new Admin of this token.
+   * @param {object} freezer The new Freezer of this toke.
    * @returns {Promise} of transaction
    */
   async setTokenTeam (id, issuer, admin, freezer) {
@@ -818,10 +852,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `symbol`: The exchange symbol for this token. Limited in length by `StringLimit`.
    * - `decimals`: The number of decimals this token uses to represent one unit.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {string} name The user friendly name of this token. Limited in length by `StringLimit. 
-   * @param {string} symbol The exchange symbol for this token. Limited in length by `StringLimit`n. 
-   * @param {number} decimals The number of decimals this token uses to represent one unit. 
+   * @param {number} id The identifier of the token.
+   * @param {string} name The user friendly name of this token. Limited in length by `StringLimit.
+   * @param {string} symbol The exchange symbol for this token. Limited in length by `StringLimit`n.
+   * @param {number} decimals The number of decimals this token uses to represent one unit.
    * @returns {Promise} of transaction
    */
   async setTokenMetadata (id, name, symbol, decimals) {
@@ -836,7 +870,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * - `id`: The identifier of the token to clear.
    *
-   * @param {number} id The identifier of the token. 
+   * @param {number} id The identifier of the token.
    * @returns {Promise} of transaction
    */
   async clearTokenMetadata (id) {
@@ -853,11 +887,11 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `symbol`: The exchange symbol for this token. Limited in length by `StringLimit`.
    * - `decimals`: The number of decimals this token uses to represent one unit.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {atring} name The user friendly name of this token. Limited in length by `StringLimit`. 
-   * @param {string} symbol The exchange symbol for this token. Limited in length by `StringLimit`. 
-   * @param {number} decimals The number of decimals this token uses to represent one unit. 
-   * @param {bool} isFrozen The identifier of the token. 
+   * @param {number} id The identifier of the token.
+   * @param {atring} name The user friendly name of this token. Limited in length by `StringLimit`.
+   * @param {string} symbol The exchange symbol for this token. Limited in length by `StringLimit`.
+   * @param {number} decimals The number of decimals this token uses to represent one unit.
+   * @param {bool} isFrozen The identifier of the token.
    * @returns {Promise} of transaction
    */
   async forceSetTokenMetadata (id, name, symbol, decimals, isFrozen) {
@@ -871,7 +905,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    *
    * - `id`: The identifier of the token to clear.
    *
-   * @param {number} id The identifier of the token. 
+   * @param {number} id The identifier of the token.
    * @returns {Promise} of transaction
    */
   async forceClearTokenMetadata (id) {
@@ -896,14 +930,14 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `is_frozen`: Whether this token class is frozen except for permissioned/admin
    *    instructions.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} owner The new Owner of this token. 
-   * @param {object} issuer The new Issuer of this token. 
-   * @param {object} admin The new Admin of this token. 
-   * @param {object} freezer The new Freezer of this token. 
-   * @param {number} minBalance The minimum balance of this token. 
-   * @param {bool} isSufficient Whether a non-zero balance of this token is deposit of sufficient. 
-   * @param {bool} isFrozen Whether this token class is frozen except for permissioned/admin instructions. 
+   * @param {number} id The identifier of the token.
+   * @param {object} owner The new Owner of this token.
+   * @param {object} issuer The new Issuer of this token.
+   * @param {object} admin The new Admin of this token.
+   * @param {object} freezer The new Freezer of this token.
+   * @param {number} minBalance The minimum balance of this token.
+   * @param {bool} isSufficient Whether a non-zero balance of this token is deposit of sufficient.
+   * @param {bool} isFrozen Whether this token class is frozen except for permissioned/admin instructions.
    * @returns {Promise} of transaction
    */
   async forceTokenStatus (id, owner, issuer, admin, freezer, minBalance, isSufficient, isFrozen) {
@@ -926,9 +960,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `amount`: The amount of token that may be transferred by `delegate`. If there is
    *    already an approval in place, then this acts additively.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} delegate The account to delegate permission to transfer token. 
-   * @param {number} amount The amount of token that may be transferred by `delegate`. 
+   * @param {number} id The identifier of the token.
+   * @param {object} delegate The account to delegate permission to transfer token.
+   * @param {number} amount The amount of token that may be transferred by `delegate`.
    * @returns {Promise} of transaction
    */
   async approveTokenTransfer (id, delegate, amount) {
@@ -945,8 +979,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `id`: The identifier of the token.
    * - `delegate`: The account delegated permission to transfer token.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} delegate The account delegated permission to transfer token. 
+   * @param {number} id The identifier of the token.
+   * @param {object} delegate The account delegated permission to transfer token.
    * @returns {Promise} of transaction
    */
   async cancelApprovalTokenTransfer (id, delegate) {
@@ -963,9 +997,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `id`: The identifier of the token.
    * - `delegate`: The account delegated permission to transfer token.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} owner The new Owner of this token. 
-   * @param {object} delegate The account delegated permission to transfer token. 
+   * @param {number} id The identifier of the token.
+   * @param {object} owner The new Owner of this token.
+   * @param {object} delegate The account delegated permission to transfer token.
    * @returns {Promise} of transaction
    */
   async forceCancelApprovalTokenTransfer (id, owner, delegate) {
@@ -987,10 +1021,10 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * - `destination`: The account to which the token balance of `amount` will be transferred.
    * - `amount`: The amount of tokens to transfer.
    *
-   * @param {number} id The identifier of the token. 
-   * @param {object} owner The account which previously approved for a transfer of at least `amount`. 
-   * @param {object} destination The account to which the token balance of `amount` will be transferred. 
-   * @param {number} amount The amount of tokens to transfer. 
+   * @param {number} id The identifier of the token.
+   * @param {object} owner The account which previously approved for a transfer of at least `amount`.
+   * @param {object} destination The account to which the token balance of `amount` will be transferred.
+   * @param {number} amount The amount of tokens to transfer.
    * @returns {Promise} of transaction
    */
   async transferTokenApproval (id, owner, destination, amount) {
@@ -1022,13 +1056,567 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   /**
    * Get Account Token data.
    *
-   * @param {object} exec Executor class.
    * @param {string} id TokenId
    * @param {string} who Account
    * @returns {Promise} of Transaction
    */
   async getAccountTokenData (id, who) {
     return this.tokens.getAccountTokenData(this.exec, id, who)
+  }
+
+  /**
+   * Functions dealing with Non-fungible tokens with classes
+   */
+
+  /**
+   * Issue a new class of non-fungible assets from a public origin.
+   * This new asset class has no assets initially and its owner is the origin.
+   *
+   * The origin must be Signed and the sender must have sufficient funds free.
+   *
+   * `AssetDeposit` funds of sender are reserved.
+   *
+   * Parameters:
+   * - `classid`: The identifier of the new asset class. This must not be currently in use.
+   * - `admin`: The admin of this class of assets. The admin is the initial address of each
+   *    member of the asset class's admin team.
+   *
+   * Emits `Created` event when successful.
+   *
+   * @param {number} classid The identifier of the new class of tokens.
+   * @param {object} admin The admin of this class of tokens.
+   * @returns {Promise} of transaction
+   */
+  async createNFTClass (classid, admin) {
+    return this.classNFTs.createNFTClass(this.exec, this.keypair, classid, admin)
+  }
+
+  /**
+   * Issue a new class of non-fungible assets from a privileged origin.
+   * This new asset class has no assets initially.
+   *
+   * The origin must conform to `ForceOrigin`.
+   *
+   * Unlike `create`, no funds are reserved.
+   *
+   * - `classid`: The identifier of the new asset. This must not be currently in use.
+   * - `owner`: The owner of this class of assets. The owner has full superuser permissions
+   *    over this asset, but may later change and configure the permissions using
+   *    `transferOwnership` and `setTeam`.
+   *
+   * Emits `ForceCreated` event when successful.
+   *
+   * @param {number} classid The identifier of the new class of tokens.
+   * @param {object} owner The admin of this class of tokens.
+   * @param {bool} freeHolding The free Holdinfg of this class of tokens.
+   * @returns {Promise} of transaction
+   */
+  async forceCreateNFTClass (classid, owner, freeHolding) {
+    return this.classNFTs.forceCreateNFTClass(this.exec, this.keypair, classid, owner, freeHolding)
+  }
+
+  /**
+   * Destroy a class of non-fungible assets.
+   * The origin must conform to `ForceOrigin` or must be `Signed` and the sender must be the
+   * owner of the asset `class`.
+   *
+   * - `classid`: The identifier of the asset class to be destroyed.
+   * - `witness`: Information on the instances minted in the asset class. This must be correct.
+   *
+   * Emits `Destroyed` event when successful.
+   *
+   * @param {number} classid The identifier of the new class of tokens.
+   * @param {object} witness Information on the instances minted in the asset class.
+   * @returns {Promise} of transaction
+   */
+  async destroyNFTClass (classid, witness) {
+    return this.classNFTs.destroyNFTClass(this.exec, this.keypair, classid, witness)
+  }
+
+  /**
+   * Mint an asset instance of a particular class.
+   *
+   * The origin must be Signed and the sender must be the Issuer of the asset `class`.
+   *
+   * - `classid`: The class of the asset to be minted.
+   * - `instanceid`: The instance value of the asset to be minted.
+   * - `owner`: The initial owner of the minted asset.
+   *
+   * Emits `Issued` event when successful.
+   *
+   * @param {number} classid The identifier of the new class of tokens.
+   * @param {object} instanceid The instance value of the asset to be minted.
+   * @param {object} owner The initial owner of the minted asset.
+   * @returns {Promise} of transaction
+   */
+  async mintNFTInstance (classid, instanceid, owner) {
+    return this.classNFTs.mintNFTInstance(this.exec, this.keypair, classid, instanceid, owner)
+  }
+
+  /**
+   * Destroy a single asset instance.
+   *
+   * Origin must be Signed and the sender should be the Admin of the asset `class`.
+   *
+   * - `classid`: The class of the asset to be burned.
+   * - `instanceid`: The instance of the asset to be burned.
+   * - `check_owner`: If `Some` then the operation will fail with `WrongOwner` unless the
+   *   asset is owned by this value.
+   *
+   * Emits `Burned` with the actual amount burned.
+   *
+   * @param {number} classid The identifier of the new class of tokens.
+   * @param {object} instanceid The instance value of the asset to be minted.
+   * @param {object} checkOwner Checks Owner.
+   * @returns {Promise} of transaction
+   */
+  async burnNFTInstance (classid, instanceid, checkOwner) {
+    return this.classNFTs.burnNFTInstance(this.exec, this.keypair, classid, instanceid, checkOwner)
+  }
+
+  /**
+   * Move an asset from the sender account to another.
+   *
+   * Origin must be Signed and the signing account must be either:
+   * - the Admin of the asset `class`;
+   * - the Owner of the asset `instance`;
+   * - the approved delegate for the asset `instance` (in this case, the approval is reset).
+   *
+   * Arguments:
+   * - `classid`: The class of the asset to be transferred.
+   * - `instanceid`: The instance of the asset to be transferred.
+   * - `dest`: The account to receive ownership of the asset.
+   *
+   * Emits `Transferred`.
+   *
+   * @param {number} classid The identifier of the new class of tokens.
+   * @param {object} instanceid The instance value of the asset to be minted.
+   * @param {object} dest The account to receive ownership of the asset.
+   * @returns {Promise} of transaction
+   */
+  async transferNFTInstance (classid, instanceid, dest) {
+    return this.classNFTs.transferNFTInstance(this.exec, this.keypair, classid, instanceid, dest)
+  }
+
+  /**
+   * Reevaluate the deposits on some assets.
+   *
+   * Origin must be Signed and the sender should be the Owner of the asset `class`.
+   *
+   * - `classid`: The class of the asset to be frozen.
+   * - `instances`: The instances of the asset class whose deposits will be reevaluated.
+   *
+   * NOTE: This exists as a best-effort function. Any asset instances which are unknown or
+   * in the case that the owner account does not have reservable funds to pay for a
+   * deposit increase are ignored. Generally the owner isn't going to call this on instances
+   * whose existing deposit is less than the refreshed deposit as it would only cost them,
+   * so it's of little consequence.
+   *
+   * It will still return an error in the case that the class is unknown of the signer is
+   * not permitted to call it.
+   *
+   * @param {number} classid The identifier of the new class of tokens.
+   * @param {object} instances The instances of the asset class whose deposits will be reevaluated.
+   * @returns {object} true
+   */
+  async redepositNFTInstances (classid, instances) {
+    return this.classNFTs.redepositNFTInstances(this.exec, this.keypair, classid, instances)
+  }
+
+  /**
+   * Disallow further unprivileged transfer of an asset instance.
+   *
+   * Origin must be Signed and the sender should be the Freezer of the asset `class`.
+   *
+   * - `classid`: The class of the asset to be frozen.
+   * - `instanceid`: The instance of the asset to be frozen.
+   *
+   * Emits `Frozen`.
+   *
+   * @param {number} classid The class of the asset to be frozen.
+   * @param {object} instanceid The instance of the asset to be frozen.
+   * @returns {Promise} of transaction
+   */
+  async freezeNFTInstance (classid, instanceid) {
+    return this.classNFTs.freezeNFTInstance(this.exec, this.keypair, classid, instanceid)
+  }
+
+  /**
+   * Re-allow unprivileged transfer of an asset instance.
+   *
+   * Origin must be Signed and the sender should be the Freezer of the asset `class`.
+   *
+   * - `classid`: The class of the asset to be thawed.
+   * - `instanceid`: The instance of the asset to be thawed.
+   *
+   * Emits `Thawed`.
+   *
+   * @param {number} classid The class of the asset to be frozen.
+   * @param {object} instanceid The instance of the asset to be frozen.
+   * @returns {Promise} of transaction
+   */
+  async unfrozenNFTInstance (classid, instanceid) {
+    return this.classNFTs.unfrozenNFTInstance(this.exec, this.keypair, classid, instanceid)
+  }
+
+  /**
+   * Disallow further unprivileged transfers for a whole asset class.
+   *
+   * Origin must be Signed and the sender should be the Freezer of the asset `class`.
+   *
+   * - `classid`: The asset class to be frozen.
+   *
+   * Emits `ClassFrozen`.
+   *
+   * @param {number} classid The class of the asset to be frozen.
+   * @returns {Promise} of transaction
+   */
+  async freezeNFTClass (classid) {
+    return this.classNFTs.freezeNFTClass(this.exec, this.keypair, classid)
+  }
+
+  /**
+   * Re-allow unprivileged transfers for a whole asset class.
+   *
+   * Origin must be Signed and the sender should be the Admin of the asset `class`.
+   *
+   * - `classid`: The class to be thawed.
+   *
+   * Emits `ClassThawed`.
+   *
+   * @param {number} classid The class of the asset to be frozen.
+   * @returns {Promise} of transaction
+   */
+  async unfrozenNFTClass (classid) {
+    return this.classNFTs.unfrozenNFTClass(this.exec, this.keypair, classid)
+  }
+
+  /**
+   * Change the Owner of an asset class.
+   *
+   * Origin must be Signed and the sender should be the Owner of the asset `class`.
+   *
+   * - `classid`: The asset class whose owner should be changed.
+   * - `owner`: The new Owner of this asset class.
+   *
+   * Emits `OwnerChanged`.
+   *
+   * @param {number} classid The class of the asset to be tranferred.
+   * @param {object} owner The new Owner of this asset class.
+   * @returns {Promise} of transaction
+   */
+  async transferOwnershipOfNFTClass (classid, owner) {
+    return this.classNFTs.transferOwnershipOfNFTClass(this.exec, this.keypair, classid, owner)
+  }
+
+  /**
+   * Change the Issuer, Admin and Freezer of an asset class.
+   *
+   * Origin must be Signed and the sender should be the Owner of the asset `class`.
+   *
+   * - `classid`: The asset class whose team should be changed.
+   * - `issuer`: The new Issuer of this asset class.
+   * - `admin`: The new Admin of this asset class.
+   * - `freezer`: The new Freezer of this asset class.
+   *
+   * Emits `TeamChanged`.
+   *
+   * @param {number} classid The class of the asset to be frozen.
+   * @param {object} issuer The new Issuer of this asset class.
+   * @param {object} admin The new AdminOwner of this asset class.
+   * @param {object} freezer The new Freezer of this asset class.
+   * @returns {Promise} of transaction
+   */
+  async setTeamOfNFTClass (classid, issuer, admin, freezer) {
+    return this.classNFTs.setTeamOfNFTClass(this.exec, this.keypair, classid, issuer, admin, freezer)
+  }
+
+  /**
+   * Approve an instance to be transferred by a delegated third-party account.
+   *
+   * Origin must be Signed and must be the owner of the asset `instance`.
+   *
+   * - `classid`: The class of the asset to be approved for delegated transfer.
+   * - `instanceid`: The instance of the asset to be approved for delegated transfer.
+   * - `delegate`: The account to delegate permission to transfer the asset.
+   *
+   * Emits `ApprovedTransfer` on success.
+   *
+   * @param {number} classid The class of the asset to be frozen.
+   * @param {object} instanceid The instance of the asset to be approved for delegated transfer..
+   * @param {object} delegate The account to delegate permission to transfer the asset.
+   * @returns {Promise} of transaction
+   */
+  async approveTransferOfNFTInstance (classid, instanceid, delegate) {
+    return this.classNFTs.approveTransferOfNFTInstance(this.exec, this.keypair, classid, instanceid, delegate)
+  }
+
+  /**
+   * Cancel the prior approval for the transfer of an asset by a delegate.
+   *
+   * Origin must be either:
+   * - the `Force` origin;
+   * - `Signed` with the signer being the Admin of the asset `class`;
+   * - `Signed` with the signer being the Owner of the asset `instance`;
+   *
+   * Arguments:
+   * - `classid`: The class of the asset of whose approval will be cancelled.
+   * - `instanceid`: The instance of the asset of whose approval will be cancelled.
+   * - `maybe_check_delegate`: If `Some` will ensure that the given account is the one to
+   *    which permission of transfer is delegated.
+   *
+   * Emits `ApprovalCancelled` on success.
+   *
+   * @param {number} classid The class of the asset to be frozen.
+   * @param {object} instanceid The instance of the asset to be approved for delegated transfer..
+   * @param {object} maybeCheckDelegate Check delegate.
+   * @returns {Promise} of transaction
+   */
+  async cancelApprovalOfTransferOfNFTInstance (classid, instanceid, maybeCheckDelegate) {
+    return this.classNFTs.cancelApprovalOfTransferOfNFTInstance(this.exec, this.keypair, classid, instanceid, maybeCheckDelegate)
+  }
+
+  /**
+   * Alter the attributes of a given asset.
+   *
+   * Origin must be `ForceOrigin`.
+   *
+   * - `classid`: The identifier of the asset.
+   * - `owner`: The new Owner of this asset.
+   * - `issuer`: The new Issuer of this asset.
+   * - `admin`: The new Admin of this asset.
+   * - `freezer`: The new Freezer of this asset.
+   * - `free_holding`: Whether a deposit is taken for holding an instance of this asset
+   *   class.
+   * - `is_frozen`: Whether this asset class is frozen except for permissioned/admin
+   * instructions.
+   *
+   * Emits `AssetStatusChanged` with the identity of the asset.
+   *
+   * @param {number} classid The class of the asset.
+   * @param {object} owner The new Owner of this asset.
+   * @param {object} issuer The new Owner of this asset.
+   * @param {object} admin The new Owner of this asset.
+   * @param {object} freezer The new Owner of this asset.
+   * @param {object} freeHolding Free holding.
+   * @param {object} isFrozen Frozen?.
+   * @returns {Promise} of transaction
+   */
+  async forceTokenStatusOfNFTClass (classid, owner, issuer, admin, freezer, freeHolding, isFrozen) {
+    return this.classNFTs.forceTokenStatusOfNFTClass(this.exec, this.keypair, classid, owner, issuer, admin, freezer, freeHolding, isFrozen)
+  }
+
+  /**
+   * Set an attribute for an asset class or instance.
+   *
+   * Origin must be either `ForceOrigin` or Signed and the sender should be the Owner of the
+   * asset `class`.
+   *
+   * If the origin is Signed, then funds of signer are reserved according to the formula:
+   * `MetadataDepositBase + DepositPerByte * (key.len + value.len)` taking into
+   * account any already reserved funds.
+   *
+   * - `classid`: The identifier of the asset class whose instance's metadata to set.
+   * - `maybeInstance`: The identifier of the asset instance whose metadata to set.
+   * - `key`: The key of the attribute.
+   * - `value`: The value to which to set the attribute.
+   *
+   * Emits `AttributeSet`.
+   *
+   * @param {number} classid The class of the asset.
+   * @param {object} maybeInstance The identifier of the asset instance whose metadata to set.
+   * @param {object} key The key of the attribute.
+   * @param {object} value The value to which to set the attribute.
+   * @returns {Promise} of transaction
+   */
+  async setAttributeOfNFT (classid, maybeInstance, key, value) {
+    return this.classNFTs.setAttributeOfNFT(this.exec, this.keypair, classid, maybeInstance, key, value)
+  }
+
+  /**
+   * Clear an attribute for an asset class or instance.
+   *
+   * Origin must be either `ForceOrigin` or Signed and the sender should be the Owner of the
+   * asset `class`.
+   *
+   * If the origin is Signed, then funds of signer are reserved according to the formula:
+   * `MetadataDepositBase + DepositPerByte * (key.len + value.len)` taking into
+   * account any already reserved funds.
+   *
+   * - `classid`: The identifier of the asset class whose instance's metadata to set.
+   * - `maybeInstance`: The identifier of the asset instance whose metadata to set.
+   * - `key`: The key of the attribute.
+   * - `value`: The value to which to set the attribute.
+   *
+   * Emits `AttributeSet`.
+   *
+   * @param {number} classid The class of the asset.
+   * @param {object} maybeInstance The identifier of the asset instance whose metadata to set.
+   * @param {object} key The key of the attribute.
+   * @returns {Promise} of transaction
+   */
+  async clearAttributeOfNFT (classid, maybeInstance, key) {
+    return this.classNFTs.clearAttributeOfNFT(this.exec, this.keypair, classid, maybeInstance, key)
+  }
+
+  /**
+   * Set the metadata for an asset instance.
+   *
+   * Origin must be either `ForceOrigin` or Signed and the sender should be the Owner of the
+   * asset `class`.
+   *
+   * If the origin is Signed, then funds of signer are reserved according to the formula:
+   * `MetadataDepositBase + DepositPerByte * data.len` taking into
+   * account any already reserved funds.
+   *
+   * - `classid`: The identifier of the asset class whose instance's metadata to set.
+   * - `instanceid`: The identifier of the asset instance whose metadata to set.
+   * - `data`: The general information of this asset. Limited in length by `StringLimit`.
+   * - `isFrozen`: Whether the metadata should be frozen against further changes.
+   *
+   * Emits `MetadataSet`.
+   *
+   * @param {number} classid The class of the asset.
+   * @param {number} instanceid The identifier of the asset instance whose metadata to set.
+   * @param {object} data The general information of this asset. Limited in length by `StringLimit`.
+   * @param {object} isFrozen Frozen?.
+   * @returns {Promise} of transaction
+   */
+  async setMetadataOfNFTInstance (classid, instanceid, data, isFrozen) {
+    return this.classNFTs.setMetadataOfNFTInstance(this.exec, this.keypair, classid, instanceid, data, isFrozen)
+  }
+
+  /**
+   * Clear the metadata for an asset instance.
+   *
+   * Origin must be either `ForceOrigin` or Signed and the sender should be the Owner of the
+   * asset `instance`.
+   *
+   * Any deposit is freed for the asset class owner.
+   *
+   * - `classid`: The identifier of the asset class whose instance's metadata to clear.
+   * - `instanceid`: The identifier of the asset instance whose metadata to clear.
+   *
+   * Emits `MetadataCleared`.
+   *
+   * @param {number} classid The class of the asset.
+   * @param {number} instanceid The identifier of the asset instance whose metadata to clear.
+   * @returns {Promise} of transaction
+   */
+  async clearMetadataOfNFTInstance (classid, instanceid) {
+    return this.classNFTs.clearMetadataOfNFTInstance(this.exec, this.keypair, classid, instanceid)
+  }
+
+  /**
+   * Set the metadata for an asset class.
+   *
+   * Origin must be either `ForceOrigin` or `Signed` and the sender should be the Owner of
+   * the asset `class`.
+   *
+   * If the origin is `Signed`, then funds of signer are reserved according to the formula:
+   * `MetadataDepositBase + DepositPerByte * data.len` taking into
+   * account any already reserved funds.
+   *
+   * - `classid`: The identifier of the asset whose metadata to update.
+   * - `data`: The general information of this asset. Limited in length by `StringLimit`.
+   * - `isFrozen`: Whether the metadata should be frozen against further changes.
+   *
+   * Emits `ClassMetadataSet`.
+   *
+   * @param {number} classid The class of the asset.
+   * @param {object} data The general information of this asset. Limited in length by `StringLimit`.
+   * @param {object} isFrozen Frozen?.
+   * @returns {Promise} of transaction
+   */
+  async setMetadataOfNFTClass (classid, data, isFrozen) {
+    return this.classNFTs.setMetadataOfNFTClass(this.exec, this.keypair, classid, data, isFrozen)
+  }
+
+  /**
+   * Clear the metadata for an asset class.
+   *
+   * Origin must be either `ForceOrigin` or `Signed` and the sender should be the Owner of
+   * the asset `class`.
+   *
+   * Any deposit is freed for the asset class owner.
+   *
+   * - `classid`: The identifier of the asset class whose metadata to clear.
+   *
+   * Emits `ClassMetadataCleared`.
+   *
+   * @param {number} classid The class of the asset.
+   * @returns {Promise} of transaction
+   */
+  async clearMetadataOfNFTClass (classid) {
+    return this.classNFTs.clearMetadataOfNFTClass(this.exec, this.keypair, classid)
+  }
+
+
+  /**
+   * Get details of an NFT asset class..
+   *
+   * @param {string} classid NFT Class Id
+   * @returns {object} Class Details
+   */
+  async getNFTClassDetails (classid) {
+    return this.classNFTs.getNFTClassDetails(this.exec, classid)
+  }
+
+  /**
+   * The assets held by any given account; set out this way so that assets owned by a single
+   * account can be enumerated.
+   *
+   * @param {string} who Account
+   * @param {string} classid Class Id
+   * @param {string} instanceid Instance Id
+   * @returns {object} Class Details
+   */
+  async getNFTsFromAccount (who, classid, instanceid) {
+    return this.classNfts.getNFTsFromAccount(this.exec, who, classid, instanceid)
+  }
+
+  /**
+   * The tokens in existence and their ownership details.
+   *
+   * @param {string} classid Class Id
+   * @param {string} instanceid Instance Id
+   * @returns {object} Class Details
+   */
+  async getNFTs (classid, instanceid) {
+    return this.classNfts.getNFTs(this.exec, classid, instanceid)
+  }
+
+  /**
+   * Metadata of an asset class.
+   *
+   * @param {string} classid Class Id
+   * @returns {object} Class Details
+   */
+  async getNFTClassMetadata (classid) {
+    return this.classNfts.classMetadataOf(this.exec, classid)
+  }
+
+  /**
+   * Metadata of an asset instance.
+   *
+   * @param {string} classid Class Id
+   * @param {string} instanceid Instance Id
+   * @returns {object} Class Details
+   */
+  async getNFTInstanceMetadata (classid, instanceid) {
+    return this.classNfts.getNFTInstanceMetadata(this.exec, classid, instanceid)
+  }
+
+  /**
+   * Attribute of an asset class/instance.
+   *
+   * @param {string} classid Class Id
+   * @param {string} instanceid Instance Id
+   * @param {string} key Attribute key
+   * @returns {object} Class Details
+   */
+  async getNFTAttribute (classid, instanceid, key) {
+    return this.classNfts.getNFTAttribute(this.exec, classid, instanceid, key)
   }
 
   /**
