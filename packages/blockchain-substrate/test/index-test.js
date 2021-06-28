@@ -17,10 +17,10 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   const GENESIS_SEED_FROM = '//Alice'
 
   // let alice, bob, charlie
-  // const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
   // Uncomment for testing in local blockchain and comment out the line before
   // to restore testing on cloud
-  const blockchain = new BlockchainSubstrate('ws://localhost:9944')
+  // const blockchain = new BlockchainSubstrate('ws://localhost:9944')
   let did, did2, did3
   let aliceAddr, tempWallet, tempWallet2, tempWallet3, tempWallet4
   let cid1, cid2, cid3
