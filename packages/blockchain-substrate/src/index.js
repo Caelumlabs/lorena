@@ -257,18 +257,37 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Only the owner account is allowed to do it
    *
    * @param {string} did DID
-   * @param {object} name New Name (if null will not be changed)
-   * @param {object} address New address Id (if null will not be changed)
-   * @param {object} postalCode New postal code (if null will not be changed)
-   * @param {object} city New city (if null will not be changed)
-   * @param {object} countryCode New country code (if null will not be changed)
-   * @param {object} phoneNumber New phone number (if null will not be changed)
-   * @param {object} website New website (if null will not be changed)
-   * @param {object} endpoint New endpoint (if null will not be changed)
+   * @param {object} info Object containing, optionally the following members
+   * name New Name (if null will not be changed)
+   * address New address Id (if null or undefined will not be changed)
+   * postalCode New postal code (if null or undefined will not be changed)
+   * city New city (if null or undefined will not be changed)
+   * countryCode New country code (if null or undefined will not be changed)
+   * phoneNumber New phone number (if null or undefined will not be changed)
+   * website New website (if null or undefined will not be changed)
+   * endpoint New endpoint (if null or undefined will not be changed)
    * @returns {Promise} Result of the transaction
    */
-  async changeInfo (did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint) {
-    return this.dids.changeInfo(this.exec, this.keypair, did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint)
+  async changeInfo (did, info) {
+    if (info.name === undefined) { info.name = null }
+    if (info.address === undefined) { info.address = null }
+    if (info.postalCode === undefined) { info.postalCode = null }
+    if (info.city === undefined) { info.city = null }
+    if (info.countryCode === undefined) { info.countryCode = null }
+    if (info.phoneNumber === undefined) { info.phoneNumber = null }
+    if (info.website === undefined) { info.website = null }
+    if (info.endpoint === undefined) { info.endpoint = null }
+    return this.dids.changeInfo(this.exec,
+                                this.keypair,
+                                did,
+                                info.name,
+                                info.address,
+                                info.postalCode,
+                                info.city,
+                                info.countryCode,
+                                info.phoneNumber,
+                                info.website,
+                                info.endpoint)
   }
 
   /**

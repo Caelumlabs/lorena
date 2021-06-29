@@ -23,35 +23,27 @@
         "max_hids_issue": "u64",
         "total_hids_issued": "u64",
         "date_created": "u64",
-        "valid_from": "u64",
         "block_valid_from": "BlockNumber",
-        "valid_to": "u64",
         "block_valid_to": "BlockNumber"
       },
       "PublicKey": {
         "release": "IdSpaceReleases",
         "pub_key": "Vec<u8>",
-        "valid_from": "u64",
         "block_valid_from": "BlockNumber",
-        "valid_to": "u64",
         "block_valid_to": "BlockNumber"
       },
       "PublicKeyType": {
         "release": "IdSpaceReleases",
         "pub_key_type": "u16",
         "pub_keys": "Vec<PublicKey>",
-        "valid_from": "u64",
         "block_valid_from": "BlockNumber",
-        "valid_to": "u64",
         "block_valid_to": "BlockNumber"
       },
       "Credential": {
         "release": "IdSpaceReleases",
         "credential": "Vec<u8>",
         "accumulator": "Accumulator",
-        "valid_from": "u64",
         "block_valid_from": "BlockNumber",
-        "valid_to": "u64",
         "block_valid_to": "BlockNumber"
       },
       "DIDInfo": {
@@ -79,9 +71,7 @@
         "did_doc": "Vec<u8>",
         "credentials": "Vec<Credential>",
         "info": "DIDInfo",
-        "valid_from": "u64",
         "block_valid_from": "BlockNumber",
-        "valid_to": "u64",
         "block_valid_to": "BlockNumber"
       },
       "NftClassId": "Vec<u8>",

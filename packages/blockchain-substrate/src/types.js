@@ -34,39 +34,29 @@ module.exports = {
       total_hids_issued: 'u64',
       // Date when the template CID was created.
       block_created: 'BlockNumber',
-      // Data since this template CID is valid (can be different from the creation date).
-      valid_from: 'u64',
       // Block when this template CID ws created.
       block_valid_from: 'BlockNumber',
-      // Data when this template CID was invalidated. (0 means that it still valid).
-      valid_to: 'u64',
       // Block when this template CID was invalidated. (0 means that it still valid).
       block_valid_to: 'BlockNumber'
     },
     PublicKey: {
       release: 'IdSpaceReleases',
       pub_key: 'Vec<u8>',
-      valid_from: 'u64',
       block_valid_from: 'BlockNumber',
-      valid_to: 'u64',
       block_valid_to: 'BlockNumber'
     },
     PublicKeyType: {
       release: 'IdSpaceReleases',
       pub_key_type: 'u16',
       pub_keys: 'Vec<PublicKey>',
-      valid_from: 'u64',
       block_valid_from: 'BlockNumber',
-      valid_to: 'u64',
       block_valid_to: 'BlockNumber'
     },
     Credential: {
       release: 'IdSpaceReleases',
       credential: 'Vec<u8>',
       accumulator: 'Accumulator',
-      valid_from: 'u64',
       block_valid_from: 'BlockNumber',
-      valid_to: 'u64',
       block_valid_to: 'BlockNumber'
     },
     DIDInfo: {
@@ -94,9 +84,7 @@ module.exports = {
       did_doc: 'Vec<u8>',
       credentials: 'Vec<Credential>',
       info: 'DIDInfo',
-      valid_from: 'u64',
       block_valid_from: 'BlockNumber',
-      valid_to: 'u64',
       block_valid_to: 'BlockNumber'
     },
     NftClassId: 'Vec<u8>',

@@ -62,7 +62,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
   it('should Connect', async () => {
     await blockchain.connect()
-    expect(blockchain).not.be.undefined;
+    expect(blockchain).not.be.undefined
   })
 
   it('Should send Tokens from Alice to tempWallet', async () => {
@@ -220,12 +220,20 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     blockchain.setKeyring(tempWallet2.mnemonic)
     // Get the DID for tempWallet3
     const tempWalletDid2 = await blockchain.getDidFromOwner(tempWallet2.address)
-
     // Change only Name
-    let result = await blockchain.changeInfo(tempWalletDid2, 'New Name', null, null, null, null, null, null, null)
+    const infoName = { name: 'NewName' }
+    let result = await blockchain.changeInfo(tempWalletDid2, infoName)
     expect(result).equal(true)
     let didData = await blockchain.getDidData(tempWalletDid2)
-    expect(hexToString(didData.info.name)).equal('New Name')
+    expect(hexToString(didData.info.name)).equal(infoName.name)
+    // Change City and Country Code. Name will stay unchanged
+    const infoCityAndCountry = { city: 'Barcelona', countryCode: 'ES' }
+    result = await blockchain.changeInfo(tempWalletDid2, infoCityAndCountry)
+    expect(result).equal(true)
+    didData = await blockchain.getDidData(tempWalletDid2)
+    expect(hexToString(didData.info.name)).equal(infoName.name)
+    expect(hexToString(didData.info.city)).equal(infoCityAndCountry.city)
+    expect(hexToString(didData.info.countryCode)).equal(infoCityAndCountry.countryCode)
   })
 
   // Disabled: substrate library now enforces uniqueness of diddocHash
