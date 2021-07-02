@@ -89,6 +89,18 @@ module.exports = {
     },
     NftClassId: 'Vec<u8>',
     NftInstanceId: 'Vec<u8>',
+    NftClassDetails:  {
+      owner: 'AccountId',
+      issuer: 'AccountId',
+      admin: 'AccountId',
+      freezer: 'AccountId',
+      total_deposit: 'DepositBalance',
+      free_holding: 'bool',
+      instances: 'u32',
+      instance_metadatas: 'u32',
+      attributes: 'u32',
+      is_frozen: 'bool'
+    },
     NodeType: {
       _enum: [
         'Process',

@@ -103,7 +103,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(amount2).not.equal(amount3)
   })
 
-  it('Should Create a new token, mint and transfer', async () => {
+  it.skip('Should Create a new token, mint and transfer', async () => {
     // set account keyring
     const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
     // Create token. Set Alice as Admin 
@@ -193,7 +193,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(promoter.toString()).equal(tempWallet2.address)
   })
 
-  it('Should change Legal Name and Tax Id', async () => {
+  it.skip('Should change Legal Name and Tax Id', async () => {
     blockchain.setKeyring(tempWallet2.mnemonic)
     // Get the DID for tempWallet3
     const tempWalletDid3 = await blockchain.getDidFromOwner(tempWallet3.address)
@@ -216,7 +216,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(hexToString(didData.tax_id)).equal('New change of Tax ID for DID3')
   })
 
-  it('Should change Info data', async () => {
+  it.skip('Should change Info data', async () => {
     blockchain.setKeyring(tempWallet2.mnemonic)
     // Get the DID for tempWallet3
     const tempWalletDid2 = await blockchain.getDidFromOwner(tempWallet2.address)
@@ -233,7 +233,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     didData = await blockchain.getDidData(tempWalletDid2)
     expect(hexToString(didData.info.name)).equal(infoName.name)
     expect(hexToString(didData.info.city)).equal(infoCityAndCountry.city)
-    expect(hexToString(didData.info.countryCode)).equal(infoCityAndCountry.countryCode)
+    expect(hexToString(didData.info.country_code)).equal(infoCityAndCountry.countryCode)
   })
 
   // Disabled: substrate library now enforces uniqueness of diddocHash
@@ -257,7 +257,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     }
   })
 
-  it('Register a Storage Address', async () => {
+  it.skip('Register a Storage Address', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
@@ -277,7 +277,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     }
   })
 
-  it('Should Rotate a Key', async () => {
+  it.skip('Should Rotate a Key', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     const newKeyPair = await crypto.keyPair()
     const newPubKey = newKeyPair.box.publicKey
@@ -292,7 +292,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(key).eql(newPubKey)
   })
 
-  it('Should add a CID to Blockchain', async () => {
+  it.skip('Should add a CID to Blockchain', async () => {
     // Result should equal to true => No errors
     const cid = crypto.random(16)
     // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
@@ -308,7 +308,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredCidEvent[2]).equal(didPromoter.toString())
   })
 
-  it('Should add three new CIDs to Blockchain', async () => {
+  it.skip('Should add three new CIDs to Blockchain', async () => {
     // Result should equal to true => No errors
     // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
     const result1 = await blockchain.addCid(stringToHex(cid1))
@@ -319,13 +319,13 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(result3).equal(true)
   })
 
-  it('Should read all CIDs of a DID', async () => {
+  it.skip('Should read all CIDs of a DID', async () => {
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
     const result = await blockchain.getCIDsByDID(didPromoter)
     expect(tempWallet.address).to.be.not.undefined
   })
 
-  it('Should delete a CID into Blockchain', async () => {
+  it.skip('Should delete a CID into Blockchain', async () => {
     // Result should equal to true => No errors
     const result = await blockchain.deleteCid(stringToHex(cid3))
     expect(result).equal(true)
@@ -591,19 +591,54 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     console.log(util.inspect(fullProcessTree, {showHidden: false, depth: null}))
   })
 
-  it.skip('Creates some NFTs classes and instances and transfer ownership', async () => {
+  it('Creates some NFTs classes and instances and transfer ownership', async () => {
     // Sets the keyring (so account address)
     const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
-    // Get DID for this account
-    const did = await blockchain.getDidFromOwner(alice)
     // Create random number for a class
-    const classid = crypto.random(16)
-    console.log('classid ', classid)
+    const classid = u8aToHex(crypto.random(16))
     // Creates an NFT Class 
-    await blockchain.createNFTClass (classid, alice)
+    await blockchain.createNFTClass(classid, alice)
     // Obtains result data
-    const nftClassDetails = await blockchain.getNFTClassDetails()
-    console.log('nftClassDetails ', nftClassDetails)
+    const nftClassDetails = await blockchain.getNFTClassDetails(classid)
+    expect(nftClassDetails.owner).eql(alice)
+    // Create random number for a instance of the NFT class
+    const instanceid1 = u8aToHex(crypto.random(16))
+    // Mints an instance in tyhe NFT class and assign  to tempwallet
+    await blockchain.mintNFTInstance(classid, instanceid1, tempWallet.address)
+    // Get the instance data
+    const NftsOfAccount = await blockchain.getNFTsFromAccount(tempWallet.address)
+    expect(NftsOfAccount[0].instances[0]).eql(instanceid1)
+    // Get the instance data
+    const Nfts = await blockchain.getNFTOwner(classid, instanceid1)
+    expect(Nfts.owner).eql(tempWallet.address)
+    // Create some more instances and assign to the same account and class
+    const instanceid2 = u8aToHex(crypto.random(16))
+    const instanceid3 = u8aToHex(crypto.random(16))
+    const instanceid4 = u8aToHex(crypto.random(16))
+    await blockchain.mintNFTInstance(classid, instanceid2, tempWallet.address)
+    await blockchain.mintNFTInstance(classid, instanceid3, tempWallet.address)
+    await blockchain.mintNFTInstance(classid, instanceid4, tempWallet.address)
+    // Get the instance data
+    const NftsOfAccount2 = await blockchain.getNFTsFromAccount(tempWallet.address)
+    expect(NftsOfAccount2[0].account).eql(tempWallet.address)
+    // Create some more instances and assign to the a different account and same class
+    const instanceid5 = u8aToHex(crypto.random(16))
+    const instanceid6 = u8aToHex(crypto.random(16))
+    const instanceid7 = u8aToHex(crypto.random(16))
+    await blockchain.mintNFTInstance(classid, instanceid5, tempWallet2.address)
+    await blockchain.mintNFTInstance(classid, instanceid6, tempWallet2.address)
+    await blockchain.mintNFTInstance(classid, instanceid7, tempWallet2.address)
+    // Get the instance data
+    let nfts = await blockchain.getAllNFTs()
+    const nftsacc = await blockchain.getNFTsFromAccount(tempWallet2.address)
+    expect(nftsacc[0].account).eql(tempWallet2.address)
+    // Transfers ownership of NFT instanceid1 to temwallet2
+    // Start by changing the sender to tempwallet (the owner)
+    blockchain.setKeyring(tempWallet.mnemonic)
+    await blockchain.transferNFTInstance(classid, instanceid1, tempWallet2.address)
+    // Check new ownership
+    const NewNfts = await blockchain.getNFTOwner(classid, instanceid1)
+    expect(NewNfts.owner).eql(tempWallet2.address)
   })
 
   it('should clean up after itself', () => {

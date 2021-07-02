@@ -19,8 +19,8 @@
   "dependencies": {
     "@caelumlabs/blockchain": "^0.2.20",
     "@caelumlabs/crypto": "file:../crypto",
-    "@polkadot/api": "^4.12.1",
-    "@polkadot/types": "^4.12.1"
+    "@polkadot/api": "^4.16.2",
+    "@polkadot/types": "^4.16.2"
   },
   "devDependencies": {
     "chai": "^4.3.4",

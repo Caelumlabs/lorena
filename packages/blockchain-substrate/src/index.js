@@ -1582,18 +1582,37 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * The assets held by any given account; set out this way so that assets owned by a single
-   * account can be enumerated.
+   * Chcks if an NFT instance is owned by an account.
    *
    * @param {string} who Account
    * @param {string} classid Class Id
    * @param {string} instanceid Instance Id
    * @returns {object} Class Details
    */
-  async getNFTsFromAccount (who, classid, instanceid) {
-    return this.classNfts.getNFTsFromAccount(this.exec, who, classid, instanceid)
+  async checkNFTOwnership (who, classid, instanceid) {
+    return this.classNFTs.checkNFTOwnership(this.exec, who, classid, instanceid)
   }
 
+  /**
+   * Get all Non-Fungible Tokens of the system.
+   *
+   * @returns {object} Class Details
+   */
+  async getAllNFTs () {
+    return this.classNFTs.getAllNFTs(this.exec)
+  }
+
+  /**
+   * The assets held by any given account; set out this way so that assets owned by a single
+   * account can be enumerated.
+   *
+   * @param {string} who Account
+   * @returns {object} Class Details
+   */
+  async getNFTsFromAccount (who) {
+    return this.classNFTs.getNFTsFromAccount(this.exec, who)
+  }
+  
   /**
    * The tokens in existence and their ownership details.
    *
@@ -1601,8 +1620,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {string} instanceid Instance Id
    * @returns {object} Class Details
    */
-  async getNFTs (classid, instanceid) {
-    return this.classNfts.getNFTs(this.exec, classid, instanceid)
+  async getNFTOwner (classid, instanceid) {
+    return this.classNFTs.getNFTOwner(this.exec, classid, instanceid)
   }
 
   /**
@@ -1612,7 +1631,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {object} Class Details
    */
   async getNFTClassMetadata (classid) {
-    return this.classNfts.classMetadataOf(this.exec, classid)
+    return this.classNFTs.classMetadataOf(this.exec, classid)
   }
 
   /**
@@ -1623,7 +1642,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {object} Class Details
    */
   async getNFTInstanceMetadata (classid, instanceid) {
-    return this.classNfts.getNFTInstanceMetadata(this.exec, classid, instanceid)
+    return this.classNFTs.getNFTInstanceMetadata(this.exec, classid, instanceid)
   }
 
   /**
@@ -1635,7 +1654,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {object} Class Details
    */
   async getNFTAttribute (classid, instanceid, key) {
-    return this.classNfts.getNFTAttribute(this.exec, classid, instanceid, key)
+    return this.classNFTs.getNFTAttribute(this.exec, classid, instanceid, key)
   }
 
   /**

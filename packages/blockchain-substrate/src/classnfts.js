@@ -1,5 +1,7 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
+const { bufferToU8a, stringToU8a, u8aConcat, u8aToHex, hexToU8a, hexToString, stringToHex } = require('@polkadot/util')
+
 // Debug
 var debug = require('debug')('did:debug:sub')
 
@@ -97,6 +99,7 @@ module.exports = class ClassNFTs {
    * @param {number} classid The identifier of the new class of tokens.
    * @param {object} instanceid The instance value of the asset to be minted.
    * @param {object} owner The initial owner of the minted asset.
+   * @returns {Promise} of transaction
    */
   async mintNFTInstance (exec, keypair, classid, instanceid, owner) {
     const transaction = await exec.api.tx.classNfts.mint(classid, instanceid, owner)
@@ -254,7 +257,7 @@ module.exports = class ClassNFTs {
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair. Signs transaction
-   * @param {number} classid The class of the asset to be frozen. 
+   * @param {number} classid The class of the asset to be unfrozen. 
    * @returns {Promise} of transaction
    */
   async unfrozenNFTClass (exec, keypair, classid) {
@@ -274,7 +277,7 @@ module.exports = class ClassNFTs {
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair. Signs transaction
-   * @param {number} classid The class of the asset to be frozen. 
+   * @param {number} classid The class of the asset to be transfer. 
    * @param {object} owner The new Owner of this asset class.
    * @returns {Promise} of transaction
    */
@@ -568,8 +571,7 @@ module.exports = class ClassNFTs {
   }
 
   /**
-   * The assets held by any given account; set out this way so that assets owned by a single
-   * account can be enumerated.
+   * Check if a NFT is owned by an account.
    *
    * @param {object} exec Executor class.
    * @param {string} who Account
@@ -577,9 +579,46 @@ module.exports = class ClassNFTs {
    * @param {string} instanceid Instance Id
    * @returns {object} Class Details
    */
-  async getNFTsFromAccount (exec, who, classid, instanceid) {
-    const nfts = await exec.api.query.classNfts.account(who, classid, instanceid)
-    return JSON.parse(nfts)
+  async checkNFTOwnership (exec, who, classid, instanceid) {
+    const result = await exec.api.query.classNfts.account(who, classid, instanceid)
+    if (result.isNone) {
+      return false
+    }
+    return result.unwrap()
+  }
+
+  /**
+   * Get all the Non-Fungible Tokens of an account and a class
+   * account can be enumerated.
+   *
+   * @param {object} exec Executor class.
+   * @returns {object} List of all NFT instances classed by Account and Class Id
+   */
+  async getAllNFTs (exec) {
+    const nftsEntries = await exec.api.query.classNfts.accountNfts.entries()
+    // accounTest(AccountId, NtfsClassId) for the types of the key args
+    const nfts = []
+    nftsEntries.forEach(([{ args: [acc, klass] }, value]) => {
+      nfts.push({ account: acc.toHuman(), class: klass.toHuman(), instances: value.toHuman() })
+    })
+    return nfts
+  }
+
+  /**
+   * The assets held by any given account; set out this way so that assets owned by a single
+   * account can be enumerated.
+   *
+   * @param {object} exec Executor class.
+   * @param {string} who Account
+   * @returns {object} Class Details
+   */
+  async getNFTsFromAccount (exec, who) {
+    const nftsEntries = await exec.api.query.classNfts.accountNfts.entries(who)
+    const nfts = []
+    nftsEntries.forEach(([{ args: [acc, klass] }, value]) => {
+      nfts.push({ account: acc.toHuman(), class: klass.toHuman(), instances: value.toHuman() })
+    })
+    return nfts
   }
 
   /**
@@ -590,7 +629,7 @@ module.exports = class ClassNFTs {
    * @param {string} instanceid Instance Id
    * @returns {object} Class Details
    */
-  async getNFTs (exec, classid, instanceid) {
+  async getNFTOwner (exec, classid, instanceid) {
     const nfts = await exec.api.query.classNfts.asset(classid, instanceid)
     return JSON.parse(nfts)
   }
