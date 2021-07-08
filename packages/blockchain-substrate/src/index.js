@@ -206,6 +206,19 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
+   * Set new key : changes the current key for a DID
+   * Assumes Key Type = 0
+   *
+   * @param {string} did DID
+   * @param {object} pubKey Public Key to be rotated (Vec<u8>)
+   * @param {number} typ Public Key type. Defaults to zero
+   * @returns {Promise} Result of the transaction
+   */
+  async setKey (did, pubKey, typ = 0) {
+    return this.dids.rotateKey(this.exec, this.keypair, did, pubKey, typ)
+  }
+
+  /**
    * Rotate Key Type: changes the current key for a specific type for a DID
    *
    * @param {string} did DID
@@ -214,6 +227,18 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {Promise} Result of the transaction
    */
   async rotateKeyType (did, pubKey, typ) {
+    return this.dids.rotateKeyType(this.exec, this.keypair, did, pubKey, typ)
+  }
+
+  /**
+   * Sets Key Type: changes the current key for a specific type for a DID
+   *
+   * @param {string} did DID
+   * @param {object} pubKey Public Key to be rotated (Vec<u8>)
+   * @param {number} typ Public Key type
+   * @returns {Promise} Result of the transaction
+   */
+  async setKeyType (did, pubKey, typ) {
     return this.dids.rotateKeyType(this.exec, this.keypair, did, pubKey, typ)
   }
 
@@ -355,6 +380,18 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
+   * Get Public Key from Did.
+   * Assumes Key Type = 0
+   *
+   * @param {string} did DID
+   * @param {number} typ Public Key type
+   * @returns {string} Actual Key
+   */
+  async getKey (did, typ = 0) {
+    return this.dids.getActualDidKey(this.exec, did, typ)
+  }
+
+  /**
    * Get Public Key of specific type from Did.
    *
    * @param {string} did DID
@@ -362,6 +399,17 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @returns {string} Actual Key
    */
   async getActualDidKeyType (did, typ) {
+    return this.dids.getActualDidKeyType(this.exec, did, typ)
+  }
+
+  /**
+   * Get Public Key of specific type from Did.
+   *
+   * @param {string} did DID
+   * @param {number} typ Public Key type
+   * @returns {string} Actual Key
+   */
+  async getKeyType (did, typ) {
     return this.dids.getActualDidKeyType(this.exec, did, typ)
   }
 

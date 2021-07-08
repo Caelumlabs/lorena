@@ -17,10 +17,10 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   const GENESIS_SEED_FROM = '//Alice'
 
   // let alice, bob, charlie
-  const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
+  // const blockchain = new BlockchainSubstrate('wss://labdev.substrate.lorena.tech')
   // Uncomment for testing in local blockchain and comment out the line before
   // to restore testing on cloud
-  // const blockchain = new BlockchainSubstrate('ws://localhost:9944')
+  const blockchain = new BlockchainSubstrate('ws://localhost:9944')
   let did, did2, did3
   let aliceAddr, tempWallet, tempWallet2, tempWallet3, tempWallet4
   let cid1, cid2, cid3
@@ -289,6 +289,21 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredRotateKeyEvent[2].split('x')[1]).equal(Utils.base64ToHex(newPubKey))
 
     const key = await blockchain.getActualDidKey(tempWalletDid)
+    expect(key).eql(newPubKey)
+  })
+
+  it.skip('Should Set a Key', async () => {
+    blockchain.setKeyring(tempWallet2.mnemonic)
+    const newKeyPair = await crypto.keyPair()
+    const newPubKey = newKeyPair.box.publicKey
+    // Get the DID for tempWallet
+    const tempWalletDid2 = await blockchain.getDidFromOwner()
+    await blockchain.setKey(tempWalletDid2, newPubKey)
+    const registeredRotateKeyEvent = await blockchain.wait4Event('KeyRotated')
+    // DID Document of event should be equal to entered
+    expect(registeredRotateKeyEvent[2].split('x')[1]).equal(Utils.base64ToHex(newPubKey))
+
+    const key = await blockchain.getKey(tempWalletDid2)
     expect(key).eql(newPubKey)
   })
 
