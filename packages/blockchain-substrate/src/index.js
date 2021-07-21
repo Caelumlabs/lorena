@@ -574,23 +574,48 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   /**
-   * Set the Token ID and cost for processes.
+   * Set the same Token ID and cost for processes.
    *
    * @param {number} tokenid Token's Id
    * @param {number} cost Cost to be burned by process node
    * @returns {Promise} of transaction
    */
   async setTokenAndCostForProcess (tokenid, cost) {
-    return this.process.setTokenAndCostForProcess(this.exec, this.keypair, tokenid, cost)
+    const tokenIdAndCost = {
+      startProcess: [tokenid, cost],
+      startSubprocess: [tokenid, cost],
+      startStep: [tokenid, cost],
+      addDocument: [tokenid, cost],
+      addAttachment: [tokenid, cost],
+      pathTo: [tokenid, cost],
+      getFullProcessTree: [tokenid, cost],
+      revokeNode: [tokenid, cost]
+    }
+    return this.setTokensAndCosts(tokenIdAndCost)
   }
 
   /**
-   * Get the Token id and cost of process data
+   * Set the same Token ID and cost for DIDs and CIDs.
    *
+   * @param {number} tokenid Token's Id
+   * @param {number} cost Cost to be burned by process node
    * @returns {Promise} of transaction
    */
-  async getTokenIdAndCostProcessData () {
-    return this.process.getTokenIdAndCostProcessData(this.exec)
+  async setTokenAndCostForDIDsAndCIDs (tokenid, cost) {
+    const tokenIdAndCost = {
+      registerDid: [tokenid, cost],
+      registerDidDocument: [tokenid, cost],
+      rotateKey: [tokenid, cost],
+      assignCredential: [tokenid, cost],
+      changeLegalNameOrTaxId: [tokenid, cost],
+      changeInfo: [tokenid, cost],
+      changeDidOwner: [tokenid, cost],
+      removeCredential: [tokenid, cost],
+      removeDid: [tokenid, cost],
+      addCid: [tokenid, cost],
+      deleteCid: [tokenid, cost]
+    }
+    return this.setTokensAndCosts(tokenIdAndCost)
   }
 
   /**
@@ -603,7 +628,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {string} hash Process node hash
    * @returns {Promise} of transaction
    */
-  async revoke (hash) {
+  async revokeNode (hash) {
     return this.process.revoke(this.exec, this.keypair, hash)
   }
 
@@ -1096,8 +1121,51 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async transferTokenApproval (id, owner, destination, amount) {
     return this.tokens.transferTokenApproval(this.exec, this.keypair, id, owner, destination, amount)
-  } 
- 
+  }
+
+  /**
+   * Set tokens ids and costs for transactions.
+   * Origin must be root.
+   *
+   * @param {object} tokenAndCost The set of tokens ids and costs for transactions. 
+   * @returns {Promise} of transaction
+   */
+  async setTokensAndCosts (tokenAndCost) {
+    const tokenIdAndCost = {
+      register_did: tokenAndCost.registerDid ? tokenAndCost.registerDid : [0, 0],
+      set_storage_address: tokenAndCost.registerDidDocument ? tokenAndCost.registerDidDocument : [0, 0],
+      register_did_document: tokenAndCost.registerDidDocument ? tokenAndCost.registerDidDocument : [0, 0],
+      add_organization: tokenAndCost.registerDid ? tokenAndCost.registerDid : [0, 0],
+      rotate_key: tokenAndCost.rotateKey ? tokenAndCost.rotateKey : [0, 0],
+      assign_credential: tokenAndCost.assignCredential ? tokenAndCost.assignCredential : [0, 0],
+      change_legal_name_or_tax_id: tokenAndCost.changeLegalNameOrTaxId ? tokenAndCost.changeLegalNameOrTaxId : [0, 0],
+      change_info: tokenAndCost.changeInfo ? tokenAndCost.changeInfo : [0, 0],
+      change_did_owner: tokenAndCost.changeDidOwner ? tokenAndCost.changeDidOwner : [0, 0],
+      remove_credential: tokenAndCost.removeCredential ? tokenAndCost.removeCredential : [0, 0],
+      remove_did: tokenAndCost.removeDid ? tokenAndCost.removeDid : [0, 0],
+      add_cid: tokenAndCost.addCid ? tokenAndCost.addCid : [0, 0],
+      delete_cid: tokenAndCost.deleteCid ? tokenAndCost.deleteCid : [0, 0],
+      start_process: tokenAndCost.startProcess ? tokenAndCost.startProcess : [0, 0],
+      start_subprocess: tokenAndCost.startSubprocess ? tokenAndCost.startSubprocess : [0, 0],
+      start_step: tokenAndCost.startStep ? tokenAndCost.startStep : [0, 0],
+      add_document: tokenAndCost.addDocument ? tokenAndCost.addDocument : [0, 0],
+      add_attachment: tokenAndCost.addAttachment ? tokenAndCost.addAttachment : [0, 0],
+      path_to: tokenAndCost.pathTo ? tokenAndCost.pathTo : [0, 0],
+      get_full_process_tree: tokenAndCost.getFullProcessTree ? tokenAndCost.getFullProcessTree : [0, 0],
+      revoke: tokenAndCost.revokeNode ? tokenAndCost.revokeNode : [0, 0]
+    }
+    return this.tokens.setTokensAndCosts(this.exec, this.keypair, tokenIdAndCost)
+  }
+
+  /**
+   * Get the Token id and cost of all transactions
+   *
+   * @returns {Promise} of transaction
+   */
+  async getTokenIdAndCosts () {
+    return this.tokens.getTokenIdAndCosts(this.exec)
+  }
+
   /**
    * Get Token details data.
    *

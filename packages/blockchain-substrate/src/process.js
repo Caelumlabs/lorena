@@ -205,14 +205,4 @@ module.exports = class Process {
     const hexHash = Utils.base64ToHex(hash)
     return await exec.api.query.idSpace.processTree(hexHash)
   }
-
-  /**
-   * Get the Token id and cost of process data
-   *
-   * @param {object} exec Executor class.
-   * @returns {Promise} of transaction
-   */
-  async getTokenIdAndCostProcessData (exec) {
-    return await exec.api.query.idSpace.tokenAndCostForProcess()
-  }
 }

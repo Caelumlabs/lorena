@@ -103,7 +103,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(amount2).not.equal(amount3)
   })
 
-  it.skip('Should Create a new token, mint and transfer', async () => {
+  it('Should Create a new token, mint and transfer', async () => {
     // set account keyring
     const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
     // Create token. Set Alice as Admin 
@@ -125,12 +125,20 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(result).equal(true)
     tokenDetails = await blockchain.getTokenDetails(tokenid)
     expect(tokenDetails.supply).eql(1000000)
-    // Transfer 1000 from Alice to tempWallet
-    result = await blockchain.transferToken(tokenid, tempWallet3.address, 1000)
+    // Transfer 1000 from Alice to  all tempWallets
+    result = await blockchain.transferToken(tokenid, tempWallet.address, 3000)
+    expect(result).equal(true)
+    result = await blockchain.transferToken(tokenid, tempWallet2.address, 3000)
+    expect(result).equal(true)
+    result = await blockchain.transferToken(tokenid, tempWallet3.address, 3000)
+    expect(result).equal(true)
+    result = await blockchain.transferToken(tokenid, tempWallet4.address, 3000)
     expect(result).equal(true)
     // Get the account token data
     const tokenAccountData = await blockchain.getAccountTokenData(tokenid, tempWallet3.address)
-    expect(tokenAccountData.balance).eql(1000)
+    expect(tokenAccountData.balance).eql(3000)
+    // Set Token ID and Costs for DIDs and Processes
+    await blockchain.setTokenAndCostForDIDsAndCIDs(tokenid, 30)
   })
 
   it('Should Save a DID to Blockchain', async () => {

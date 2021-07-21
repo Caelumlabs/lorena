@@ -33,9 +33,9 @@ module.exports = class Executor {
     debug('connecting to ' + this.providerWS)
 
     this.provider = new WsProvider(this.providerWS)
-    
+
     // Get the types defined
-    let types = SubstrateBlockchainTypes
+    const types = SubstrateBlockchainTypes
     types.provider = this.provider
     this.api = await ApiPromise.create(types)
 

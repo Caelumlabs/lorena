@@ -29,25 +29,10 @@ module.exports = class Token {
    * @param {number} minBalance The minimum balance.
    * @returns {Promise} of transaction
    */
-  // async createNewToken (exec, keypair, id, admin, minBalance) {
-  //   console.log(id, ' - ', admin, ' - ', minBalance)
-  //   const transaction = await exec.api.tx.assets.createNewToken(id, minBalance)
-  //   return await exec.execTransaction(keypair, transaction)
-  // }
 
   async createToken (exec, keypair, id, admin, minBalance) {
     const transaction = await exec.api.tx.assets.create(id, admin, minBalance, true)
     return await exec.execTransaction(keypair, transaction)
-  }
-
-  async createNewToken (exec, keypair, id, admin, minBalance) {
-    const transaction = await exec.api.tx.assets.create(id, admin, minBalance)
-    const result = await exec.execTransaction(keypair, transaction)
-    if (result == true) {
-      const trx = await exec.api.tx.assets.forceAssetStatus(id, admin, admin, admin, admin, minBalance, true, false)
-      return await exec.execTransaction(keypair, trx)
-    }
-    return false
   }
 
   /**
@@ -540,7 +525,31 @@ module.exports = class Token {
     const transaction = await exec.api.tx.assets.transferApproved(id, owner, destination, amount)
     return await exec.execTransaction(keypair, transaction)
   } 
- 
+
+  /**
+   * Set tokens ids and costs for transactions.
+   * Origin must be root.
+   *
+   * @param {object} exec Executor class.
+   * @param {object} keypair Account's keypair. Signs transaction
+   * @param {object} tokenAndCost The set ob tokens ids and costs for transactions. 
+   * @returns {Promise} of transaction
+   */
+  async setTokensAndCosts (exec, keypair, tokenAndCost) {
+    const transaction = await exec.api.tx.idSpace.setTokenAndCost(tokenAndCost)
+    return await exec.execTransaction(keypair, transaction)
+  } 
+
+  /**
+   * Get the Token id and cost of all transactions
+   *
+   * @param {object} exec Executor class.
+   * @returns {Promise} of transaction
+   */
+  async getTokenIdAndCosts (exec) {
+    return await exec.api.query.idSpace.tokenAndCost()
+  }
+
   /**
    * Get Token details data.
    *
