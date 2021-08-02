@@ -110,7 +110,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // Token name is a trick for demo. Can be any number u32
     'Caelum'.split('').forEach(val => tokenid += parseInt(val.charCodeAt()))
     // Create a new token
-    let result = await blockchain.createToken(tokenid, alice, 100)
+    let result = await blockchain.createToken(tokenid, alice)
     expect(result).equal(true)
     // Get the token details so far
     let tokenDetails = await blockchain.getTokenDetails(tokenid)
@@ -244,28 +244,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(hexToString(didData.info.country_code)).equal(infoCityAndCountry.countryCode)
   })
 
-  // Disabled: substrate library now enforces uniqueness of diddocHash
-  it.skip('Register a Did Document', async () => {
-    blockchain.setKeyring(tempWallet.mnemonic)
-    // Get the DID for tempWallet
-    const tempWalletDid = await blockchain.getDidFromOwner()
-    let result = await blockchain.registerDidDocument(tempWalletDid, diddocHash)
-    expect(result).equal(true)
-    const didData = await blockchain.getDidData(tempWalletDid)
-    expect(didData.did_doc).eql(u8aToHex(diddocHash))
-    const registeredDocumentEvent = await blockchain.wait4Event('DidDocumentRegistered')
-    // DID Document of event should be equal to entered
-    expect(registeredDocumentEvent[2]).eql(u8aToHex(diddocHash))
-    // DID Document of DIDData record should be equal to entered
-    result = u8aToHex(await blockchain.getDidDocHash(tempWalletDid))
-    if (result !== '') {
-      expect(result).eql(u8aToHex(diddocHash))
-    } else {
-      console.log('Did Document empty')
-    }
-  })
-
-  it.skip('Register a Storage Address', async () => {
+  it('Register a Storage Address', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
@@ -273,53 +252,62 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(result).equal(true)
     const didData = await blockchain.getDidData(tempWalletDid)
     expect(didData.did_doc).eql(u8aToHex(storageAddress))
-    const registeredStorageAddress = await blockchain.wait4Event('DidDocumentRegistered')
+    const registeredStorageAddress = await blockchain.wait4Event('StorageAddressRegistered')
     // DID Document of event should be equal to entered
     expect(registeredStorageAddress[2]).eql(u8aToHex(storageAddress))
     // DID Document of DIDData record should be equal to entered
-    result = u8aToHex(await blockchain.getDidDocHash(tempWalletDid))
+    result = u8aToHex(await blockchain.getStorageAddressHash(tempWalletDid))
     if (result !== '') {
       expect(result).eql(u8aToHex(storageAddress))
     } else {
-      console.log('Did Document empty')
+      console.log('Storage Address empty')
     }
   })
 
-  it.skip('Should Rotate a Key', async () => {
+  it('Should try to create a token by a non-root account and fail', async () => {
+    let fakeToken = 0
+    // set account keyring
+    const account = blockchain.setKeyring(tempWallet.mnemonic)
+    // Try Create token.  
+    // Token name is a trick for demo. Can be any number u32
+    'Fake'.split('').forEach(val => fakeToken += parseInt(val.charCodeAt()))
+    // Try create a new token
+    const result = await blockchain.createToken(fakeToken, account)
+    expect(result).equal(false)
+  })
+
+  it('Should Set a Key', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     const newKeyPair = await crypto.keyPair()
     const newPubKey = newKeyPair.box.publicKey
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
-    await blockchain.rotateKey(tempWalletDid, newPubKey)
-    const registeredRotateKeyEvent = await blockchain.wait4Event('KeyRotated')
+
+    // Assign the key to tempwallet (type = 0 is the default)
+    await blockchain.setKey(newPubKey)
+    const registeredSetKeyEvent = await blockchain.wait4Event('KeySet')
     // DID Document of event should be equal to entered
-    expect(registeredRotateKeyEvent[2].split('x')[1]).equal(Utils.base64ToHex(newPubKey))
+    expect(registeredSetKeyEvent[2]).equal(u8aToHex(newPubKey))
 
-    const key = await blockchain.getActualDidKey(tempWalletDid)
-    expect(key).eql(newPubKey)
-  })
-
-  it.skip('Should Set a Key', async () => {
-    blockchain.setKeyring(tempWallet2.mnemonic)
-    const newKeyPair = await crypto.keyPair()
-    const newPubKey = newKeyPair.box.publicKey
+    const key = await blockchain.getKey(tempWalletDid)
+    expect(u8aToHex(key)).eql(u8aToHex(newPubKey))
+    // Now we are going to rotate key to tempWallet2
     // Get the DID for tempWallet
-    const tempWalletDid2 = await blockchain.getDidFromOwner()
-    await blockchain.setKey(tempWalletDid2, newPubKey)
-    const registeredRotateKeyEvent = await blockchain.wait4Event('KeyRotated')
+    const tempWalletDid2 = await blockchain.getDidFromOwner(tempWallet2.address)
+    await blockchain.setKey(newPubKey, tempWalletDid2)
+    const registeredSetKeyEvent2 = await blockchain.wait4Event('KeySet')
     // DID Document of event should be equal to entered
-    expect(registeredRotateKeyEvent[2].split('x')[1]).equal(Utils.base64ToHex(newPubKey))
-
-    const key = await blockchain.getKey(tempWalletDid2)
-    expect(key).eql(newPubKey)
+    expect(registeredSetKeyEvent2[2]).equal(u8aToHex(newPubKey))
+    const key2 = await blockchain.getKey(tempWalletDid2)
+    expect(u8aToHex(key2)).eql(u8aToHex(newPubKey))
   })
 
-  it.skip('Should add a CID to Blockchain', async () => {
+  it('Should add a Certificate to Blockchain', async () => {
+    blockchain.setKeyring(tempWallet.mnemonic)
     // Result should equal to true => No errors
     const cid = crypto.random(16)
     // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
-    const result = await blockchain.addCid(stringToHex(cid))
+    const result = await blockchain.addCertificate(stringToHex(cid))
     expect(result).equal(true)
 
     // Promoter Account from even data should be address of tempwallet
@@ -331,58 +319,61 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredCidEvent[2]).equal(didPromoter.toString())
   })
 
-  it.skip('Should add three new CIDs to Blockchain', async () => {
+  it('Should add three new Certificates to Blockchain', async () => {
+    blockchain.setKeyring(tempWallet.mnemonic)
     // Result should equal to true => No errors
     // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
-    const result1 = await blockchain.addCid(stringToHex(cid1))
-    const result2 = await blockchain.addCid(stringToHex(cid2))
-    const result3 = await blockchain.addCid(stringToHex(cid3))
+    const result1 = await blockchain.addCertificate(stringToHex(cid1))
+    const result2 = await blockchain.addCertificate(stringToHex(cid2), 'Title for Cid2', null, 'URL image for cid2')
+    const result3 = await blockchain.addCertificate(stringToHex(cid3), 'Title for Cid3', 'URL for cid3', null, 'Type for Cid3')
     expect(result1).equal(true)
     expect(result2).equal(true)
     expect(result3).equal(true)
   })
 
-  it.skip('Should read all CIDs of a DID', async () => {
+  it('Should read all Certificates of a DID', async () => {
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
-    const result = await blockchain.getCIDsByDID(didPromoter)
-    expect(tempWallet.address).to.be.not.undefined
+    const result = await blockchain.getCertificatesByDID(didPromoter)
+     expect(result[0].did_owner).equal(didPromoter)
   })
 
-  it.skip('Should delete a CID into Blockchain', async () => {
+  it('Should revoke a Certificate into Blockchain', async () => {
     // Result should equal to true => No errors
-    const result = await blockchain.deleteCid(stringToHex(cid3))
+    const result = await blockchain.revokeCertificate(stringToHex(cid3))
     expect(result).equal(true)
 
     // Promoter Account from even data should be address of tempwallet
-    const registeredCidEvent = await blockchain.wait4Event('CIDDeleted')
+    const registeredCidEvent = await blockchain.wait4Event('CIDRevoked')
     expect(registeredCidEvent[1]).equal(tempWallet.address)
 
     // DID must be DID of the Owner
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
     expect(registeredCidEvent[2]).equal(didPromoter.toString())
     // See result
-    const res = await blockchain.getCIDsByDID(didPromoter)
+    const res = await blockchain.getCertificatesByDID(didPromoter)
+    expect(res[0].did_owner).equal(didPromoter)
   })
 
   // The following tests will pass just once if the blockchain is
   // not reinitialized. That's because a credential assigned
-  // is not deleted but marked as deleted and can not
+  // is not revoked but marked as revoked and can not
   // be reassigned
-  it.skip('Should Assign a Credential', async () => {
+  it('Should Assign a Hash', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
-    await blockchain.assignCredential(tempWalletDid, credential)
+    // Put the has. Left type as default
+    await blockchain.putHash(tempWalletDid, credential, cid1, 'type')
     const registeredCredentialAssignedEvent = await blockchain.wait4Event('CredentialAssigned')
     // Credential of event should be equal to entered
     expect(registeredCredentialAssignedEvent[2]).equal(stringToHex(credential))
   })
 
-  it.skip('Should Remove a Credential', async () => {
+  it('Should Remove a Hash', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
-    await blockchain.removeCredential(tempWalletDid, credential)
+    await blockchain.revokeHash(tempWalletDid, credential)
     const registeredCredentialRemovedEvent = await blockchain.wait4Event('CredentialRemoved')
     // Credential of event should be equal to entered
     expect(registeredCredentialRemovedEvent[2]).equal(stringToHex(credential))

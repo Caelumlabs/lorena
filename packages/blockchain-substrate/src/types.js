@@ -19,7 +19,7 @@ module.exports = {
         'V2_0_0'
       ]
     },
-    CID: {
+    Certificate: {
       // Release of this CID template.
       release: 'IdSpaceReleases',
       // Hash of the CID template.
@@ -28,13 +28,17 @@ module.exports = {
       owner: 'AccountId',
       // Owner's DID.
       did_owner: 'Vec<u8>',
-      // Maximum HIDs allow to issue based on this CID.
-      max_hids_issue: 'u64',
+      // Certificate title
+      title: 'Vec<u8>',
+      // Certificate's URL
+      url_certificate: 'Vec<u8>',
+      // Certificate's image URL
+      url_image: 'Vec<u8>',
+      // Certificates type
+      cid_type: 'Vec<u8>',
       // Total HIDs issued so far.
       total_hids_issued: 'u64',
-      // Date when the template CID was created.
-      block_created: 'BlockNumber',
-      // Block when this template CID ws created.
+      // Block when this template CID was created.
       block_valid_from: 'BlockNumber',
       // Block when this template CID was invalidated. (0 means that it still valid).
       block_valid_to: 'BlockNumber'
@@ -54,8 +58,10 @@ module.exports = {
     },
     Credential: {
       release: 'IdSpaceReleases',
-      credential: 'Vec<u8>',
-      accumulator: 'Accumulator',
+      did: 'Vec<u8>',
+      cid: 'Vec<u8>',
+      cid_type: 'Vec<u8>',
+      path: 'Option<Vec<u8>>',
       block_valid_from: 'BlockNumber',
       block_valid_to: 'BlockNumber'
     },
@@ -82,7 +88,8 @@ module.exports = {
       legal_name: 'Vec<u8>',
       tax_id: 'Vec<u8>',
       did_doc: 'Vec<u8>',
-      credentials: 'Vec<Credential>',
+      credentials: 'Option<Vec<Vec<u8>>>',
+      accumulator: 'Option<Accumulator>',
       info: 'DIDInfo',
       block_valid_from: 'BlockNumber',
       block_valid_to: 'BlockNumber'
@@ -90,17 +97,16 @@ module.exports = {
     TokenIdAndCost: {
       register_did: '(AssetId, u64)',
       set_storage_address: '(AssetId, u64)',
-      register_did_document: '(AssetId, u64)',
       add_organization: '(AssetId, u64)',
-      rotate_key: '(AssetId, u64)',
-      assign_credential: '(AssetId, u64)',
+      set_key: '(AssetId, u64)',
+      put_hash: '(AssetId, u64)',
       change_legal_name_or_tax_id: '(AssetId, u64)',
-      change_info: '(AssetId, u64)',
+      update_info: '(AssetId, u64)',
       change_did_owner: '(AssetId, u64)',
-      remove_credential: '(AssetId, u64)',
+      revoke_hash: '(AssetId, u64)',
       remove_did: '(AssetId, u64)',
-      add_cid: '(AssetId, u64)',
-      delete_cid: '(AssetId, u64)',
+      add_certificate: '(AssetId, u64)',
+      revoke_certificate: '(AssetId, u64)',
       start_process: '(AssetId, u64)',
       start_subprocess: '(AssetId, u64)',
       start_step: '(AssetId, u64)',

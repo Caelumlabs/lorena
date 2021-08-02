@@ -38,27 +38,21 @@ module.exports = class BlockchainInterface {
     } else if (!this.getActualDidKey) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `getActualDidKey`!')
-    } else if (!this.registerDidDocument) {
+    } else if (!this.getStorageAddressHash) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `registerDidDocument`!')
-    } else if (!this.getDidDocHash) {
+      throw new Error('Blockchain must have function `getStorageAddressHash`!')
+    } else if (!this.setKey) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `getDidDocHash`!')
-    } else if (!this.rotateKey) {
-      /* istanbul ignore next */
-      throw new Error('Blockchain must have function `rotateKey`!')
-    } else if (!this.rotateKeyType) {
-      /* istanbul ignore next */
-      throw new Error('Blockchain must have function `rotateKeyType`!')
+      throw new Error('Blockchain must have function `setKey`!')
     } else if (!this.changeOwner) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `changeOwner`!')
-    } else if (!this.assignCredential) {
+    } else if (!this.putHash) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `assignCredential`!')
-    } else if (!this.removeCredential) {
+      throw new Error('Blockchain must have function `putHash`!')
+    } else if (!this.revokeHash) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `removeCredential`!')
+      throw new Error('Blockchain must have function `revokeHash`!')
     } else if (!this.getDidData) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `getDidData`!')
@@ -74,25 +68,25 @@ module.exports = class BlockchainInterface {
     } else if (!this.getActualDidKeyType) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `getActualDidKeyType`!')
-    } else if (!this.getDidDocHash) {
+    } else if (!this.getStorageAddressHash) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `getDidDocHash`!')
-    } else if (!this.addCid) {
+      throw new Error('Blockchain must have function `getStorageAddressHash`!')
+    } else if (!this.addCertificate) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `addCid`!')
-    } else if (!this.deleteCid) {
+      throw new Error('Blockchain must have function `addCertificate`!')
+    } else if (!this.revokeCertificate) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `deleteCid`!')
-    } else if (!this.getCIDs) {
+      throw new Error('Blockchain must have function `revokeCertificate`!')
+    } else if (!this.getCertificates) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `getCIDs`!')
-    } else if (!this.getValidCIDs) {
+    } else if (!this.getValidCertificates) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `getValidCIDs`!')
-    } else if (!this.getCIDByKey) {
+    } else if (!this.getCertificateByKey) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `getCIDByKey`!')
-    } else if (!this.getCIDsByDID) {
+    } else if (!this.getCertificatesByDID) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `getCIDsByDID`!')
     } else if (!this.startProcess) {

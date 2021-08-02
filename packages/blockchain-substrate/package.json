@@ -12,7 +12,7 @@
   "scripts": {
     "coverage": "jest --silent --coverage",
     "lint": "eslint ./src",
-    "mocha": "mocha test --exit --timeout 70000",
+    "mocha": "mocha test --exit --timeout 80000",
     "lint:fix": "eslint ./src ./test --fix",
     "test": "npm run mocha"
   },

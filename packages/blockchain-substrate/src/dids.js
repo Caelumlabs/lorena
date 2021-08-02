@@ -42,54 +42,26 @@ module.exports = class DIDs {
   }
 
   /**
-   * Registers a Vec<u8> (of the DID document) for a DID
-   *
-   * @param {object} exec Executor class.
-   * @param {object} keypair Account's keypair
-   * @param {string} did DID
-   * @param {object} diddocHash Did document Hash (Vec<u8>)
-   * @returns {Promise} Result of the transaction
-   */
-  async registerDidDocument (exec, keypair, did, diddocHash) {
-    const docHash = u8aToHex(diddocHash)
-    const transaction = await exec.api.tx.idSpace.registerDidDocument(did, docHash)
-    return await exec.execTransaction(keypair, transaction)
-  }
-
-  /**
-   * Rotate Key : changes the current key for a DID
+   * Set Key : changes the current key for a DID
+   * If did == null or undefined adds the new key to the sender
+   * If did has value moves the key from sender to DID receiver
    * Assumes Key Type = 0
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair
    * @param {string} did DID
-   * @param {object} pubKey Public Key to be rotated (Vec<u8>)
+   * @param {object} pubKey Public Key to be created/rotated (Vec<u8>)
    * @param {number} typ Public Key type
    * @returns {Promise} Result of the transaction
    */
-  async rotateKey (exec, keypair, did, pubKey, typ) {
+  async setKey (exec, keypair, did, pubKey, typ) {
+    if (did === undefined || did === null) {
+      did = u8aToHex('\x00')
+    }
     // Convert pubKey to vec[u8]
     const keyArray = u8aToHex(Utils.toUTF8Array(pubKey))
-    // Call idSpace RotateKey function
-    const transaction = await exec.api.tx.idSpace.rotateKey(did, keyArray, typ)
-    return await exec.execTransaction(keypair, transaction)
-  }
-
-  /**
-   * Rotate Key Type: changes the current key for a specific type for a DID
-   *
-   * @param {object} exec Executor class.
-   * @param {object} keypair Account's keypair
-   * @param {string} did DID
-   * @param {object} pubKey Public Key to be rotated (Vec<u8>)
-   * @param {number} typ Public Key type
-   * @returns {Promise} Result of the transaction
-   */
-  async rotateKeyType (exec, keypair, did, pubKey, typ) {
-    // Convert pubKey to vec[u8]
-    const keyArray = u8aToHex(Utils.toUTF8Array(pubKey))
-    // Call idSpace RotateKey function
-    const transaction = await exec.api.tx.idSpace.rotateKey(did, keyArray, typ)
+    // Call idSpace SetKey function
+    const transaction = await exec.api.tx.idSpace.setKey(did, keyArray, typ)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -118,10 +90,12 @@ module.exports = class DIDs {
    * @param {object} keypair Account's keypair
    * @param {string} did DID
    * @param {object} credential Credential Hash (Vec<u8>)
+   * @param {object} certificate Certificate from which hash is generated
+   * @param {object} typ Type
    * @returns {Promise} Result of the transaction
    */
-  async assignCredential (exec, keypair, did, credential) {
-    const transaction = await exec.api.tx.idSpace.assignCredential(did, credential)
+  async putHash (exec, keypair, did, credential, certificate, typ) {
+    const transaction = await exec.api.tx.idSpace.putHash(did, credential, certificate, typ)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -160,7 +134,7 @@ module.exports = class DIDs {
    * @param {object} endpoint New endpoint (if null will not be changed)
    * @returns {Promise} Result of the transaction
    */
-  async changeInfo (exec, keypair, did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint) {
+  async updateInfo (exec, keypair, did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint) {
     if (name === null) { name = '0x00' }
     if (address === null) { address = '0x00' }
     if (postalCode === null) { postalCode = '0x00' }
@@ -169,7 +143,7 @@ module.exports = class DIDs {
     if (phoneNumber === null) { phoneNumber = '0x00' }
     if (website === null) { website = '0x00' }
     if (endpoint === null) { endpoint = '0x00' }
-    const transaction = await exec.api.tx.idSpace.changeInfo(did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint)
+    const transaction = await exec.api.tx.idSpace.updateInfo(did, name, address, postalCode, city, countryCode, phoneNumber, website, endpoint)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -182,8 +156,8 @@ module.exports = class DIDs {
    * @param {object} credential Credential Hash (Vec<u8>)
    * @returns {Promise} Result of the transaction
    */
-  async removeCredential (exec, keypair, did, credential) {
-    const transaction = await exec.api.tx.idSpace.removeCredential(did, credential)
+  async revokeHash (exec, keypair, did, credential) {
+    const transaction = await exec.api.tx.idSpace.revokeHash(did, credential)
     return await exec.execTransaction(keypair, transaction)
   }
 
@@ -196,7 +170,7 @@ module.exports = class DIDs {
    * @returns {Promise} Result of the transaction
    */
   async removeDid (exec, keypair, did) {
-    // Check if CID is wellformed
+    // Check if Certificate is wellformed
     if (Utils.verifyHexString(did) === false) {
       return false
     }
@@ -212,7 +186,7 @@ module.exports = class DIDs {
    * @returns {Promise} of public key
    */
   async getDidData (exec, did) {
-    // Check if CID is wellformed
+    // Check if Certificate is wellformed
     if (Utils.verifyHexString(did) === false) {
       return false
     }
@@ -229,7 +203,7 @@ module.exports = class DIDs {
    * @returns {string} public key in hex format
    */
   async getOwnerFromDid (exec, did) {
-    // Check if CID is wellformed
+    // Check if Certificate is wellformed
     if (Utils.verifyHexString(did) === false) {
       return false
     }
@@ -254,12 +228,16 @@ module.exports = class DIDs {
    * Assumes Key Type = 0
    *
    * @param {object} exec Executor class.
+   * @param {object} keypair Account's keypair
    * @param {string} did DID
    * @param {number} typ Public Key type
    * @returns {string} Actual Key
    */
-  async getActualDidKey (exec, did, typ) {
-    // Check if CID is wellformed
+  async getActualDidKey (exec, keypair, did, typ) {
+    if (did === undefined || did === null) {
+      did = this.getDidFromOwner(exec, this.keypair.address)
+    }
+    // Check if DID is wellformed
     if (Utils.verifyHexString(did) === false) {
       return false
     }
@@ -273,11 +251,15 @@ module.exports = class DIDs {
    *
    * @param {object} exec Executor class.
    * @param {string} did DID
+   * @param {object} keypair Account's keypair
    * @param {number} typ Public Key type
    * @returns {string} Actual Key
    */
-  async getActualDidKeyType (exec, did, typ) {
-    // Check if CID is wellformed
+  async getActualDidKeyType (exec, keypair, did, typ) {
+    if (did === undefined || did === null) {
+      did = this.getDidFromOwner(exec, this.keypair.address)
+    }
+    // Check if Certificate is wellformed
     if (Utils.verifyHexString(did) === false) {
       return false
     }
@@ -287,136 +269,154 @@ module.exports = class DIDs {
   }
 
   /**
-   * Retrieves the Hash of a Did Document for a DID
+   * Retrieves the Hash of a Storage Address for a DID
    *
    * @param {object} exec Executor class.
    * @param {string} did DID
    * @returns {string} hash in Base64 format
    */
-  async getDidDocHash (exec, did) {
-    // Check if CID is wellformed
+  async getStorageAddressHash (exec, did) {
+    // Check if Certificate is wellformed
     if (Utils.verifyHexString(did) === false) {
       return false
     }
     const { internalDid } = this.structDid(did)
-    return await exec.api.query.idSpace.didDocumentFromDid(internalDid)
+    return await exec.api.query.idSpace.storageAddressFromDid(internalDid)
   }
 
   /**
-   * Adds a CID.
-   * DID to assign the CID. By default is Null and the CID
+   * Adds a Certificate.
+   * DID to assign the Certrificate. By default is Null and the Certificate
    * will be assigned to the DID of the sender transaction account
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair
-   * @param {string} cid CID
-   * @param {string} did DID to assign the new CID (Must exists)
-   * @param {number} maxHids DID to assign the new CID (Must exists)
+   * @param {string} cid Certificate ID
+   * @param {string} title Certicate's title
+   * @param {string} urlCertificate Certificate's URL
+   * @param {string} urlImage Certificate's URL image
+   * @param {string} cidType Certificate's type
+   * @param {string} did DID to assign the new CID (Either null or Must exists)
    * @returns {Promise} of transaction
    */
-  async addCid (exec, keypair, cid, did, maxHids) {
-    const transaction = await exec.api.tx.idSpace.addCid(cid, did, maxHids)
+  async addCertificate (exec, keypair, cid, title, urlCertificate, urlImage, cidType, did) {
+    if (title === undefined || title === null) {
+      title = u8aToHex('\x00')
+    }
+    if (urlCertificate === undefined || urlCertificate === null) {
+      urlCertificate = u8aToHex('\x00')
+    }
+    if (urlImage === undefined || urlImage === null) {
+      urlImage = u8aToHex('\x00')
+    }
+    if (cidType === undefined || cidType === null) {
+      cidType = u8aToHex('\x00')
+    }
+    if (did === undefined || did === null) {
+      did = u8aToHex('\x00')
+    }
+    const transaction = await exec.api.tx.idSpace.addCertificate(cid, title, urlCertificate, urlImage, cidType, did)
     return await exec.execTransaction(keypair, transaction)
   }
 
   /**
-   * Removes a CID.
-   * DID of the CIDs owner. By default is Null and the CID
+   * Revokes a Certificate.
+   * DID of the Certificates owner. By default is Null and the Certificate
    * must be assigned to the DID of the sender transaction account
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair
-   * @param {string} cid CID
-   * @param {string} did DID of the CIDs owner if providede
+   * @param {string} cid Certificate ID
+   * @param {string} did DID of the Certificate owner if provided
    * @returns {Promise} of transaction
    */
-  async deleteCid (exec, keypair, cid, did) {
-    const transaction = await exec.api.tx.idSpace.deleteCid(cid, did)
+  async revokeCertificate (exec, keypair, cid, did) {
+    const transaction = await exec.api.tx.idSpace.revokeCertificate(cid, did)
     return await exec.execTransaction(keypair, transaction)
   }
 
   /**
-   * Get all CIDs.
-   * Get the whole CIDs collection, including deleted.
+   * Get all Certificates.
+   * Get the whole Certificates collection, including revoked.
    *
    * @param {object} exec Executor class.
-   * @returns {Array} array of CIDs
+   * @returns {Array} array of Certificates
    */
-  async getCIDs (exec) {
-    const CIDs = await exec.api.query.idSpace.cIDs()
-    return CIDs.map((cid) => { return JSON.parse(cid) })
+  async getCertificates (exec) {
+    const cids = await exec.api.query.idSpace.certificates()
+    return cids.map((cid) => { return JSON.parse(cid) })
   }
 
   /**
-   * Get all valid CIDs.
-   * Get all CIDs that are not deleted.
+   * Get all valid Certificates.
+   * Get all Certificates that are not revoked.
    *
    * @param {object} exec Executor class.
-   * @returns {Array} array of CIDs
+   * @returns {Array} array of Certificates
    */
-  async getValidCIDs (exec) {
-    const CIDs = await exec.api.query.idSpace.cIDs()
-    return CIDs.map((cid) => {
+  async getValidCertificates (exec) {
+    const cids = await exec.api.query.idSpace.certificates()
+    return cids.map((cid) => {
       const c = JSON.parse(cid)
-      if (c.valid_to === 0) {
+      if (c.block_valid_to === 0) {
         return c
       }
     })
   }
 
   /**
-   * Get CID by key.
-   * Get CID data is key exists, else return null.
+   * Get Certificate by key.
+   * Get Certificate data is key exists, else return null.
    * Because is an ordered array, we use a binary search
    *
    * @param {object} exec Executor class.
-   * @param {string} cid CID
-   * @returns {string} CID struct or null
+   * @param {string} cid Certificate ID
+   * @returns {string} Certificate struct or null
    */
-  async getCIDByKey (exec, cid) {
-    // Check if CID is wellformed
+  async getCertificateByKey (exec, cid) {
+    // Check if Certificate is wellformed
     if (Utils.verifyHexString(cid) === false) {
       return false
     }
-    const CIDs = await exec.api.query.idSpace.cIDs()
+    const cids = await exec.api.query.idSpace.certificates()
     let first = 0
-    let last = CIDs.length - 1
+    let last = cids.length - 1
     let middle = Math.floor((last + first) / 2)
 
-    let parsedCID = JSON.parse(CIDs[middle])
-    while (parsedCID.cid !== cid && first < last) {
-      if (cid < parsedCID.cid) {
+    let parsedCertificate = JSON.parse(cids[middle])
+    while (parsedCertificate.cid !== cid && first < last) {
+      if (cid < parsedCertificate.cid) {
         last = middle - 1
-      } else if (cid > parsedCID.cid) {
+      } else if (cid > parsedCertificate.cid) {
         first = middle + 1
       }
       middle = Math.floor((last + first) / 2)
-      parsedCID = JSON.parse(CIDs[middle])
+      parsedCertificate = JSON.parse(cids[middle])
     }
 
-    return (parsedCID.cid !== cid) ? null : parsedCID
+    return (parsedCertificate.cid !== cid) ? null : parsedCertificate
   }
 
   /**
-   * Get all valid CIDs that belongs to a DID.
-   * Get a collections of CID data that belongs to a DID.
+   * Get all valid Certificates that belongs to a DID.
+   * Get a collections of Certificate data that belongs to a DID.
    * (Can be empty)
    *
    * @param {object} exec Executor class.
    * @param {string} did DID to search
-   * @returns {object} CID array
+   * @returns {object} Certificate array
    */
-  async getCIDsByDID (exec, did) {
-    // Check if CID is wellformed
+  async getCertificatesByDID (exec, did) {
+    // Check if Certificate is wellformed
     if (Utils.verifyHexString(did) === false) {
       return false
     }
-    const CIDs = await exec.api.query.idSpace.cIDs()
+    const cids = await exec.api.query.idSpace.certificates()
     const didCollection = []
-    for (let i = 0; i < CIDs.length; i++) {
-      const parsedCID = JSON.parse(CIDs[i])
-      if (parsedCID.did_owner === did && parsedCID.valid_to === 0) {
-        didCollection.push(parsedCID)
+    for (let i = 0; i < cids.length; i++) {
+      const parsedCertificate = JSON.parse(cids[i])
+      if (parsedCertificate.did_owner === did && parsedCertificate.block_valid_to === 0) {
+        didCollection.push(parsedCertificate)
       }
     }
     return didCollection
@@ -426,7 +426,7 @@ module.exports = class DIDs {
    * Destructure DID into its components as version.
    *
    * @param {string} did DID to search
-   * @returns {object} CID array
+   * @returns {object} Certificate array
    */
   structDid (did) {
     return {
