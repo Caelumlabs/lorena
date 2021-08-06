@@ -179,7 +179,7 @@ module.exports = class DIDs {
   }
 
   /**
-   * Get Public Key from Did.
+   * Get DID Data.
    *
    * @param {object} exec Executor class.
    * @param {string} did DID
@@ -193,6 +193,26 @@ module.exports = class DIDs {
     const { internalDid } = this.structDid(did)
     const didData = await exec.api.query.idSpace.didData(internalDid)
     return JSON.parse(didData)
+  }
+
+  /**
+   * Get All DID Data.
+   *
+   * @param {object} exec Executor class.
+   * @returns {Promise} of public key
+   */
+  async getAllDidData (exec) {
+    const allDidData = await exec.api.query.idSpace.didData.entries()
+    const didData = allDidData
+      .map((v) => {
+        const data = JSON.parse(v[1])
+        const did = '0x' + Utils.decimalToHex(data.did_version, 2) +
+                           Utils.decimalToHex(data.network_id, 4) +
+                           Utils.decimalToHex(data.did_type, 2) +
+                           u8aToHex(v[0]).slice(100)
+        return { did: did, data: data }
+      })
+    return didData
   }
 
   /**
@@ -343,8 +363,14 @@ module.exports = class DIDs {
    * @returns {Array} array of Certificates
    */
   async getCertificates (exec) {
-    const cids = await exec.api.query.idSpace.certificates()
-    return cids.map((cid) => { return JSON.parse(cid) })
+    const allCids = await exec.api.query.idSpace.certificates.entries()
+    const cids = allCids
+      .map((v) => {
+        const data = JSON.parse(v[1])
+        const cid = '0x' + u8aToHex(v[0]).slice(100)
+        return { certificate: cid, data: data }
+      })
+    return cids
   }
 
   /**
@@ -355,13 +381,16 @@ module.exports = class DIDs {
    * @returns {Array} array of Certificates
    */
   async getValidCertificates (exec) {
-    const cids = await exec.api.query.idSpace.certificates()
-    return cids.map((cid) => {
-      const c = JSON.parse(cid)
-      if (c.block_valid_to === 0) {
-        return c
-      }
-    })
+    const allCids = await exec.api.query.idSpace.certificates.entries()
+    const cids = allCids
+      .map((v) => {
+        const data = JSON.parse(v[1])
+        if (data.block_valid_to === 0) {
+          const cid = '0x' + u8aToHex(v[0]).slice(100)
+          return { certificate: cid, data: data }
+        }
+      })
+    return cids
   }
 
   /**
@@ -378,23 +407,7 @@ module.exports = class DIDs {
     if (Utils.verifyHexString(cid) === false) {
       return false
     }
-    const cids = await exec.api.query.idSpace.certificates()
-    let first = 0
-    let last = cids.length - 1
-    let middle = Math.floor((last + first) / 2)
-
-    let parsedCertificate = JSON.parse(cids[middle])
-    while (parsedCertificate.cid !== cid && first < last) {
-      if (cid < parsedCertificate.cid) {
-        last = middle - 1
-      } else if (cid > parsedCertificate.cid) {
-        first = middle + 1
-      }
-      middle = Math.floor((last + first) / 2)
-      parsedCertificate = JSON.parse(cids[middle])
-    }
-
-    return (parsedCertificate.cid !== cid) ? null : parsedCertificate
+    return await exec.api.query.idSpace.certificates(cid)
   }
 
   /**
@@ -411,15 +424,16 @@ module.exports = class DIDs {
     if (Utils.verifyHexString(did) === false) {
       return false
     }
-    const cids = await exec.api.query.idSpace.certificates()
-    const didCollection = []
-    for (let i = 0; i < cids.length; i++) {
-      const parsedCertificate = JSON.parse(cids[i])
-      if (parsedCertificate.did_owner === did && parsedCertificate.block_valid_to === 0) {
-        didCollection.push(parsedCertificate)
-      }
-    }
-    return didCollection
+    const allCids = await exec.api.query.idSpace.certificates.entries()
+    const cids = allCids
+      .map((v) => {
+        const data = JSON.parse(v[1])
+        if (data.did_owner === did && data.block_valid_to === 0) {
+          const cid = '0x' + u8aToHex(v[0]).slice(100)
+          return { certificate: cid, data: data }
+        }
+      })
+    return cids
   }
 
   /**

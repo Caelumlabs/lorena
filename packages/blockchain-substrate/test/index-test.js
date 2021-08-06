@@ -334,7 +334,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   it('Should read all Certificates of a DID', async () => {
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
     const result = await blockchain.getCertificatesByDID(didPromoter)
-     expect(result[0].did_owner).equal(didPromoter)
+    expect(result[0].data.did_owner).equal(didPromoter)
   })
 
   it('Should revoke a Certificate into Blockchain', async () => {
@@ -351,14 +351,19 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredCidEvent[2]).equal(didPromoter.toString())
     // See result
     const res = await blockchain.getCertificatesByDID(didPromoter)
-    expect(res[0].did_owner).equal(didPromoter)
+    expect(res[0].data.did_owner).equal(didPromoter)
+  })
+
+  it.skip('Should read all DIDs', async () => {
+    const result = await blockchain.getAllDidData()
+    console.log(result)
   })
 
   // The following tests will pass just once if the blockchain is
   // not reinitialized. That's because a credential assigned
   // is not revoked but marked as revoked and can not
   // be reassigned
-  it('Should Assign a Hash', async () => {
+  it.skip('Should Assign a Hash', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
@@ -369,7 +374,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredCredentialAssignedEvent[2]).equal(stringToHex(credential))
   })
 
-  it('Should Remove a Hash', async () => {
+  it.skip('Should Remove a Hash', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
@@ -439,7 +444,8 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // Set the token and cost for processes
     // This can be done solely by root that in this case is Alice
     await blockchain.setTokenAndCostForProcess(tokenid, 30)
-    const tc = await blockchain.getTokenIdAndCostProcessData()
+    const tc = await blockchain.getTokenIdAndCosts()
+    expect(tc.start_process[0].toNumber()).equal(tokenid)
     // Get the account token data
     let tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -456,7 +462,8 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     let AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    // Should be zero because Alice is Root
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash mocking subprocess hash
@@ -470,7 +477,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash mocking first step hash
@@ -484,7 +491,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash mocking second step hash
@@ -498,7 +505,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash for a document and link to process
@@ -512,7 +519,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash for a document and link to subprocess
@@ -526,7 +533,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash for a document and link to first step
@@ -540,7 +547,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash for a document and link to second step
@@ -554,7 +561,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain a random hash for a document attachment and link to document on the second step
@@ -568,7 +575,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
     AliceNewBalance = tokenAccountData.balance
-    expect(AliceOldBalance - AliceNewBalance).eql(30)
+    expect(AliceOldBalance - AliceNewBalance).eql(0)
     AliceOldBalance = AliceNewBalance
 
     // Obtain path to Attachment
@@ -589,7 +596,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     console.log(util.inspect(fullProcessTree, { showHidden: false, depth: null }))
 
     // Revoke from second step
-    await blockchain.revoke(secondStepHash)
+    await blockchain.revokeNode(secondStepHash)
 
     // Obtain again the full process tree to check for revoked
     // Remember that the full process tree can be obtained from any
@@ -598,14 +605,14 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     console.log(util.inspect(fullProcessTree, {showHidden: false, depth: null}))
 
     // Now revoke the whole process
-    await blockchain.revoke(processHash)
+    await blockchain.revokeNode(processHash)
 
     // And obtain again the full process tree to check for revoked
     fullProcessTree = await blockchain.getFullProcessTree(processHash)
     console.log(util.inspect(fullProcessTree, {showHidden: false, depth: null}))
   })
 
-  it('Creates some NFTs classes and instances and transfer ownership', async () => {
+  it.skip('Creates some NFTs classes and instances and transfer ownership', async () => {
     // Sets the keyring (so account address)
     const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
     // Create random number for a class

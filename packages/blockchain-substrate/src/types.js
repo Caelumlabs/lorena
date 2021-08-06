@@ -22,8 +22,6 @@ module.exports = {
     Certificate: {
       // Release of this CID template.
       release: 'IdSpaceReleases',
-      // Hash of the CID template.
-      cid: 'Vec<u8>',
       // Owner account the creates this CID.
       owner: 'AccountId',
       // Owner's DID.
@@ -38,6 +36,8 @@ module.exports = {
       cid_type: 'Vec<u8>',
       // Total HIDs issued so far.
       total_hids_issued: 'u64',
+      // Certificate is frozen
+      is_frozen: 'bool',
       // Block when this template CID was created.
       block_valid_from: 'BlockNumber',
       // Block when this template CID was invalidated. (0 means that it still valid).
@@ -62,6 +62,7 @@ module.exports = {
       cid: 'Vec<u8>',
       cid_type: 'Vec<u8>',
       path: 'Option<Vec<u8>>',
+      is_frozen: 'bool',
       block_valid_from: 'BlockNumber',
       block_valid_to: 'BlockNumber'
     },
@@ -91,6 +92,7 @@ module.exports = {
       credentials: 'Option<Vec<Vec<u8>>>',
       accumulator: 'Option<Accumulator>',
       info: 'DIDInfo',
+      is_frozen: 'bool',
       block_valid_from: 'BlockNumber',
       block_valid_to: 'BlockNumber'
     },
