@@ -222,15 +222,15 @@ module.exports = class Token {
    * Sender should be the Admin of the token `id`.
    *
    * - `id`: The identifier of the token to be frozen.
-   * - `who`: The account to be unfrozen.
+   * - `who`: The account to be unfreeze.
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair. Signs transaction
    * @param {number} id The identifier of the token. 
-   * @param {object} who The account to be unfrozen. 
+   * @param {object} who The account to be unfreeze. 
    * @returns {Promise} of transaction
    */
-  async unfrozenAccountForToken (exec, keypair, id, who) {
+  async unfreezeAccountForToken (exec, keypair, id, who) {
     const transaction = await exec.api.tx.assets.thaw(id, who)
     return await exec.execTransaction(keypair, transaction)
   } 
@@ -262,7 +262,7 @@ module.exports = class Token {
    * @param {number} id The identifier of the token. 
    * @returns {Promise} of transaction
    */
-  async unfrozenToken (exec, keypair, id) {
+  async unfreezeToken (exec, keypair, id) {
     const transaction = await exec.api.tx.assets.thawToken(id)
     return await exec.execTransaction(keypair, transaction)
   } 

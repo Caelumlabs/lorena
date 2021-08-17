@@ -131,15 +131,15 @@ module.exports = class BlockchainInterface {
     } else if (!this.freezeAccountForToken) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `freezeAccountForToken`!')
-    } else if (!this.unfrozenAccountForToken) {
+    } else if (!this.unfreezeAccountForToken) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `unfrozenAccountForToken`!')
+      throw new Error('Blockchain must have function `unfreezeAccountForToken`!')
     } else if (!this.freezeToken) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `freezeToken`!')
-    } else if (!this.unfrozenToken) {
+    } else if (!this.unfreezeToken) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `unfrozenToken`!')
+      throw new Error('Blockchain must have function `unfreezeToken`!')
     } else if (!this.transferTokenOwnership) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `transferTokenOwnership`!')

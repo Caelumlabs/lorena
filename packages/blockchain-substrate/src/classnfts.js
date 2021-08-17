@@ -222,7 +222,7 @@ module.exports = class ClassNFTs {
    * @param {object} instanceid The instance of the asset to be frozen. 
    * @returns {Promise} of transaction
    */
-  async unfrozenNFTInstance (exec, keypair, classid, instanceid) {
+  async unfreezeNFTInstance (exec, keypair, classid, instanceid) {
     const transaction = await exec.api.tx.classNfts.thaw(classid, instanceid)
     return await exec.execTransaction(keypair, transaction)
   }
@@ -257,10 +257,10 @@ module.exports = class ClassNFTs {
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair. Signs transaction
-   * @param {number} classid The class of the asset to be unfrozen. 
+   * @param {number} classid The class of the asset to be unfreeze. 
    * @returns {Promise} of transaction
    */
-  async unfrozenNFTClass (exec, keypair, classid) {
+  async unfreezeNFTClass (exec, keypair, classid) {
     const transaction = await exec.api.tx.classNfts.thawClass(classid)
     return await exec.execTransaction(keypair, transaction)
   }

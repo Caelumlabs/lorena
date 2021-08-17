@@ -825,14 +825,14 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Sender should be the Admin of the token `id`.
    *
    * - `id`: The identifier of the token to be frozen.
-   * - `who`: The account to be unfrozen.
+   * - `who`: The account to be unfreeze.
    *
    * @param {number} id The identifier of the token.
-   * @param {object} who The account to be unfrozen.
+   * @param {object} who The account to be unfreeze.
    * @returns {Promise} of transaction
    */
-  async unfrozenAccountForToken (id, who) {
-    return this.tokens.unfrozenAccountForToken(this.exec, this.keypair, id, who)
+  async unfreezeAccountForToken (id, who) {
+    return this.tokens.unfreezeAccountForToken(this.exec, this.keypair, id, who)
   } 
 
   /**
@@ -857,8 +857,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {number} id The identifier of the token.
    * @returns {Promise} of transaction
    */
-  async unfrozenToken (id) {
-    return this.tokens.unfrozenToken(this.exec, this.keypair, id)
+  async unfreezeToken (id) {
+    return this.tokens.unfreezeToken(this.exec, this.keypair, id)
   } 
 
   /**
@@ -1353,8 +1353,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {object} instanceid The instance of the asset to be frozen.
    * @returns {Promise} of transaction
    */
-  async unfrozenNFTInstance (classid, instanceid) {
-    return this.classNFTs.unfrozenNFTInstance(this.exec, this.keypair, classid, instanceid)
+  async unfreezeNFTInstance (classid, instanceid) {
+    return this.classNFTs.unfreezeNFTInstance(this.exec, this.keypair, classid, instanceid)
   }
 
   /**
@@ -1385,7 +1385,7 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {number} classid The class of the asset to be frozen.
    * @returns {Promise} of transaction
    */
-  async unfrozenNFTClass (classid) {
+  async unfreezeNFTClass (classid) {
     return this.classNFTs.unfrozenNFTClass(this.exec, this.keypair, classid)
   }
 
