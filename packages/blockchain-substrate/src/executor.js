@@ -84,7 +84,7 @@ module.exports = class Executor {
           // extract the phase, event and the event types
           const { event } = record
           const types = event.typeDef
-          if (event.section === 'idSpace' && event.method === eventMethod) {
+          if ((event.section === 'idSpace' || event.section === 'assets') && event.method === eventMethod) {
             for (let i = 0; i < event.data.length; i++) {
               // All events have a a type 'AccountId'
               if (types[i].type === 'AccountId') {
@@ -101,6 +101,7 @@ module.exports = class Executor {
   /**
    * Execute a transaction.
    *
+   * @param {object} keypair Sender's keypair
    * @param {object} transaction Transaction to execute (Transaction)
    * @returns {Promise} result of the Transaction
    */
@@ -131,55 +132,89 @@ module.exports = class Executor {
     })
   }
 
+  /**
+   * Execute a batch of transactions.
+   *
+   * @param {object} keypair Sender's keypair
+   * @param {object} batch Transactions batch to execute (Array)
+   * @returns {Promise} result of the Transactions batch
+   */
+  async execBatch (keypair, txs) {
+    return new Promise(async (resolve) => {
+      let result = true
+      this.api.tx.utility.batch(txs).signAndSend(keypair, ({ status, events }) => {
+        debug('Status -> ', this.getStatus(status))
+        events.forEach(({ event: { method, section } }) => debug('Section ', section, 'Method ', method ))
+        if (status.isInBlock || status.isFinalized) {
+          const errors = events.filter(({ event: { method, section } }) =>
+            section === 'system' && method === 'ExtrinsicFailed'
+          )
+          if (errors.length > 0) {
+            errors.forEach(({ event: { data: [error, info] } }) => {
+              if (error.isModule) {
+                const { documentation, method, section } = this.api.registry.findMetaError(error.asModule)
+                console.log(`${section}.${method}: ${documentation.join(' ')}`)
+              } else {
+                console.log('System error found ' + error.toString())
+              }
+            })
+            result = false
+          }
+          resolve(result)
+        }
+      })
+    })
+  }
+
   getStatus (status) {
-  if (status.isFuture) { return 'Is Future'}
-  if (status.isReady) {return 'Is Ready'}
-  if (status.isBroadcast) { return 'Is broadcast'}
-  if (status.isInBlock) { return 'Is Inblock'}
-  if (status.isRetracted) {return 'Is retracted'}
-  if (status.isFinalityTimeout) { return 'Is FinalityTimeout'}
-  if (status.isFinalized) {return 'Is finalized'}
-  if (status.isUsurped) { return 'Is Usurped'}
-  if (status.isDropped) {return 'Is dropped'}
-  if (status.isInvalid) {return 'Is invalid'}
-  return 'Else'
+    if (status.isFuture) { return 'Is Future'}
+    if (status.isReady) {return 'Is Ready'}
+    if (status.isBroadcast) { return 'Is broadcast'}
+    if (status.isInBlock) { return 'Is Inblock'}
+    if (status.isRetracted) {return 'Is retracted'}
+    if (status.isFinalityTimeout) { return 'Is FinalityTimeout'}
+    if (status.isFinalized) {return 'Is finalized'}
+    if (status.isUsurped) { return 'Is Usurped'}
+    if (status.isDropped) {return 'Is dropped'}
+    if (status.isInvalid) {return 'Is invalid'}
+    return 'Else'
   }
 
   errorType (error) {
-  if (error.isOther) { return 'isOther' }
-  if (error.isCannotLookup) { return 'isCannotLookup' }
-  if (error.isBadOrigin) { return 'isBadOrigin' }
-  if (error.isModule) { return 'isModule' }
-  if (error.isConsumerRemaining) { return 'isConsumerRemaining' }
-  if (error.isNoProviders) { return 'isNoProviders' }
-  if (error.isToken) { return 'isToken' }
-  if (error.isArithmetic) { return 'isArithmetic' }
-  return 'Other'
+    if (error.isOther) { return 'isOther' }
+    if (error.isCannotLookup) { return 'isCannotLookup' }
+    if (error.isBadOrigin) { return 'isBadOrigin' }
+    if (error.isModule) { return 'isModule' }
+    if (error.isConsumerRemaining) { return 'isConsumerRemaining' }
+    if (error.isNoProviders) { return 'isNoProviders' }
+    if (error.isToken) { return 'isToken' }
+    if (error.isArithmetic) { return 'isArithmetic' }
+    return 'Other'
   }
 
   async executeTransaction (keypair, transaction) {
-      return new Promise(async (resolve) => {
-        await transaction
-              .signAndSend(keypair, ({ status, events, dispatchError }) => {
-              // status would still be set, but in the case of error we can shortcut
-              // to just check it (so an error would indicate InBlock or Finalized)
-              if (dispatchError) {
-                console.log('DispatchError')
-                if (dispatchError.isModule) {
-                  // for module errors, we have the section indexed, lookup
-                  const decoded = this.api.registry.findMetaError(dispatchError.asModule);
-                  const { documentation, name, section } = decoded;
+    return new Promise(async (resolve) => {
+      await transaction
+        .signAndSend(keypair, ({ status, events, dispatchError }) => {
+          // status would still be set, but in the case of error we can shortcut
+          // to just check it (so an error would indicate InBlock or Finalized)
+          if (dispatchError) {
+            console.log('DispatchError')
+            if (dispatchError.isModule) {
+              // for module errors, we have the section indexed, lookup
+              const decoded = this.api.registry.findMetaError(dispatchError.asModule);
+              const { documentation, name, section } = decoded;
 
-                  console.log(`${section}.${name}: ${documentation.join(' ')}`);
-                } else {
-                  // Other, CannotLookup, BadOrigin, no extra info
-                  console.log(dispatchError.toString());
-                }
-                resolve(false)
-              }
-              console.log('No dispatch error')
-              resolve(true)
+              console.log(`${section}.${name}: ${documentation.join(' ')}`);
+            } else {
+              // Other, CannotLookup, BadOrigin, no extra info
+              console.log(dispatchError.toString());
+            }
+            resolve(false)
+          }
+          console.log('No dispatch error')
+          resolve(true)
         })
-      })
+    })
   }
 }

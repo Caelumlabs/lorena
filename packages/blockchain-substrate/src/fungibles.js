@@ -11,6 +11,29 @@ var debug = require('debug')('did:debug:sub')
  */
 module.exports = class Token {
   /**
+   * Constructor
+   *
+   * @param {string} format Format presentation for DIDs
+   */
+  constructor (format) {
+    this.format = format
+    this.DIDPrefix = 'A'
+    this.DIDSep = ':'
+    this.CIDPrefix = 'B'
+    this.CIDSep = ':'
+  }
+
+  /**
+   * Sets a format 
+   *
+   * @param {string} format Format to set
+   * @returns {Promise} Result of the transaction
+   */
+  async setFormat (format) {
+    this.format = format
+  }
+
+  /**
    * Issue a new class of fungible tokens from a public origin.
    * This new token class has no tokens initially and its owner is the origin.
    * The origin must be Signed (Keypair) and the sender must have sufficient funds free.
@@ -24,14 +47,13 @@ module.exports = class Token {
    *
    * @param {object} exec Executor class.
    * @param {object} keypair Account's keypair. Signs transaction
-   * @param {number} id The identifier of the new token. 
    * @param {object} admin The admin of this class of tokens. 
    * @param {number} minBalance The minimum balance.
    * @returns {Promise} of transaction
    */
 
-  async createToken (exec, keypair, id, admin, minBalance) {
-    const transaction = await exec.api.tx.assets.create(id, admin, minBalance, true)
+  async createToken (exec, keypair, admin, minBalance) {
+    const transaction = await exec.api.tx.assets.create(admin, minBalance, true)
     return await exec.execTransaction(keypair, transaction)
   }
 

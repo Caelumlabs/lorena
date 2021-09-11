@@ -1,5 +1,6 @@
 /* eslint-disable no-async-promise-executor */
 'use strict'
+const util = require('util')
 const Utils = require('./utils')
 const { bufferToU8a } = require('@polkadot/util')
 
@@ -9,6 +10,29 @@ var debug = require('debug')('did:debug:sub')
  * Functions dealing with receipes and processes.
  */
 module.exports = class Process {
+  /**
+   * Constructor
+   *
+   * @param {string} format Format presentation for DIDs
+   */
+  constructor (format) {
+    this.format = format
+    this.DIDPrefix = 'A'
+    this.DIDSep = ':'
+    this.CIDPrefix = 'B'
+    this.CIDSep = ':'
+  }
+
+  /**
+   * Sets a format 
+   *
+   * @param {string} format Format to set
+   * @returns {Promise} Result of the transaction
+   */
+  async setFormat (format) {
+    this.format = format
+  }
+
   /**
    * Starts a Process.
    * This must be the first call when a recipe o process is being executed
@@ -23,6 +47,11 @@ module.exports = class Process {
    * @returns {Promise} of transaction
    */
   async startProcess (exec, keypair, did, hash) {
+    // Check if DID is wellformed
+    did = Utils.verifyHexString(did, this.format)
+    if (did === false) {
+      return false
+    }
     // Convert hash string to hex
     const hexHash = Utils.base64ToHex(hash)
     // Convert did string to hex
@@ -45,6 +74,11 @@ module.exports = class Process {
    * @returns {Promise} of transaction
    */
   async startSubprocess (exec, keypair, did, hash, parentHash) {
+    // Check if DID is wellformed
+    did = Utils.verifyHexString(did, this.format)
+    if (did === false) {
+      return false
+    }
     // Convert hash string to hex
     const hexHash = Utils.base64ToHex(hash)
     // Convert hash string to hex
@@ -68,6 +102,11 @@ module.exports = class Process {
    * @returns {Promise} of transaction
    */
   async startStep (exec, keypair, did, hash, parentHash) {
+    // Check if DID is wellformed
+    did = Utils.verifyHexString(did, this.format)
+    if (did === false) {
+      return false
+    }
     // Convert hash string to hex
     const hexHash = Utils.base64ToHex(hash)
     // Convert hash string to hex
@@ -91,6 +130,11 @@ module.exports = class Process {
    * @returns {Promise} of transaction
    */
   async addDocument (exec, keypair, did, hash, parentHash) {
+    // Check if DID is wellformed
+    did = Utils.verifyHexString(did, this.format)
+    if (did === false) {
+      return false
+    }
     // Convert hash string to hex
     const hexHash = Utils.base64ToHex(hash)
     // Convert hash string to hex
@@ -114,6 +158,11 @@ module.exports = class Process {
    * @returns {Promise} of transaction
    */
   async addAttachment (exec, keypair, did, hash, parentHash) {
+    // Check if DID is wellformed
+    did = Utils.verifyHexString(did, this.format)
+    if (did === false) {
+      return false
+    }
     // Convert hash string to hex
     const hexHash = Utils.base64ToHex(hash)
     // Convert hash string to hex
@@ -169,9 +218,9 @@ module.exports = class Process {
     const transaction = await exec.api.tx.idSpace.pathTo(hexHash)
     await exec.execTransaction(keypair, transaction)
     const pathEvent = await exec.wait4Event('ProcessPath')
-    let path = []
+    const path = []
     pathEvent[1].split('x')[1].match(/.{1,2}/g).forEach(el => path.push(String.fromCharCode(parseInt(el, 16))))
-    return JSON.parse(path.join(''))
+    return this.formatProcessTree(JSON.parse(path.join('')))
   }
 
   /**
@@ -188,9 +237,10 @@ module.exports = class Process {
     const transaction = await exec.api.tx.idSpace.getFullProcessTree(hexHash)
     await exec.execTransaction(keypair, transaction)
     const pathEvent = await exec.wait4Event('ProcessPath')
-    let path = []
+    const path = []
     pathEvent[1].split('x')[1].match(/.{1,2}/g).forEach(el => path.push(String.fromCharCode(parseInt(el, 16))))
-    return JSON.parse(path.join(''))
+    const pathParsed = JSON.parse(path.join(''))
+    return this.formatProcessTree(pathParsed)
   }
 
   /**
@@ -200,9 +250,49 @@ module.exports = class Process {
    * @param {string} hash Process node hash
    * @returns {Promise} of transaction
    */
-  async getProcessNode(exec, hash) {
+  async getProcessNode (exec, hash) {
     // Convert hash string to hex
     const hexHash = Utils.base64ToHex(hash)
-    return await exec.api.query.idSpace.processTree(hexHash)
+    let nodeData = await exec.api.query.idSpace.processTree(hexHash)
+    nodeData = JSON.parse(nodeData) 
+    nodeData.did = Utils.formatHexString(nodeData.did, this.format, this.DIDPrefix, this.DIDSep)
+    return nodeData
+  }
+
+  /**
+   * Format a Tree path
+   *
+   * @param {object} tree Process Tree to reformat
+   * @returns {object} Process Tree reformatted
+   */
+  formatProcessTree (tree) {
+    if (tree.Children !== undefined && tree.Children.length > 0) {
+      for (let i = 0; i < tree.Children.length; i++) {
+        tree.Children[i] = this.formatProcessTree(tree.Children[i])
+      }
+    }
+    if (tree.DID !== undefined) {
+      tree.DID = Utils.formatHexString(tree.DID, this.format, this.DIDPrefix, this.DIDSep)
+    }
+    if (tree.Process !== undefined) {
+      tree.Process = this.formatProcessTree(tree.Process)
+    } else {
+      if (tree.SubProcess !== undefined) {
+        tree.SubProcess = this.formatProcessTree(tree.SubProcess)
+      } else {
+        if (tree.Step !== undefined) {
+          tree.Step = this.formatProcessTree(tree.Step)
+        } else {
+          if (tree.Document !== undefined) {
+            tree.Document = this.formatProcessTree(tree.Document)
+          } else {
+            if (tree.Attachment !== undefined) {
+              tree.Attachment = this.formatProcessTree(tree.Attachment)
+            }
+          }
+        }
+      }
+    }
+    return tree
   }
 }

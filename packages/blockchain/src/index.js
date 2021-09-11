@@ -26,9 +26,9 @@ module.exports = class BlockchainInterface {
     } else if (!this.addrState) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `addrState`!')
-    } else if (!this.transferTokens) {
+    } else if (!this.transferGas) {
       /* istanbul ignore next */
-      throw new Error('Blockchain must have function `transferTokens`!')
+      throw new Error('Blockchain must have function `transferGas`!')
     } else if (!this.registerDid) {
       /* istanbul ignore next */
       throw new Error('Blockchain must have function `registerDid`!')

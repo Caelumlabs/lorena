@@ -19,6 +19,10 @@ module.exports = {
         'V2_0_0'
       ]
     },
+    Timepoint: {
+      height: 'BlockNumber',
+      index: 'u32'
+    },
     Certificate: {
       // Release of this CID template.
       release: 'IdSpaceReleases',
@@ -39,22 +43,22 @@ module.exports = {
       // Certificate is frozen
       is_frozen: 'bool',
       // Block when this template CID was created.
-      block_valid_from: 'BlockNumber',
+      timepoint_valid_from: 'Timepoint',
       // Block when this template CID was invalidated. (0 means that it still valid).
-      block_valid_to: 'BlockNumber'
+      timepoint_valid_to: 'Timepoint'
     },
     PublicKey: {
       release: 'IdSpaceReleases',
       pub_key: 'Vec<u8>',
-      block_valid_from: 'BlockNumber',
-      block_valid_to: 'BlockNumber'
+      timepoint_valid_from: 'Timepoint',
+      timepoint_valid_to: 'Timepoint'
     },
     PublicKeyType: {
       release: 'IdSpaceReleases',
       pub_key_type: 'u16',
       pub_keys: 'Vec<PublicKey>',
-      block_valid_from: 'BlockNumber',
-      block_valid_to: 'BlockNumber'
+      timepoint_valid_from: 'Timepoint',
+      timepoint_valid_to: 'Timepoint'
     },
     Credential: {
       release: 'IdSpaceReleases',
@@ -63,8 +67,8 @@ module.exports = {
       cid_type: 'Vec<u8>',
       path: 'Option<Vec<u8>>',
       is_frozen: 'bool',
-      block_valid_from: 'BlockNumber',
-      block_valid_to: 'BlockNumber'
+      timepoint_valid_from: 'Timepoint',
+      timepoint_valid_to: 'Timepoint'
     },
     DIDInfo: {
       release: 'IdSpaceReleases',
@@ -80,7 +84,7 @@ module.exports = {
     DIDData: {
       release: 'IdSpaceReleases',
       did_version: 'u8',
-      network_id: 'u16',
+      network_id: 'Vec<u8>',
       did_type: 'u8',
       owner: 'AccountId',
       did_promoter: 'Vec<u8>',
@@ -93,8 +97,8 @@ module.exports = {
       accumulator: 'Option<Accumulator>',
       info: 'DIDInfo',
       is_frozen: 'bool',
-      block_valid_from: 'BlockNumber',
-      block_valid_to: 'BlockNumber'
+      timepoint_valid_from: 'Timepoint',
+      timepoint_valid_to: 'Timepoint'
     },
     TokenIdAndCost: {
       register_did: '(AssetId, u64)',
@@ -148,8 +152,16 @@ module.exports = {
       node_type: 'NodeType',
       parent: 'Option<Vec<u8>>',
       children: 'Option<Vec<Vec<u8>>>',
-      created_block: 'BlockNumber',
-      valid_until: 'BlockNumber'
+      created_block: 'Timepoint',
+      valid_until: 'Timepoint'
+    },
+    MultisigAccount: {
+      members: 'Vec<AccountId>',
+      threshold: 'u16',
+      creator: 'AccountId',
+      is_frozen: 'bool',
+      valid_from: 'Timepoint<BlockNumber>',
+      valid_to: 'Timepoint<BlockNumber>'
     },
     SuspensionJudgement: {
       _enum: [

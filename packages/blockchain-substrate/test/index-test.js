@@ -12,6 +12,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   const BlockchainSubstrate = require('../src/index.js')
   const Crypto = require('@caelumlabs/crypto')
   const Utils = require('../src/utils')
+  const Formats = require('../src/format')
 
   const crypto = new Crypto(true)
   const GENESIS_SEED_FROM = '//Alice'
@@ -25,6 +26,9 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   let aliceAddr, tempWallet, tempWallet2, tempWallet3, tempWallet4
   let cid1, cid2, cid3
   let tokenid
+  let format = Formats.DECIMAL
+  let prefix = 'A'
+  let sep = ':'
   const diddocHash = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
   const storageAddress = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
   const credential = 'bafyreiecd7bahhf6ohlzg5wu4eshn655kqhgaguurupwtbnantf54kloem'
@@ -35,9 +39,6 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     did = crypto.random(16)
     did2 = crypto.random(16)
     did3 = crypto.random(16)
-    cid1 = crypto.random(16)
-    cid2 = crypto.random(16)
-    cid3 = crypto.random(16)
     aliceAddr = blockchain.setKeyring(GENESIS_SEED_FROM)
     blockchain.getAddress('//Alice')
     expect(aliceAddr).equal('5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY')
@@ -47,7 +48,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tempWallet2 = crypto.keyPair()
     tempWallet3 = crypto.keyPair()
     tempWallet4 = crypto.keyPair()
-
+  
     tokenid = 0
   })
 
@@ -62,43 +63,56 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
   it('should Connect', async () => {
     await blockchain.connect()
+    blockchain.setFormat(format)
     expect(blockchain).not.be.undefined
   })
 
-  it('Should send Tokens from Alice to tempWallet', async () => {
+  it('Should send Gas from Alice to tempWallet', async () => {
     const amount1 = await blockchain.addrState(aliceAddr)
-    await blockchain.transferTokens(tempWallet.address, 3000000000000000)
+    await blockchain.transferGas(tempWallet.address, 3000000000000000)
     const amount2 = await blockchain.addrState(aliceAddr)
     expect(amount1).not.equal(amount2);
   })
 
-  it('Should send Tokens from Alice to Zelda', async () => {
+  it('Should send Gas from Alice to Zelda', async () => {
     const amount1 = await blockchain.addrState(aliceAddr)
-    await blockchain.transferTokens(blockchain.getAddress(zeldaMnemonic), 3000000000000000)
+    await blockchain.transferGas(blockchain.getAddress(zeldaMnemonic), 3000000000000000)
     const amount2 = await blockchain.addrState(aliceAddr)
     expect(amount1).not.equal(amount2)
   })
 
-  it('Should send Tokens from Alice to tempWallet without paying fee', async () => {
+  it('Should send Gas from Alice to tempWallet without paying fee', async () => {
     const amount1 = await blockchain.addrState(aliceAddr)
-    await blockchain.transferTokensNoFees(tempWallet.address, 3000)
+    await blockchain.transferGasNoFees(tempWallet.address, 3000)
+    const amount2 = await blockchain.addrState(aliceAddr)
+    const { balance } = await blockchain.addrState(aliceAddr)
+    // console.log('Free = %O, Reserved = %O, MiscFrozen = %O, FeeFrozen = %O', 
+    //   BigInt(balance.free),
+    //   balance.reserved.toNumber(),
+    //   balance.miscFrozen.toNumber(),
+    //   balance.feeFrozen.toNumber())
+    // { balance } = await blockchain.addrState(tempWallet.address)
+    // console.log('Free = %O, Reserved = %O, MiscFrozen = %O, FeeFrozen = %O', 
+    //   balance.free.toNumber(),
+    //   balance.reserved.toNumber(),
+    //   balance.miscFrozen.toNumber(),
+    //   balance.feeFrozen.toNumber())
+    expect(amount1).not.equal(amount2)
+  })
+
+  it('Should send Gas from Alice to tempWallet2 without paying fee', async () => {
+    const amount1 = await blockchain.addrState(aliceAddr)
+    await blockchain.transferGasNoFees(tempWallet2.address, 3000000000000000)
     const amount2 = await blockchain.addrState(aliceAddr)
     expect(amount1).not.equal(amount2)
   })
 
-  it('Should send Tokens from Alice to tempWallet2 without paying fee', async () => {
+  it('Should send Gas from Alice to tempWallet3 and tempWallet4 without paying fee', async () => {
     const amount1 = await blockchain.addrState(aliceAddr)
-    await blockchain.transferTokensNoFees(tempWallet2.address, 3000000000000000)
+    await blockchain.transferGasNoFees(tempWallet3.address, 30000000)
     const amount2 = await blockchain.addrState(aliceAddr)
     expect(amount1).not.equal(amount2)
-  })
-
-  it('Should send Tokens from Alice to tempWallet3 and tempWallet4 without paying fee', async () => {
-    const amount1 = await blockchain.addrState(aliceAddr)
-    await blockchain.transferTokensNoFees(tempWallet3.address, 30000000)
-    const amount2 = await blockchain.addrState(aliceAddr)
-    expect(amount1).not.equal(amount2)
-    await blockchain.transferTokensNoFees(tempWallet4.address, 3000000000000000)
+    await blockchain.transferGasNoFees(tempWallet4.address, 3000000000000000)
     const amount3 = await blockchain.addrState(aliceAddr)
     expect(amount2).not.equal(amount3)
   })
@@ -107,11 +121,13 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // set account keyring
     const alice = blockchain.setKeyring(GENESIS_SEED_FROM)
     // Create token. Set Alice as Admin 
-    // Token name is a trick for demo. Can be any number u32
-    'Caelum'.split('').forEach(val => tokenid += parseInt(val.charCodeAt()))
     // Create a new token
-    let result = await blockchain.createToken(tokenid, alice)
+    let result = await blockchain.createToken(alice)
     expect(result).equal(true)
+    // Get the new created token id
+    const createdEvent = await blockchain.wait4Event('Created')
+    // Token ID is the first parameter of event
+    tokenid = createdEvent[0]
     // Get the token details so far
     let tokenDetails = await blockchain.getTokenDetails(tokenid)
     expect(tokenDetails.owner).eql(alice)
@@ -126,7 +142,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     tokenDetails = await blockchain.getTokenDetails(tokenid)
     expect(tokenDetails.supply).eql(1000000)
     // Transfer 1000 from Alice to  all tempWallets
-    result = await blockchain.transferToken(tokenid, tempWallet.address, 3000)
+    result = await blockchain.transferToken(tokenid, tempWallet.address, 90000)
     expect(result).equal(true)
     result = await blockchain.transferToken(tokenid, tempWallet2.address, 3000)
     expect(result).equal(true)
@@ -152,6 +168,31 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
     // DID Owner should be the address of tempWallet
     const didDataJson = await blockchain.getDidData(registeredDidEvent[0])
+    console.log('DID =', registeredDidEvent[0])
+    const didConverted = Utils.formatHexString(registeredDidEvent[0], format, prefix, sep)
+    console.log('DID converted =', didConverted)
+    let didAgain 
+    switch (format) {
+      case Formats.HEXADECIMAL:
+        didAgain = didConverted.slice(2)
+        break
+      case Formats.BASE58:
+        didAgain = Utils.FromBase58ToHex(didConverted)
+        break
+      case Formats.BASE58WITHSEPARATORS:
+        didAgain = Utils.FromBase58ToHex(didConverted)
+        break
+      case Formats.DECIMAL:
+        didAgain = Utils.FromDecimalToHex(didConverted)
+        break
+      case Formats.DEFAULT:
+        didAgain = didConverted.slice(2)
+        break
+      default:
+        didAgain = didConverted.slice(2)
+        break
+    }
+    console.log('DID Again =', didAgain)
     expect(didDataJson.owner).equal(tempWallet.address)
 
     // DID promoter should belong to Alice
@@ -201,7 +242,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(promoter.toString()).equal(tempWallet2.address)
   })
 
-  it.skip('Should change Legal Name and Tax Id', async () => {
+  it('Should change Legal Name and Tax Id', async () => {
     blockchain.setKeyring(tempWallet2.mnemonic)
     // Get the DID for tempWallet3
     const tempWalletDid3 = await blockchain.getDidFromOwner(tempWallet3.address)
@@ -224,19 +265,19 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(hexToString(didData.tax_id)).equal('New change of Tax ID for DID3')
   })
 
-  it.skip('Should change Info data', async () => {
+  it('Should change Info data', async () => {
     blockchain.setKeyring(tempWallet2.mnemonic)
     // Get the DID for tempWallet3
     const tempWalletDid2 = await blockchain.getDidFromOwner(tempWallet2.address)
     // Change only Name
     const infoName = { name: 'NewName' }
-    let result = await blockchain.changeInfo(tempWalletDid2, infoName)
+    let result = await blockchain.updateInfo(tempWalletDid2, infoName)
     expect(result).equal(true)
     let didData = await blockchain.getDidData(tempWalletDid2)
     expect(hexToString(didData.info.name)).equal(infoName.name)
     // Change City and Country Code. Name will stay unchanged
     const infoCityAndCountry = { city: 'Barcelona', countryCode: 'ES' }
-    result = await blockchain.changeInfo(tempWalletDid2, infoCityAndCountry)
+    result = await blockchain.updateInfo(tempWalletDid2, infoCityAndCountry)
     expect(result).equal(true)
     didData = await blockchain.getDidData(tempWalletDid2)
     expect(hexToString(didData.info.name)).equal(infoName.name)
@@ -265,14 +306,11 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   })
 
   it('Should try to create a token by a non-root account and fail', async () => {
-    let fakeToken = 0
     // set account keyring
     const account = blockchain.setKeyring(tempWallet.mnemonic)
     // Try Create token.  
-    // Token name is a trick for demo. Can be any number u32
-    'Fake'.split('').forEach(val => fakeToken += parseInt(val.charCodeAt()))
     // Try create a new token
-    const result = await blockchain.createToken(fakeToken, account)
+    const result = await blockchain.createToken(account)
     expect(result).equal(false)
   })
 
@@ -282,7 +320,6 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     const newPubKey = newKeyPair.box.publicKey
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
-
     // Assign the key to tempwallet (type = 0 is the default)
     await blockchain.setKey(newPubKey)
     const registeredSetKeyEvent = await blockchain.wait4Event('KeySet')
@@ -304,28 +341,33 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
   it('Should add a Certificate to Blockchain', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
-    // Result should equal to true => No errors
-    const cid = crypto.random(16)
     // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
-    const result = await blockchain.addCertificate(stringToHex(cid))
+    const result = await blockchain.addCertificate()
     expect(result).equal(true)
 
     // Promoter Account from even data should be address of tempwallet
     const registeredCidEvent = await blockchain.wait4Event('CIDCreated')
+    const cid = registeredCidEvent[0]
     expect(registeredCidEvent[1]).equal(tempWallet.address)
 
     // DID must be DID of the Owner because has not been provided
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
-    expect(registeredCidEvent[2]).equal(didPromoter.toString())
+    expect(Utils.formatHexString(registeredCidEvent[2], format, prefix, sep)).equal(didPromoter)
   })
 
   it('Should add three new Certificates to Blockchain', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Result should equal to true => No errors
     // Vec<u8> parameters must be entered as hex strings (e.g.: format 0xab67c8ff...)
-    const result1 = await blockchain.addCertificate(stringToHex(cid1))
-    const result2 = await blockchain.addCertificate(stringToHex(cid2), 'Title for Cid2', null, 'URL image for cid2')
-    const result3 = await blockchain.addCertificate(stringToHex(cid3), 'Title for Cid3', 'URL for cid3', null, 'Type for Cid3')
+    const result1 = await blockchain.addCertificate()
+    const eventCid1 = await blockchain.wait4Event('CIDCreated')
+    cid1 = eventCid1[0]
+    const result2 = await blockchain.addCertificate('Title for Cid2', null, 'URL image for cid2')
+    const eventCid2 = await blockchain.wait4Event('CIDCreated')
+    cid2 = eventCid2[0]
+    const result3 = await blockchain.addCertificate('Title for Cid3', 'URL for cid3', null, 'Type for Cid3')
+    const eventCid3 = await blockchain.wait4Event('CIDCreated')
+    cid3 = eventCid3[0]
     expect(result1).equal(true)
     expect(result2).equal(true)
     expect(result3).equal(true)
@@ -337,9 +379,9 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(result[0].data.did_owner).equal(didPromoter)
   })
 
-  it('Should revoke a Certificate into Blockchain', async () => {
+  it('Should revoke a Certificate', async () => {
     // Result should equal to true => No errors
-    const result = await blockchain.revokeCertificate(stringToHex(cid3))
+    const result = await blockchain.revokeCertificate(cid3)
     expect(result).equal(true)
 
     // Promoter Account from even data should be address of tempwallet
@@ -348,10 +390,12 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
     // DID must be DID of the Owner
     const didPromoter = await blockchain.getDidFromOwner(tempWallet.address)
-    expect(registeredCidEvent[2]).equal(didPromoter.toString())
+    expect(Utils.formatHexString(registeredCidEvent[2], format, prefix, sep)).equal(didPromoter)
     // See result
     const res = await blockchain.getCertificatesByDID(didPromoter)
-    expect(res[0].data.did_owner).equal(didPromoter)
+    if (res.length > 0) {
+      expect(res[0].data.did_owner).equal(didPromoter)
+    }
   })
 
   it.skip('Should read all DIDs', async () => {
@@ -363,7 +407,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
   // not reinitialized. That's because a credential assigned
   // is not revoked but marked as revoked and can not
   // be reassigned
-  it.skip('Should Assign a Hash', async () => {
+  it('Should Assign a Hash', async () => {
     blockchain.setKeyring(tempWallet.mnemonic)
     // Get the DID for tempWallet
     const tempWalletDid = await blockchain.getDidFromOwner()
@@ -372,6 +416,10 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     const registeredCredentialAssignedEvent = await blockchain.wait4Event('CredentialAssigned')
     // Credential of event should be equal to entered
     expect(registeredCredentialAssignedEvent[2]).equal(stringToHex(credential))
+    // Read the credential
+    console.log(await blockchain.getHash(stringToHex(credential)))
+    // Read all credentials
+    console.log(await blockchain.getAllHashesForDid(tempWalletDid))
   })
 
   it.skip('Should Remove a Hash', async () => {
@@ -384,7 +432,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     expect(registeredCredentialRemovedEvent[2]).equal(stringToHex(credential))
   })
 
-  it.skip('Trying to Change Owner not being the owner. Should fail', async () => {
+  it('Trying to Change Owner not being the owner. Should fail', async () => {
     // Create a new accopunt without DID assigned
     const tempWallet4 = crypto.keyPair()
     blockchain.setKeyring(tempWallet2.mnemonic)
@@ -420,18 +468,14 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     const tempWalletDid = await blockchain.getDidFromOwner(tempWallet.address)
     await blockchain.removeDid(tempWalletDid)
     const subs = await blockchain.wait4Event('DidRemoved')
-    const didRemovedEvent = JSON.parse(subs)
-    console.log('SUBS -> %O', subs)
-
-    // New owner of event should be equal to entered
-    expect(Utils.hexToBase64(didRemovedEvent[1].split('x')[1])).equal(Utils.base64ToHex(did))
+    expect(Utils.formatHexString(subs[1]), format, prefix, sep).eql(tempWalletDid)
   })
 
-  it.skip('Should sweep tokens from Zelda to Alice', async () => {
+  it.skip('Should sweep Gas from Zelda to Alice', async () => {
     const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
     blockchain.setKeyring(zeldaMnemonic)
     const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
-    await blockchain.transferAllTokens(blockchain.getAddress('//Alice'))
+    await blockchain.transferAllGas(blockchain.getAddress('//Alice'))
     const zeldaBalance2 = await blockchain.addrState(zeldaAddress)
     expect(zeldaBalance2).not.equal(zeldaBalance1)
   })
@@ -457,7 +501,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startProcess(did, processHash)
     // Assert data is correctly written
     const processData = await blockchain.getProcessNode(processHash)
-    expect(u8aToHex(processData.did)).eql(did)
+    expect(processData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -472,7 +516,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startSubprocess(did, subProcessHash, processHash)
     // Assert data is correctly written
     const subProcessData = await blockchain.getProcessNode(subProcessHash)
-    expect(u8aToHex(subProcessData.did)).eql(did)
+    expect(subProcessData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -486,7 +530,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startStep(did, firstStepHash, subProcessHash)
     // Assert data is correctly written
     const firstStepData = await blockchain.getProcessNode(firstStepHash)
-    expect(u8aToHex(firstStepData.did)).eql(did)
+    expect(firstStepData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -500,7 +544,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.startStep(did, secondStepHash, subProcessHash)
     // Assert data is correctly written
     const secondStepData = await blockchain.getProcessNode(secondStepHash)
-    expect(u8aToHex(secondStepData.did)).eql(did)
+    expect(secondStepData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -514,7 +558,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, processDocumentHash, processHash)
     // Assert data is correctly written
     const processDocumentData = await blockchain.getProcessNode(processDocumentHash)
-    expect(u8aToHex(processDocumentData.did)).eql(did)
+    expect(processDocumentData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -528,7 +572,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, subProcessDocumentHash, subProcessHash)
     // Assert data is correctly written
     const subProcessDocumentData = await blockchain.getProcessNode(subProcessDocumentHash)
-    expect(u8aToHex(subProcessDocumentData.did)).eql(did)
+    expect(subProcessDocumentData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -542,7 +586,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, firstStepDocumentHash, firstStepHash)
     // Assert data is correctly written
     const firstStepDocumentData = await blockchain.getProcessNode(firstStepDocumentHash)
-    expect(u8aToHex(firstStepDocumentData.did)).eql(did)
+    expect(firstStepDocumentData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -556,7 +600,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addDocument(did, secondStepDocumentHash, secondStepHash)
     // Assert data is correctly written
     const secondStepDocumentData = await blockchain.getProcessNode(secondStepDocumentHash)
-    expect(u8aToHex(secondStepDocumentData.did)).eql(did)
+    expect(secondStepDocumentData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -570,7 +614,7 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     await blockchain.addAttachment(did, attachmentToSecondStepDocumentHash, secondStepDocumentHash)
     // Assert data is correctly written
     const attachmentToSecondStepDocumentData = await blockchain.getProcessNode(attachmentToSecondStepDocumentHash)
-    expect(u8aToHex(attachmentToSecondStepDocumentData.did)).eql(did)
+    expect(attachmentToSecondStepDocumentData.did).eql(did)
     // Get the account token data
     tokenAccountData = await blockchain.getAccountTokenData(tokenid, alice)
     // Keep the old balance
@@ -580,15 +624,15 @@ describe('Test Blockchain Substrate Connection and functions', function () {
 
     // Obtain path to Attachment
     const pathToAttachment = await blockchain.pathTo(attachmentToSecondStepDocumentHash)
-    console.log(util.inspect(pathToAttachment, {showHidden: false, depth: null}))
+    console.log(util.inspect(pathToAttachment, { showHidden: false, depth: null }))
 
     // Obtain path to first step document
     const pathToDocument = await blockchain.pathTo(firstStepDocumentHash)
-    console.log(util.inspect(pathToDocument, {showHidden: false, depth: null}))
+    console.log(util.inspect(pathToDocument, { showHidden: false, depth: null }))
 
     // Obtain degenrate path to process root
     const pathToProcessRoot = await blockchain.pathTo(processHash)
-    console.log(util.inspect(pathToProcessRoot, {showHidden: false, depth: null}))
+    console.log(util.inspect(pathToProcessRoot, { showHidden: false, depth: null }))
 
     // Giving any node (in that case the document of the second step) 
     // Obtain the full process tree
@@ -602,14 +646,14 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // Remember that the full process tree can be obtained from any
     // member of the process tree (in our case secondStepDocumentHash)
     fullProcessTree = await blockchain.getFullProcessTree(secondStepDocumentHash)
-    console.log(util.inspect(fullProcessTree, {showHidden: false, depth: null}))
+    console.log(util.inspect(fullProcessTree, { showHidden: false, depth: null }))
 
     // Now revoke the whole process
     await blockchain.revokeNode(processHash)
 
     // And obtain again the full process tree to check for revoked
     fullProcessTree = await blockchain.getFullProcessTree(processHash)
-    console.log(util.inspect(fullProcessTree, {showHidden: false, depth: null}))
+    console.log(util.inspect(fullProcessTree, { showHidden: false, depth: null }))
   })
 
   it.skip('Creates some NFTs classes and instances and transfer ownership', async () => {
@@ -660,6 +704,36 @@ describe('Test Blockchain Substrate Connection and functions', function () {
     // Check new ownership
     const NewNfts = await blockchain.getNFTOwner(classid, instanceid1)
     expect(NewNfts.owner).eql(tempWallet2.address)
+  })
+
+  it('Should Transfer DID Ownership, all Gas and tokens to new account', async () => {
+    blockchain.setKeyring(tempWallet.mnemonic)
+    // Get the DID for tempWallet3
+    const tempWalletDid = await blockchain.getDidFromOwner(tempWallet.address)
+    // Receiver will be Zelda
+    const zeldaAddress = blockchain.getAddress(zeldaMnemonic)
+    // Ensure DID before is owner by tempWallet
+    const didDataBefore = await blockchain.getDidData(tempWalletDid)
+    expect(didDataBefore.owner).eql(tempWallet.address)
+    // Get the initial gas balance of the sender account
+    const tempWalletBalance1 = await blockchain.addrState(tempWallet.address)
+    console.log('Temp Wallet Balance before ', BigInt(tempWalletBalance1.balance.free))
+    console.log('Temp Wallet token data before ',await blockchain.getAccountTokenData(tokenid, tempWallet.address))
+
+    const zeldaBalance1 = await blockchain.addrState(zeldaAddress)
+    console.log('Zelda Balance before ', BigInt(zeldaBalance1.balance.free))
+    console.log('Zelda token data before ',await blockchain.getAccountTokenData(tokenid, zeldaAddress))
+
+    console.log('Result = ', await blockchain.transferDidOwnershipGasAndTokens(tempWalletDid, zeldaAddress, tokenid))
+
+    console.log('DID Data after', await blockchain.getDidData(tempWalletDid))
+    const tempWalletBalance2 = await blockchain.addrState(tempWallet.address)
+    console.log('Temp Wallet Balance after ', BigInt(tempWalletBalance2.balance.free))
+    console.log('Temp Wallet token data after ',await blockchain.getAccountTokenData(tokenid, tempWallet.address))
+
+    const zeldaBalance2 = await blockchain.addrState(zeldaAddress)
+    console.log('Zelda Balance after ',  BigInt(zeldaBalance2.balance.free))
+    console.log('Zelda token data after ',await blockchain.getAccountTokenData(tokenid, zeldaAddress))
   })
 
   it('should clean up after itself', () => {

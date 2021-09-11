@@ -4,10 +4,11 @@ const BlockchainInterface = require('@caelumlabs/blockchain')
 const { Keyring } = require('@polkadot/api')
 const Executor = require('./executor')
 const DID = require('./dids')
-const Balance = require('./balance')
+const Gas = require('./gas')
 const Process = require('./process')
 const Tokens = require('./fungibles')
 const ClassNFTs = require('./classnfts')
+const Formats = require('./format')
 
 // Debug
 var debug = require('debug')('did:debug:sub')
@@ -25,9 +26,9 @@ module.exports = class SubstrateLib extends BlockchainInterface {
     super()
     // Initialize all needed classes
     this.exec = new Executor(server)
-    this.dids = new DID()
-    this.balance = new Balance()
-    this.process = new Process()
+    this.dids = new DID(Formats.DEFAULT)
+    this.gas = new Gas()
+    this.process = new Process(Formats.DEFAULT)
     this.tokens = new Tokens()
     this.classNFTs = new ClassNFTs()
     this.keypair = {}
@@ -101,57 +102,48 @@ module.exports = class SubstrateLib extends BlockchainInterface {
   }
 
   // The following functions deal with native blockchain tokens
-  // Gets and sets token balances
+  // Gets and sets gas balances
 
   /**
-   * Balance of Tokens
+   * Balance of Gas
    *
-   * @param {string} address Address to send tokens to
-   * @returns {*} balance and nonce
+   * @param {string} address Address to send gas to
+   * @returns {*} gas and nonce
    */
   async addrState (address = false) {
-    return this.balance.addrState(this.exec, this.keypair, address)
+    return this.gas.addrState(this.exec, this.keypair, address)
   }
 
   /**
-   * Transfer Tokens
+   * Transfer Gas
    *
-   * @param {string} addrTo Address to send tokens to
-   * @param {*} amount Amount of tokens
-   * @returns {Promise} of sending tokens
+   * @param {string} addrTo Address to send gas to
+   * @param {*} amount Amount of gas
+   * @returns {Promise} of sending gas
    */
-  async transferTokens (addrTo, amount) {
-    return this.balance.transferTokens(this.exec, this.keypair, addrTo, amount)
+  async transferGas (addrTo, amount) {
+    return this.gas.transferGas(this.exec, this.keypair, addrTo, amount)
   }
 
   /**
-   * Transfer Tokens
+   * Transfer Gas without paying fees
    *
-   * @param {string} addrTo Address to send tokens to
-   * @param {*} amount Amount of tokens
-   * @returns {Promise} of sending tokens
+   * @param {string} addrTo Address to send gas to
+   * @param {*} amount Amount of gas
+   * @returns {Promise} of sending gas
    */
-  async transferTokensNoFees (addrTo, amount) {
-    return this.balance.transferTokensNoFees(this.exec, this.keypair, addrTo, amount)
+  async transferGasNoFees (addrTo, amount) {
+    return this.gas.transferGasNoFees(this.exec, this.keypair, addrTo, amount)
   }
 
   /**
-   * Transfer All Tokens
+   * Transfer All Gas
    *
-   * @param {string} addrTo Address to send tokens to
-   * @returns {Promise} of sending tokens
+   * @param {string} addrTo Address to send gas to
+   * @returns {Promise} of sending gas
    */
-  async transferAllTokens (addrTo) {
-    return this.balance.transferAllTokens(this.exec, this.keypair, addrTo)
-  }
-
-  
-  /**
-   * Transfer All Tokens
-   *
-   */
-  async createOwnAdminToken (id, admin, minBalance) {
-    return this.tokens.createOwnAdminToken(this.exec, this.keypair, id, admin, minBalance)
+  async transferAllGas (addrTo) {
+    return this.gas.transferAllGas(this.exec, this.keypair, addrTo)
   }
 
   // DID and CID functions
@@ -393,7 +385,6 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * DID to assign the CID. By default is Null and the Certificate ID
    * will be assigned to the DID of the sender transaction account
    *
-   * @param {string} cid CID
    * @param {string} title Certicate's title
    * @param {string} urlCertificate Certificate's URL
    * @param {string} urlImage Certificate's URL image
@@ -401,8 +392,8 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * @param {string} did DID to assign the new CID (Either null or Must exists)
    * @returns {Promise} of transaction
    */
-  async addCertificate (cid, title = null, urlCertificate = null, urlImage = null, cidType = null, did = null) {
-    return this.dids.addCertificate(this.exec, this.keypair, cid, title, urlCertificate, urlImage, cidType, did)
+  async addCertificate (title = null, urlCertificate = null, urlImage = null, cidType = null, did = null) {
+    return this.dids.addCertificate(this.exec, this.keypair, title, urlCertificate, urlImage, cidType, did)
   }
 
   /**
@@ -460,6 +451,26 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async getCertificatesByDID (did) {
     return this.dids.getCertificatesByDID(this.exec, did)
+  }
+
+  /**
+   * Get a Credential/Hash.
+   *
+   * @param {string} hash hash to read.
+   * @returns {object} Credential/Hash
+   */
+  async getHash (hash) {
+    return this.dids.getHash(this.exec, hash)
+  }
+
+  /**
+   * Get all Credentials/Hashes of a DID.
+   *
+   * @param {string} did DID to read.
+   * @returns {Array} array of Credentials/Hashes
+   */
+  async getAllHashesForDid (did) {
+    return await this.dids.getAllHashesForDid(this.exec, did)
   }
 
   /**
@@ -648,18 +659,16 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    * Funds of sender are reserved by `TokenDeposit`.
    *
    * Parameters:
-   * - `id`: The identifier of the new token. This must not be currently in use to identify an existing token.
    * - `admin`: The admin of this class of tokens. The admin is the initial address of each member of the token class's admin team.
    * - `minBalance`: The minimum balance of this new token that any single account must have.
    *    If an account's balance is reduced below this, then it collapses to zero.
    *
-   * @param {number} id The identifier of the new token.
    * @param {object} admin The admin of this class of tokens.
    * @param {number} minBalance The minimum balance (Defaults to zero).
    * @returns {Promise} of transaction
    */
-  async createToken (id, admin, minBalance = 0) {
-    return this.tokens.createToken(this.exec, this.keypair, id, admin, minBalance)
+  async createToken (admin, minBalance = 0) {
+    return this.tokens.createToken(this.exec, this.keypair, admin, minBalance)
   }
 
   /**
@@ -1744,5 +1753,68 @@ module.exports = class SubstrateLib extends BlockchainInterface {
    */
   async wait4Event (eventMethod) {
     return this.exec.wait4Event(eventMethod)
+  }
+
+  /**
+   * Tranfers DID ownership and all Gas and tokens from sender's new owner account.
+   * Sender must be the owner of the token.
+   *
+   * Parameters:
+   * - `newOwner`: The account receiving the Gas and tokens. This must not be currently in use to identify an existing token.
+   * - `tokenId`: The token id of the tokens to be transferred.
+   *    If an account's balance is reduced below this, then it collapses to zero.
+   *
+   * @param {string} did DID to be transferred. Sender must be the owner. 
+   * @param {number} newOwner The new DID owner and receiver of the Gas and tokens. 
+   * @param {object} tokenId The token id to be transferred.
+   * @param {number} gasAmount The amount of gas to transfer. Defaults to 'all'.
+   * @param {number} tokenAmount The amount of tokens to be transferred. Defaults to 'all'.
+   * @returns {Promise} of transaction
+   */
+
+  async transferDidOwnershipGasAndTokens (did, newOwner, tokenId, gasAmount = 'all', tokenAmount = 'all') {
+    return this.dids.transferDidOwnershipGasAndTokens(this.exec, this.keypair, did, newOwner, tokenId, gasAmount, tokenAmount)
+  }
+
+  /**
+   * Sets a format for all types of ubscribe to register events
+   *
+   * @param {string} format Format to set
+   * @returns {Promise} Result of the transaction
+   */
+  async setFormat (format) {
+    this.dids.setFormat(format)
+    this.process.setFormat(format)
+    this.tokens.setFormat(format)
+  }
+
+  /**
+   * Sets a format for DIDs
+   *
+   * @param {string} format Format to set
+   * @returns {Promise} Result of the transaction
+   */
+  async setDIDFormat (format) {
+    this.dids.setFormat(format)
+  }
+
+  /**
+   * Sets a format for Process
+   *
+   * @param {string} format Format to set
+   * @returns {Promise} Result of the transaction
+   */
+  async setProcessFormat (format) {
+    this.process.setFormat(format)
+  }
+  
+  /**
+   * Sets a format for Tokens
+   *
+   * @param {string} format Format to set
+   * @returns {Promise} Result of the transaction
+   */
+  async setTokenFormat (format) {
+    this.tokens.setFormat(format)
   }
 }
