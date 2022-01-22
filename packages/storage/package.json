@@ -23,7 +23,7 @@
   "dependencies": {
     "debug": "^4.3.1",
     "ipfs-http-client": "^48.1.2",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^3.1.1"
   },
   "gitHead": "0340423a42d0ddd0ff2b3c69624012452d07c95e"
 }
